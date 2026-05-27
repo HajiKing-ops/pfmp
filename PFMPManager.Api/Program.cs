@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using PFMPManager.Api.Data;
+using PFMPManager.Api.Data; // AppDBContext our custom database context
+using Microsoft.Net.Http.Headers; 
 
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Register AppDbContext with Mysql using the connection string from appsettings.json 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -15,51 +17,36 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         );
 });
 
-builder.Services.AddControllers();
+// CORS policy - allows the Flutter web client to call this API from any origin 
+builder.Services.AddCors(options => 
+{
+    options.AddPolicy("AllowFlutterWeb", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+builder.Services.AddControllers(); // Enable API controller routing 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(); //Enables OpenAPI/Swagger doc generation 
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Expose Swagger JSON only in development 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+app.UseHttpsRedirection(); // Redirect http -> https
 
-/*var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
-*/
-
+app.UseCors("AllowFlutterWeb"); // apply CORS policy 
 
 app.UseAuthentication();
 
-app.MapControllers();
+app.MapControllers(); //Map [ApiController]routes ->  makes your controller reachable
 
 app.Run();

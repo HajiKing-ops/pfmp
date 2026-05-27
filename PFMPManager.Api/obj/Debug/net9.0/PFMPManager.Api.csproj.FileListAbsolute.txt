@@ -35,3 +35,4 @@ C:\source\repos\PFMPManager.Api\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.A
 C:\source\repos\PFMPManager.Api\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.Relational.dll
 C:\source\repos\PFMPManager.Api\bin\Debug\net9.0\MySqlConnector.dll
 C:\source\repos\PFMPManager.Api\bin\Debug\net9.0\Pomelo.EntityFrameworkCore.MySql.dll
+C:\source\repos\PFMPManager.Api\obj\Debug\net9.0\PFMPManager.Api.sourcelink.json
