@@ -45,7 +45,7 @@ app.UseHttpsRedirection(); // Redirect http -> https
 
 app.UseCors("AllowFlutterWeb"); // apply CORS policy 
 
-app.UseAuthentication();
+//app.UseAuthentication();
 
 app.MapControllers(); //Map [ApiController]routes ->  makes your controller reachable
 

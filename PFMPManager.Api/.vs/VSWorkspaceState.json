@@ -3,9 +3,10 @@
     "",
     "\\Controllers",
     "\\Data",
+    "\\DTOs",
     "\\Models",
     "\\Services"
   ],
-  "SelectedNode": "\\Controllers\\OrganisationControllers.cs",
+  "SelectedNode": "\\DTOs\\LoginResponseDto.cs",
   "PreviewInSolutionExplorer": false
 }
