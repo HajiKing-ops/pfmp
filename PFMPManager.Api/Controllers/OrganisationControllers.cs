@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
-
+using PFMPManager.Api.DTOs;
 
 namespace PFMPManager.Api.Controllers
 {
@@ -22,8 +22,20 @@ namespace PFMPManager.Api.Controllers
         [HttpGet] // GEt /api/organisation returns all organisations as JSON
         public async Task<IActionResult> GetAll()
         {
-            var organisation = await _context.Organisation.ToListAsync(); //Query all rows
-            return Ok(organisation); // 200 ok with json array 
+            var resutlt = await _context.Organisation.Select(o => new OrganisationDto // created object of the dto 
+            {
+                SIRET = o.SIRET ?? string.Empty, // ?? string.Empty -> if the database value exists use it, if its null, use empty text
+                RaisonSociale = o.RaisonSociale ?? string.Empty,
+                SecteurActivite = o.SecteurActivite ?? string.Empty,
+                Activite = o.Activite ?? string.Empty,
+                Adresse = o.Adresse ?? string.Empty,
+                CodePostal = o.CodePostal ?? string.Empty,
+                Ville = o.Ville ?? string.Empty,
+                AdresseMail = o.AdresseMail ?? string.Empty,
+                NumTelephone = o.NumTelephone ?? string.Empty, 
+            }
+                ).ToListAsync(); //Query all rows
+            return Ok(resutlt); // 200 ok with json array 
         }
     }
 }

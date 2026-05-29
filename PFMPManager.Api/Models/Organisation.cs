@@ -9,7 +9,7 @@ namespace PFMPManager.Api.Models
         [Key]
         [Column("SIRET")]
         [MaxLength(14)]
-        public string Siret { get; set; } = string.Empty;
+        public string SIRET { get; set; } = string.Empty;
         // { get; set; } — EF Core reads this to save to DB, writes this when fetching from DB
         // = string.Empty  — default value is "" instead of null (avoids null warnings)
 

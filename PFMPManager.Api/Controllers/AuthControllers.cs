@@ -1,5 +1,4 @@
 using PFMPManager.Api.Data;
-using PFMPManager.Api.Models;
 using PFMPManager.Api.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,12 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 [Route("api/login")]
 public class AuthController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly AppDbContext _context; // Database context injected via DI (Dependency Injection)
 
-    public AuthController(AppDbContext context)
+    //DI container injects AppDbContext registered om program.cs
+    public AuthController(AppDbContext context) 
     {
         _context = context;
     }
+
 
     [HttpPost]
     public IActionResult Login(LoginRequestDto request)
@@ -23,7 +24,7 @@ public class AuthController : ControllerBase
         var pwdFromFlutter = request.Pwd;
 
 
-
+        
         if (string.IsNullOrWhiteSpace(loginFromFlutter) || string.IsNullOrWhiteSpace(pwdFromFlutter))
         {
             return BadRequest();
@@ -36,6 +37,8 @@ public class AuthController : ControllerBase
         {
             return Unauthorized();
         }
+
+        //verify the Role
         string role = "";
 
         var student = _context.Etudiant
@@ -67,13 +70,14 @@ public class AuthController : ControllerBase
 
         }
 
+        // created object of the  LoginResponseDto and passsed the info i want 
         var response = new LoginResponseDto
         {
 
             Id_Utilisateur = user.Id_Utilisateur,
-            Nom = user.Nom,
-            Prenom = user.Prenom,
-            Login = user.Login,
+            Nom = user.Nom ??  string.Empty,
+            Prenom = user.Prenom ??  string.Empty ,
+            Login = user.Login ?? string.Empty ,
             Role = role
         };
 

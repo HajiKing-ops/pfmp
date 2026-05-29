@@ -29,7 +29,7 @@ namespace PFMPManager.Api.Models
 
         [Column("SIRET")]
         [MaxLength(14)]
-        public string SIRET { get; set; }
+        public string SIRET { get; set; } = string.Empty;
 
         [Column("Id_Utilisateur_1")]
         public int Id_Utilisateur_1 { get; set; }

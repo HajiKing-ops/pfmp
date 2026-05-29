@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
+using PFMPManager.Api.DTOs;
 
 
 namespace PFMPManager.Api.Controllers
@@ -22,7 +23,17 @@ namespace PFMPManager.Api.Controllers
         [HttpGet] // GEt /api/organisation returns all organisations as JSON
         public async Task<IActionResult> GetAll()
         {
-            var PfmpController = await _context.Pfmp.ToListAsync(); //Query all rows
+            var PfmpController = await _context.Pfmp.Select(p => new PfmpDto
+            { 
+               
+                DateDebut =  p.DateDebut,
+                DateFin = p.DateFin,
+                IdAdministrateur = p.Id_Utilisateur,
+                Id_Planning = p.Id_Planning,
+                SIRET = p.SIRET,
+                IdEtudiant = p.Id_Utilisateur_1
+            }
+            ).ToListAsync(); //Query all rows
             return Ok(PfmpController); // 200 ok with json array 
         }
     }
