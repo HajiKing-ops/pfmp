@@ -8,7 +8,8 @@ namespace PFMPManager.Api.DTOs
         public string SIRET { get; set; } = string.Empty;
         public int IdAdministrateur { get; set;}
         public int IdEtudiant { get; set; }
+        public int IdPfmp { get; set; }
 
-
+        
     }
 }

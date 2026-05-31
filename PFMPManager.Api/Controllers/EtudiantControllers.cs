@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
+using PFMPManager.Api.Models;
+using PFMPManager.Api.DTOs;
 
 
 namespace PFMPManager.Api.Controllers
@@ -25,5 +28,28 @@ namespace PFMPManager.Api.Controllers
             var etudiant = await _context.Etudiant.ToListAsync(); //Query all rows
             return Ok(etudiant); // 200 ok with json array 
         }
+
+        [HttpGet("{id}/pfmp")]
+        
+        public async Task<IActionResult> GetByID(int id)
+        {
+            var etudiantById = await _context.Pfmp.Where( p => p.Id_Utilisateur_1 == id).Select( p => new PfmpDto {
+                DateDebut =  p.DateDebut,
+                DateFin = p.DateFin,
+                IdAdministrateur = p.Id_Utilisateur,
+                Id_Planning = p.Id_Planning,
+                SIRET = p.SIRET,
+                IdEtudiant = p.Id_Utilisateur_1,
+                IdPfmp = p.Id_PFMP,
+            }).ToListAsync(); // 
+            if (etudiantById != null && !etudiantById.Any()) 
+            {
+                return NotFound();
+            }
+            return Ok(etudiantById);
+
+        }
+        
+
     }
 }
