@@ -3,9 +3,10 @@
     "",
     "\\Controllers",
     "\\Data",
+    "\\DTOs",
     "\\Models",
     "\\Services"
   ],
-  "SelectedNode": "\\Controllers\\ReferentControllers.cs",
+  "SelectedNode": "\\DTOs\\CreateJournalDto.cs",
   "PreviewInSolutionExplorer": false
 }

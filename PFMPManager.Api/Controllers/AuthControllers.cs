@@ -23,8 +23,6 @@ public class AuthController : ControllerBase
         var loginFromFlutter = request.Login;
         var pwdFromFlutter = request.Pwd;
 
-
-        
         if (string.IsNullOrWhiteSpace(loginFromFlutter) || string.IsNullOrWhiteSpace(pwdFromFlutter))
         {
             return BadRequest();
@@ -78,7 +76,7 @@ public class AuthController : ControllerBase
             Nom = user.Nom ??  string.Empty,
             Prenom = user.Prenom ??  string.Empty ,
             Login = user.Login ?? string.Empty ,
-            Role = role
+            Role = role,
         };
 
         return Ok(response);

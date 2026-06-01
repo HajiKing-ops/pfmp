@@ -35,29 +35,33 @@ namespace PFMPManager.Api.Controllers
                 SIRET = p.SIRET,
                 IdEtudiant = p.Id_Utilisateur_1,
                 IdPfmp = p.Id_PFMP,
-            }
-            ).ToListAsync(); //Query all rows
+            }).ToListAsync(); //Query all rows
             return Ok(pfmps); // 200 ok with json array 
         }
 
         [HttpGet("{id}")] //address of the method
         public async Task<IActionResult> GetPfmpById(int id)
         {
-            var pfmpById = await _context.Pfmp.Where(f => f.Id_PFMP == id).Select(p => new PfmpDto
-            {
-                
-                DateDebut =  p.DateDebut,
-                DateFin = p.DateFin,
-                IdAdministrateur = p.Id_Utilisateur,
-                Id_Planning = p.Id_Planning,
-                SIRET = p.SIRET,
-                IdEtudiant = p.Id_Utilisateur_1,
-                IdPfmp = p.Id_PFMP,
-            }).FirstOrDefaultAsync(); // Return one result, or null if no PFMP exists with this id
-            if (pfmpById == null)
+            var pfmp = await _context.Pfmp.FirstOrDefaultAsync(p => p.Id_PFMP == id);
+
+            if (pfmp == null)
             {
                 return NotFound();
             }
+            var pfmpById = new PfmpDto
+            {
+                DateDebut = pfmp.DateDebut,
+                DateFin = pfmp.DateFin,
+                IdAdministrateur = pfmp.Id_Utilisateur,
+                Id_Planning = pfmp.Id_Planning,
+                SIRET = pfmp.SIRET,
+                IdEtudiant = pfmp.Id_Utilisateur_1,
+                IdPfmp = pfmp.Id_PFMP,
+                JourRestants = pfmp.DateFin.HasValue ? Math.Max(0, (pfmp.DateFin.Value.Date - DateTime.Today).Days) : 0,
+            };
+
+
+
             return Ok(pfmpById);
         }
         
@@ -94,13 +98,13 @@ namespace PFMPManager.Api.Controllers
             
             var pfmpDto = new PfmpDto
             {
-             IdPfmp = pfmp.Id_PFMP,
-             IdAdministrateur = pfmp.Id_Utilisateur,
-             Id_Planning = pfmp.Id_Planning,
-             DateFin = pfmp.DateFin,
-             DateDebut = pfmp.DateDebut,
-             SIRET = pfmp.SIRET,
-             IdEtudiant = pfmp.Id_Utilisateur_1,
+                 IdPfmp = pfmp.Id_PFMP,
+                 IdAdministrateur = pfmp.Id_Utilisateur,
+                 Id_Planning = pfmp.Id_Planning,
+                 DateFin = pfmp.DateFin,
+                 DateDebut = pfmp.DateDebut,
+                 SIRET = pfmp.SIRET,
+                 IdEtudiant = pfmp.Id_Utilisateur_1,
             };
 
             return Ok(pfmpDto);
@@ -141,16 +145,16 @@ namespace PFMPManager.Api.Controllers
 
                 await _context.SaveChangesAsync();
 
-                var update = new PfmpDto
-                {
-                    IdPfmp = search.Id_PFMP,
-                    IdAdministrateur = search.Id_Utilisateur,
-                    Id_Planning = search.Id_Planning,
-                    DateFin = search.DateFin,
-                    DateDebut = search.DateDebut,
-                    SIRET = search.SIRET,
-                    IdEtudiant = search.Id_Utilisateur_1,
-                };
+            var update = new PfmpDto
+            {
+                IdPfmp = search.Id_PFMP,
+                IdAdministrateur = search.Id_Utilisateur,
+                Id_Planning = search.Id_Planning,
+                DateFin = search.DateFin,
+                DateDebut = search.DateDebut,
+                SIRET = search.SIRET,
+                IdEtudiant = search.Id_Utilisateur_1,
+            };
                 return Ok(update);
                 
             }

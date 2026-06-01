@@ -761,19 +761,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Utilisateur\\.nuget\\packages\\": {}
+    "C:\\Users\\r.salamzada\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Stage\\pfmp\\PFMPManager.Api\\PFMPManager.Api.csproj",
+      "projectUniqueName": "C:\\source\\repos\\PFMPManager.Api\\PFMPManager.Api.csproj",
       "projectName": "PFMPManager.Api",
-      "projectPath": "D:\\Stage\\pfmp\\PFMPManager.Api\\PFMPManager.Api.csproj",
-      "packagesPath": "C:\\Users\\Utilisateur\\.nuget\\packages\\",
-      "outputPath": "D:\\Stage\\pfmp\\PFMPManager.Api\\obj\\",
+      "projectPath": "C:\\source\\repos\\PFMPManager.Api\\PFMPManager.Api.csproj",
+      "packagesPath": "C:\\Users\\r.salamzada\\.nuget\\packages\\",
+      "outputPath": "C:\\source\\repos\\PFMPManager.Api\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Utilisateur\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\r.salamzada\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -833,7 +833,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

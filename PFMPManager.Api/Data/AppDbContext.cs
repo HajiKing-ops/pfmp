@@ -18,5 +18,10 @@ namespace PFMPManager.Api.Data
         public DbSet<Administrateur> Administrateur { get; set; }
         public DbSet<Pfmp> Pfmp { get; set; }
         public DbSet<Organisation> Organisation { get; set; }
+        public Dbset<Remplir> Remplir { get; set; }
+        public Dbset<RapportJournalier> RapportJournalier { get; set; }
+
+
+
     }
 }
