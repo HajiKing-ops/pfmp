@@ -18,10 +18,15 @@ namespace PFMPManager.Api.Data
         public DbSet<Administrateur> Administrateur { get; set; }
         public DbSet<Pfmp> Pfmp { get; set; }
         public DbSet<Organisation> Organisation { get; set; }
-        public Dbset<Remplir> Remplir { get; set; }
-        public Dbset<RapportJournalier> RapportJournalier { get; set; }
+        public DbSet<Remplir> Remplir { get; set; }
+       
+        public DbSet<RapportJournalier> RapportJournalier { get; set; }
 
-
+        protected override void OnModelCreating(ModelBuilder modelBuilder) // table rule/configuration
+        {
+            modelBuilder.Entity<Remplir>()
+                .HasKey(r => new {r.Id_Utilisateur, r.Id_RapportJournalier}); 
+        }
 
     }
 }

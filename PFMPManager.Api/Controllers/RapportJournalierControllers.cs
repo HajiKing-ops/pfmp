@@ -86,5 +86,8 @@ namespace PFMPManager.Api.Controllers
             };
             return Ok(journal);
         }
+
+       
+        
     }
 }
