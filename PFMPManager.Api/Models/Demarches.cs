@@ -10,17 +10,17 @@ namespace PFMPManager.Api.Models
         [Column("SIRET")]
         [MaxLength(14)]
         public string SIRET { get; set; } = string.Empty;
-        // { get; set; } — EF Core reads this to save to DB, writes this when fetching from DB
-        // = string.Empty  — default value is "" instead of null (avoids null warnings)
+        // { get; set; } ï¿½ EF Core reads this to save to DB, writes this when fetching from DB
+        // = string.Empty  ï¿½ default value is "" instead of null (avoids null warnings)
 
 
         [Column("Id_Utilisateur")]
-        public string? Id_Utilisateur { get; set; } = string.Empty;
-        // string? — the ? means this column is nullable (optional, can be null)
+        public int? Id_Utilisateur { get; set; } 
+        // string? ï¿½ the ? means this column is nullable (optional, can be null)
 
 
         [Column("dateRefus")]
-        public Datetime? dateRefus { get; set; }
+        public DateTime? dateRefus { get; set; }
 
 
         [Column("status")]

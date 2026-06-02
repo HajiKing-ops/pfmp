@@ -13,7 +13,7 @@ namespace PFMPManager.Api.Controllers
 
     [Route("api/demarches")]
 
-    public class DemarcheController : ControllersBase 
+    public class DemarcheController : ControllerBase 
     {
         private readonly AppDbContext _context;
 
@@ -23,6 +23,27 @@ namespace PFMPManager.Api.Controllers
         }
 
         [HttpPost]
+
+        public async Task<IActionResult> Create(CreateDemarchesDto request)
+        {
+            var idEtudiant = request.Id_Utilisateur;
+            var nomEntreprise = request.SIRET;
+            var dateRefus = request.dateRefus;
+            var status = request.status;
+            
+            var query = new Demarches
+            {
+                SIRET = nomEntreprise,
+                Id_Utilisateur = idEtudiant,
+                dateRefus = dateRefus,
+                status = status,
+            };
+            _context.Demarches.Add(query);
+            await _context.SaveChangesAsync();
+
+
+            return Ok();
+        }
 
     }
 }

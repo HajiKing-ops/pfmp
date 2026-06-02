@@ -102,7 +102,7 @@ namespace PFMPManager.Api.Controllers
                                 && rapport.DateRapport.Value.Date== DateTime.Today
                                 select rapport
                                ).AnyAsync();
-            return Ok(  return Ok(new { idEtudiant = idEtudiant, journalExiste = search }););
+             return Ok(new { idEtudiant = idEtudiant, journalExiste = search });
         }
 
 
@@ -110,7 +110,7 @@ namespace PFMPManager.Api.Controllers
 
         [HttpGet("export/{idPfmp}")]
 
-        public async Task<IActionResult> chrono(int idPfmp)
+        public async Task<IActionResult> ExportJournal(int idPfmp)
         { 
             var query = await _context.Pfmp.FirstOrDefaultAsync(p => p.Id_PFMP == idPfmp);
 
@@ -129,26 +129,30 @@ namespace PFMPManager.Api.Controllers
                 IdPfmp = query.Id_PFMP,
 
             };
-            var DateDebut = query.DateDebut;
-            var DateFin = query.DateFin;
-            var IdEtudiant = query.Id_Utilisateur_1;
-
+            var dateDebut = query.DateDebut;
+            var dateFin = query.DateFin;
+            var idEtudiant = query.Id_Utilisateur_1;
+            if(!dateDebut.HasValue || !dateFin.HasValue)
+            {
+                return BadRequest();
+            }
             var journal = await (from remplir in _context.Remplir
                                 join rapport in _context.RapportJournalier
-                                   on remplir.Id_RapportJournalier equals rapport.Id_RapportJournalier
-                                where remplir.Id_Utilisateur == IdEtudiant && rapport.DateRapport >= DateDebut && rapport.DateRapport <= DateFin
+                                on remplir.Id_RapportJournalier equals rapport.Id_RapportJournalier
+                                where remplir.Id_Utilisateur == idEtudiant && rapport.DateRapport.HasValue 
+                                && rapport.DateRapport.Value.Date >= dateDebut.Value.Date && rapport.DateRapport.Value.Date <= dateFin.Value.Date
+                                orderby rapport.DateRapport
                                  select  new JournalDto
                                 {
                                     IdEtudiant = remplir.Id_Utilisateur,
                                     IdRapportJournalier = rapport.Id_RapportJournalier,
                                     DateRapport = rapport.DateRapport,
                                     LienVersFichier = rapport.LienVersFichier
-                                }).OrderBy(DateRapport).ToListAsync();
+                                }).ToListAsync();
             
-  
-            return Ok(pfmp, journal)
-                  return Ok(new { pfmp, journal });
-
+               
+            return Ok(new { pfmp,  journal});
+                  
 
         }
         
