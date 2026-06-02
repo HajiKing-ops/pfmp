@@ -49,5 +49,7 @@ namespace PFMPManager.Api.Models
         public string? NumTelephone { get; set; }
 
 
+
+
     }
 }

@@ -20,15 +20,33 @@ namespace PFMPManager.Api.Controllers
             _context = context;
 
             }
-            [HttpGet("{idEtudiant}")]
+        [HttpGet("{idEtudiant}")]
 
-            public async Task<IActionResult> GetById(int idEtudiant)
+        public async Task<IActionResult> GetById(int idEtudiant)
+        {
+            var search = await _context.Pfmp.FirstOrDefaultAsync(p => p.DateDebut.HasValue && p.DateDebut.Value.Date <= DateTime.Today 
+            && p.DateFin.HasValue && p.DateFin.Value.Date >= DateTime.Today 
+            && p.Id_Utilisateur_1 == idEtudiant);
+            if (search == null)
             {
-            var search = await _context.Pfmp.FirstOrDefaultAsync(p => p.DateDebut <= DateTime.Today && p.DateFin >= DateTime.Today && p.Id_Utilisateur_1 == idEtudiant);
-                if (search == null)
-                {
-                    return NotFound();
-                }
+                return NotFound();
+            }
+            var joursRenseignes = await _context.Remplir.CountAsync(r => r.Id_Utilisateur == idEtudiant);
+
+            var plan = await _context.Planning.FirstOrDefaultAsync(p => p.Id_Planning == search.Id_Planning);
+
+            if (plan == null)
+            {
+                return NotFound();
+            }
+
+            var heuresParJour = plan.HoraireFin - plan.HoraireDebut;
+
+            var heuresTotales = joursRenseignes * heuresParJour;
+
+
+
+
             var dash = new DashboardDto
             {
                 DateDebut = search.DateDebut,
@@ -39,12 +57,16 @@ namespace PFMPManager.Api.Controllers
                 IdEtudiant = search.Id_Utilisateur_1,
                 IdPfmp = search.Id_PFMP,
                 JourRestants = search.DateFin.HasValue ? Math.Max(0, (search.DateFin.Value.Date - DateTime.Today).Days) : 0,
+                HeuresParJour = heuresParJour,
+                HeuresTotales =  heuresTotales,
+                JoursRenseignes = joursRenseignes
             };
 
                 return Ok(dash);
-
-
             }
+
+
+        
             
         }  
 }

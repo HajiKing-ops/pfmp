@@ -19,7 +19,10 @@ namespace PFMPManager.Api.Data
         public DbSet<Pfmp> Pfmp { get; set; }
         public DbSet<Organisation> Organisation { get; set; }
         public DbSet<Remplir> Remplir { get; set; }
-       
+        public DbSet<Planning> Planning { get; set; }
+        public DbSet<Demarches> Demarches { get; set; }
+
+
         public DbSet<RapportJournalier> RapportJournalier { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) // table rule/configuration

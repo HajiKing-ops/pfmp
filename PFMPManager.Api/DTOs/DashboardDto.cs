@@ -10,8 +10,8 @@ namespace PFMPManager.Api.DTOs
         public int IdEtudiant { get; set; }
         public int IdPfmp { get; set; }
         public int JourRestants { get; set; }
-
-
-
+        public int JoursRenseignes { get; set; }
+        public int HeuresTotales { get; set; }
+        public int HeuresParJour { get; set; }
     }
 }

@@ -35,6 +35,7 @@ namespace PFMPManager.Api.Controllers
                 SIRET = p.SIRET,
                 IdEtudiant = p.Id_Utilisateur_1,
                 IdPfmp = p.Id_PFMP,
+              
             }).ToListAsync(); //Query all rows
             return Ok(pfmps); // 200 ok with json array 
         }
@@ -58,6 +59,7 @@ namespace PFMPManager.Api.Controllers
                 IdEtudiant = pfmp.Id_Utilisateur_1,
                 IdPfmp = pfmp.Id_PFMP,
                 JourRestants = pfmp.DateFin.HasValue ? Math.Max(0, (pfmp.DateFin.Value.Date - DateTime.Today).Days) : 0,
+                
             };
 
 
@@ -92,6 +94,7 @@ namespace PFMPManager.Api.Controllers
                 Id_Planning = request.IdPlanning,
                 SIRET = request.Siret,
                 Id_Utilisateur_1 = request.IdEtudiant,
+               
             };
             _context.Pfmp.Add(pfmp);
             await _context.SaveChangesAsync();
@@ -105,6 +108,7 @@ namespace PFMPManager.Api.Controllers
                  DateDebut = pfmp.DateDebut,
                  SIRET = pfmp.SIRET,
                  IdEtudiant = pfmp.Id_Utilisateur_1,
+               
             };
 
             return Ok(pfmpDto);
@@ -142,8 +146,9 @@ namespace PFMPManager.Api.Controllers
                 search.Id_Planning = request.IdPlanning;
                 search.SIRET = request.Siret;
                 search.Id_Utilisateur_1 = request.IdEtudiant;
+               
 
-                await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             var update = new PfmpDto
             {
@@ -154,6 +159,7 @@ namespace PFMPManager.Api.Controllers
                 DateDebut = search.DateDebut,
                 SIRET = search.SIRET,
                 IdEtudiant = search.Id_Utilisateur_1,
+                
             };
                 return Ok(update);
                 

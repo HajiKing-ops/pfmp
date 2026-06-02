@@ -75,7 +75,7 @@ public class AuthController : ControllerBase
             Id_Utilisateur = user.Id_Utilisateur,
             Nom = user.Nom ??  string.Empty,
             Prenom = user.Prenom ??  string.Empty ,
-            Login = user.Login ?? string.Empty ,
+            
             Role = role,
         };
 

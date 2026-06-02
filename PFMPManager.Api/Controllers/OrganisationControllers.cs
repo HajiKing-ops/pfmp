@@ -7,7 +7,7 @@ namespace PFMPManager.Api.Controllers
 {
     [ApiController] // Enables model validation and smart binding 
 
-    [Route("api/organisation")] // Base route for all endpoints in this controller
+    [Route("api/entreprises")] // Base route for all endpoints in this controller
 
     public class OrganisationController : ControllerBase
     {
@@ -19,7 +19,7 @@ namespace PFMPManager.Api.Controllers
             _context = context;
         }
 
-        [HttpGet] // GEt /api/organisation returns all organisations as JSON
+        [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var result = await _context.Organisation.Select(o => new OrganisationDto // created object of the dto 
@@ -32,17 +32,34 @@ namespace PFMPManager.Api.Controllers
                 CodePostal = o.CodePostal ?? string.Empty,
                 Ville = o.Ville ?? string.Empty,
                 AdresseMail = o.AdresseMail ?? string.Empty,
-                NumTelephone = o.NumTelephone ?? string.Empty, 
+                NumTelephone = o.NumTelephone ?? string.Empty,
             }
                 ).ToListAsync(); //Query all rows
             return Ok(result); // 200 ok with json array 
         }
 
-        [HttpGet("{siret}")]
+        [HttpGet("recherche")]
 
-        public async Task<IActionResult> GetBySiret(string siret)
+        public async Task<IActionResult> Recherche (string? nom, string? codePostal, string? secteur)
         {
-            var BySiret =  await _context.Organisation.Where(p => p.SIRET == siret).Select(o => new OrganisationDto
+            var query = _context.Organisation.AsQueryable();
+
+
+            if (!string.IsNullOrWhiteSpace(nom))
+            {
+                query = query.Where(o => o.RaisonSociale.Contains(nom));
+
+            }
+             if (!string.IsNullOrWhiteSpace(codePostal))
+            {
+                query = query.Where(o => o.CodePostal == codePostal);
+            }
+             if (!string.IsNullOrWhiteSpace(secteur))
+            {
+                query = query.Where(o => o.SecteurActivite.Contains(secteur));
+            }
+          
+            var result = await query.Select(o => new OrganisationDto
             {
                 SIRET = o.SIRET ?? string.Empty, // ?? string.Empty -> if the database value exists use it, if its null, use empty text
                 RaisonSociale = o.RaisonSociale ?? string.Empty,
@@ -52,14 +69,17 @@ namespace PFMPManager.Api.Controllers
                 CodePostal = o.CodePostal ?? string.Empty,
                 Ville = o.Ville ?? string.Empty,
                 AdresseMail = o.AdresseMail ?? string.Empty,
-                NumTelephone = o.NumTelephone ?? string.Empty, 
-            }).FirstOrDefaultAsync();
+                NumTelephone = o.NumTelephone ?? string.Empty,
+            }).ToListAsync();
 
-            if(BySiret == null)
+            if (!result.Any())
             {
                 return NotFound();
             }
-            return Ok(BySiret);
+            return Ok(result);
+            
+
         }
     }
+
 }

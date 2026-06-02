@@ -4,9 +4,8 @@
     "\\Controllers",
     "\\Data",
     "\\DTOs",
-    "\\Models",
-    "\\Services"
+    "\\Models"
   ],
-  "SelectedNode": "\\DTOs\\CreateJournalDto.cs",
+  "SelectedNode": "\\Controllers\\RapportJournalierControllers.cs",
   "PreviewInSolutionExplorer": false
 }
