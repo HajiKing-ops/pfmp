@@ -1,6 +1,7 @@
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 
 
 [ApiController]
@@ -19,22 +20,24 @@ public class AuthController : ControllerBase
     [HttpPost]
     public IActionResult Login(LoginRequestDto request)
     {
-
+        
         var loginFromFlutter = request.Login;
-        var pwdFromFlutter = request.Pwd;
 
-        if (string.IsNullOrWhiteSpace(loginFromFlutter) || string.IsNullOrWhiteSpace(pwdFromFlutter))
+        if (string.IsNullOrWhiteSpace(loginFromFlutter) )
         {
             return BadRequest();
         }
 
         var user = _context.Utilisateur
-            .FirstOrDefault(u => u.Login == loginFromFlutter && u.Pwd == pwdFromFlutter);
+            .FirstOrDefault(u => u.Login == loginFromFlutter);
 
         if (user == null)
         {
             return Unauthorized();
         }
+        var pwd = user.Pwd;
+
+        var pwdhash = PasswordHasher<request.Pwd>();
 
         //verify the Role
         string role = "";

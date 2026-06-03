@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.HttpSys;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
@@ -84,13 +85,14 @@ namespace PFMPManager.Api.Controllers
             {
                 return BadRequest();
             }
-            
+
+
+
 
             var pfmp = new Pfmp
             {
                 DateDebut = request.DateDebut,
                 DateFin = request.DateFin,
-                Id_Utilisateur = request.IdAdministrateur,
                 Id_Planning = request.IdPlanning,
                 SIRET = request.Siret,
                 Id_Utilisateur_1 = request.IdEtudiant,

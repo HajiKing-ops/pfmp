@@ -21,14 +21,17 @@ namespace PFMPManager.Api.Data
         public DbSet<Remplir> Remplir { get; set; }
         public DbSet<Planning> Planning { get; set; }
         public DbSet<Demarches> Demarches { get; set; }
-
-
         public DbSet<RapportJournalier> RapportJournalier { get; set; }
+        public DbSet<Contacter> Contacter { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) // table rule/configuration
         {
             modelBuilder.Entity<Remplir>()
-                .HasKey(r => new {r.Id_Utilisateur, r.Id_RapportJournalier}); 
+                .HasKey(r => new {r.Id_Utilisateur, r.Id_RapportJournalier});
+            modelBuilder.Entity<Demarches>()
+               .HasKey(r => new { r.Id_Utilisateur, r.SIRET });
+            modelBuilder.Entity<Contacter>()
+              .HasKey(c => new { c.Id_Utilisateur, c.SIRET });
         }
 
     }

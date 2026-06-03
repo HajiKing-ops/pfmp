@@ -31,7 +31,19 @@ namespace PFMPManager.Api.Controllers
             {
                 return NotFound();
             }
-            var joursRenseignes = await _context.Remplir.CountAsync(r => r.Id_Utilisateur == idEtudiant);
+            var joursRenseignes = await
+                (
+                    from remplir in _context.Remplir
+                    join rapport in _context.RapportJournalier
+                    on remplir.Id_RapportJournalier equals rapport.Id_RapportJournalier
+                    where remplir.Id_Utilisateur == idEtudiant
+                    && rapport.DateRapport.HasValue
+                    && rapport.DateRapport.Value.Date >= search.DateDebut.Value.Date
+                    && rapport.DateRapport.Value.Date <= search.DateFin.Value.Date
+                    select rapport
+                ).CountAsync();
+                
+
 
             var plan = await _context.Planning.FirstOrDefaultAsync(p => p.Id_Planning == search.Id_Planning);
 
@@ -43,7 +55,6 @@ namespace PFMPManager.Api.Controllers
             var heuresParJour = plan.HoraireFin - plan.HoraireDebut;
 
             var heuresTotales = joursRenseignes * heuresParJour;
-
 
 
 

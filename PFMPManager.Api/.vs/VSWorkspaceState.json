@@ -6,6 +6,6 @@
     "\\DTOs",
     "\\Models"
   ],
-  "SelectedNode": "\\Controllers\\RapportJournalierControllers.cs",
+  "SelectedNode": "\\DTOs\\CreateDemarchesDto.cs",
   "PreviewInSolutionExplorer": false
 }

@@ -41,14 +41,10 @@ namespace  PFMPManager.Api.Controllers
 
 
             return Ok(rssItems);
-           }catch(Exception e)
+           }catch
             {
                 return StatusCode(500);
             }
-
-
-           
-
         }
     }
 }

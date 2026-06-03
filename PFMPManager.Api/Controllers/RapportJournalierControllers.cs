@@ -46,6 +46,7 @@ namespace PFMPManager.Api.Controllers
 
         }
 
+
         [HttpPost]
 
         public async Task<IActionResult> Create(CreateJournalDto  request) 
@@ -62,7 +63,19 @@ namespace PFMPManager.Api.Controllers
             {
                 return BadRequest();
             }
+            var search = await (from remplir in _context.Remplir
+                                join rapport in _context.RapportJournalier
+                                   on remplir.Id_RapportJournalier equals rapport.Id_RapportJournalier
+                                where remplir.Id_Utilisateur == idEtudiant
+                                && rapport.DateRapport.HasValue &&
+                                rapport.DateRapport.Value.Date == request.DateRapport.Value.Date
 
+                                select rapport
+                                {}).AnyAsync();
+            if (search)
+            {
+                return Conflict();
+            }
             var rapport = new RapportJournalier
             {
                 DateRapport = request.DateRapport,
