@@ -64,14 +64,13 @@ namespace PFMPManager.Api.Controllers
                 return BadRequest();
             }
             var search = await (from remplir in _context.Remplir
-                                join rapport in _context.RapportJournalier
-                                   on remplir.Id_RapportJournalier equals rapport.Id_RapportJournalier
-                                where remplir.Id_Utilisateur == idEtudiant
-                                && rapport.DateRapport.HasValue &&
-                                rapport.DateRapport.Value.Date == request.DateRapport.Value.Date
-
-                                select rapport
-                                {}).AnyAsync();
+                                join repport in _context.RapportJournalier
+                                on remplir.Id_RapportJournalier equals repport.Id_RapportJournalier
+                                where remplir.Id_Utilisateur == request.IdEtudiant
+                                && repport.DateRapport.HasValue &&
+                                repport.DateRapport.Value.Date == request.DateRapport.Value.Date
+                                select repport
+                                ).AnyAsync();
             if (search)
             {
                 return Conflict();

@@ -1,7 +1,5 @@
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Server.HttpSys;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
@@ -28,66 +26,73 @@ namespace PFMPManager.Api.Controllers
         public async Task<IActionResult> GetAll()
         {
             var pfmps = await _context.Pfmp.Select(p => new PfmpDto
-            { 
-               
-                DateDebut =  p.DateDebut,
+            {
+                DateDebut = p.DateDebut,
                 DateFin = p.DateFin,
                 IdAdministrateur = p.Id_Utilisateur,
                 Id_Planning = p.Id_Planning,
                 SIRET = p.SIRET,
                 IdEtudiant = p.Id_Utilisateur_1,
                 IdPfmp = p.Id_PFMP,
-              
             }).ToListAsync(); //Query all rows
             return Ok(pfmps); // 200 ok with json array 
         }
 
-        [HttpGet("{id}")] //address of the method
-        public async Task<IActionResult> GetPfmpById(int id)
-        {
-            var pfmp = await _context.Pfmp.FirstOrDefaultAsync(p => p.Id_PFMP == id);
 
-            if (pfmp == null)
+        [HttpGet("recherche/{idEtudiant}/{idPfmp?}")] //address of the method
+        public async Task<IActionResult> GetPfmpById(int idEtudiant, int? idPfmp)
+
+        {
+            var query = _context.Pfmp.AsQueryable();
+            if (idPfmp != null)
+            {
+                query = query.Where(o => o.Id_Utilisateur_1 == idEtudiant && o.Id_PFMP == idPfmp);
+            }
+            else
+            {
+                query = query.Where(o => o.Id_Utilisateur_1 == idEtudiant);
+            }
+
+
+            var pfmps = await query.ToListAsync();
+            var pfmpById = pfmps.Select(p => new PfmpDto
+            {
+                DateDebut = p.DateDebut,
+                DateFin = p.DateFin,
+                IdAdministrateur = p.Id_Utilisateur,
+                Id_Planning = p.Id_Planning,
+                SIRET = p.SIRET,
+                IdEtudiant = p.Id_Utilisateur_1,
+                IdPfmp = p.Id_PFMP,
+                JourRestants = p.DateFin.HasValue ? Math.Max(0, (p.DateFin.Value.Date - DateTime.Today).Days) : 0,
+            }).ToList();
+
+
+            if (!pfmpById.Any())
             {
                 return NotFound();
             }
-            var pfmpById = new PfmpDto
-            {
-                DateDebut = pfmp.DateDebut,
-                DateFin = pfmp.DateFin,
-                IdAdministrateur = pfmp.Id_Utilisateur,
-                Id_Planning = pfmp.Id_Planning,
-                SIRET = pfmp.SIRET,
-                IdEtudiant = pfmp.Id_Utilisateur_1,
-                IdPfmp = pfmp.Id_PFMP,
-                JourRestants = pfmp.DateFin.HasValue ? Math.Max(0, (pfmp.DateFin.Value.Date - DateTime.Today).Days) : 0,
-                
-            };
-
-
 
             return Ok(pfmpById);
         }
-        
+
         [HttpPost]
 
         public async Task<IActionResult> Create(CreatePfmpDto request)
         {
 
-            if(string.IsNullOrWhiteSpace(request.Siret))
+            if (string.IsNullOrWhiteSpace(request.Siret))
             {
                 return BadRequest();
             }
-            if(request.IdAdministrateur <= 0 || request.IdPlanning <= 0 || request.IdEtudiant <= 0)
+            if (request.IdAdministrateur <= 0 || request.IdPlanning <= 0 || request.IdEtudiant <= 0)
             {
                 return BadRequest();
             }
-            if(request.DateFin < request.DateDebut)
+            if (request.DateFin < request.DateDebut)
             {
                 return BadRequest();
             }
-
-
 
 
             var pfmp = new Pfmp
@@ -97,33 +102,34 @@ namespace PFMPManager.Api.Controllers
                 Id_Planning = request.IdPlanning,
                 SIRET = request.Siret,
                 Id_Utilisateur_1 = request.IdEtudiant,
-               
+
             };
             _context.Pfmp.Add(pfmp);
             await _context.SaveChangesAsync();
-            
+
             var pfmpDto = new PfmpDto
             {
-                 IdPfmp = pfmp.Id_PFMP,
-                 IdAdministrateur = pfmp.Id_Utilisateur,
-                 Id_Planning = pfmp.Id_Planning,
-                 DateFin = pfmp.DateFin,
-                 DateDebut = pfmp.DateDebut,
-                 SIRET = pfmp.SIRET,
-                 IdEtudiant = pfmp.Id_Utilisateur_1,
-               
+                IdPfmp = pfmp.Id_PFMP,
+                IdAdministrateur = pfmp.Id_Utilisateur,
+                Id_Planning = pfmp.Id_Planning,
+                DateFin = pfmp.DateFin,
+                DateDebut = pfmp.DateDebut,
+                SIRET = pfmp.SIRET,
+                IdEtudiant = pfmp.Id_Utilisateur_1,
+
             };
 
             return Ok(pfmpDto);
 
         }
 
+
         [HttpPost("complete")]
 
         public async Task<IActionResult> CompletePfmp(CreateCompletePfmpDto request)
         {
             //entreprise 
-            var RaisonSociale =request.RaisonSociale;
+            var RaisonSociale = request.RaisonSociale;
             var SecteurActivite = request.SecteurActivite;
             var SIRET = request.SIRET;
             var Adresse = request.Adresse;
@@ -133,7 +139,7 @@ namespace PFMPManager.Api.Controllers
             var Jour = request.Jour;
             var HoraireDebut = request.HoraireDebut;
             var HoraireFin = request.HoraireFin;
-            
+
             //PFMP
             var DateDebut = request.DateDebut;
             var DateFin = request.DateFin;
@@ -146,18 +152,22 @@ namespace PFMPManager.Api.Controllers
             var FonctionMaitreStage = request.FonctionMaitreStage;
             var TelephoneMaitreStage = request.TelephoneMaitreStage;
             var EmailMaitreStage = request.EmailMaitreStage;
-            
-            if (string.IsNullOrWhiteSpace(RaisonSociale) ||  string.IsNullOrWhiteSpace(SecteurActivite) ||  string.IsNullOrWhiteSpace(SIRET)
-                ||  string.IsNullOrWhiteSpace(Adresse) ||  string.IsNullOrWhiteSpace(NumTelephone)  ||  string.IsNullOrWhiteSpace(Jour) 
-                ||  HoraireDebut <= 0 ||  HoraireFin <= 0 ||  !DateDebut.HasValue                                 
-                ||  !DateFin.HasValue || IdEtudiant <=0 || IdAdministrateur <=0 || string.IsNullOrWhiteSpace(PrenomMaitreStage)
+
+           
+
+
+            if (string.IsNullOrWhiteSpace(RaisonSociale) || string.IsNullOrWhiteSpace(SecteurActivite) || string.IsNullOrWhiteSpace(SIRET)
+                || string.IsNullOrWhiteSpace(Adresse) || string.IsNullOrWhiteSpace(NumTelephone) || string.IsNullOrWhiteSpace(Jour)
+                || HoraireDebut <= 0 || HoraireFin <= 0 || !DateDebut.HasValue
+                || !DateFin.HasValue || IdEtudiant <= 0 || IdAdministrateur <= 0 || string.IsNullOrWhiteSpace(PrenomMaitreStage)
                 || string.IsNullOrWhiteSpace(NomMaitreStage) || string.IsNullOrWhiteSpace(FonctionMaitreStage) || string.IsNullOrWhiteSpace(TelephoneMaitreStage)
                 || string.IsNullOrWhiteSpace(EmailMaitreStage) || HoraireFin <= HoraireDebut || DateFin.Value.Date < DateDebut.Value.Date)
             {
                 return BadRequest();
             }
 
-            var checkOrg = await _context.Organisation.FirstOrDefaultAsync(p=> p.SIRET == SIRET);
+            var checkOrg = await _context.Organisation.FirstOrDefaultAsync(p => p.SIRET == SIRET);
+
             if (checkOrg == null)
             {
                 checkOrg = new Organisation
@@ -169,67 +179,146 @@ namespace PFMPManager.Api.Controllers
                     SIRET = request.SIRET,
                 };
                 _context.Organisation.Add(checkOrg);
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
+            }
+            var userExist = await _context.Utilisateur.FirstOrDefaultAsync(p => p.Login == EmailMaitreStage);
+
+            var user = new Utilisateur();
+
+            if (userExist == null)
+            {
+                user.Nom = request.NomMaitreStage;
+                user.Prenom = request.PrenomMaitreStage;
+                user.Login = EmailMaitreStage;
+                user.Pwd = "pwd";
+
+                _context.Utilisateur.Add(user);
+                await _context.SaveChangesAsync();
+
+            }
+            else
+            {
+                user = userExist;
             }
 
-            var user =  new Utilisateur
+
+            var prf = new Professionnel();
+
+
+                var userprf = await _context.Professionnel.FirstOrDefaultAsync(p => p.Id_Utilisateur == user.Id_Utilisateur);
+                if (userprf == null)
+                {
+
+                    prf.Id_Utilisateur = user.Id_Utilisateur;
+                    prf.Fonction = FonctionMaitreStage;
+                    prf.AdresseMail = user.Login;
+                    prf.NumTelephone = TelephoneMaitreStage;
+
+                    _context.Professionnel.Add(prf);
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+
+                    prf.Id_Utilisateur = userprf.Id_Utilisateur;
+                    prf.Fonction = userprf.Fonction;
+                    prf.AdresseMail = userprf.AdresseMail;
+                    prf.NumTelephone = userprf.NumTelephone;
+
+                }
+
+
+            var checkTravail = await _context.Travailler.FirstOrDefaultAsync(o => o.Id_Utilisateur == prf.Id_Utilisateur && o.SIRET == SIRET);
+
+            var travail = new Travailler();
+            if (checkTravail == null)
             {
-                Nom = request.NomMaitreStage,
-                Prenom = request.PrenomMaitreStage,
-                Login = EmailMaitreStage,
-                Pwd = "pwd",
+
+
+                travail.Id_Utilisateur = prf.Id_Utilisateur;
+                travail.SIRET = request.SIRET;
+
+                _context.Travailler.Add(travail);
+                await _context.SaveChangesAsync();
+
+            }
+
+            var plan = new Planning
+            {
+                Jour = request.Jour,
+                HoraireDebut = request.HoraireDebut,
+                HoraireFin = request.HoraireFin,
             };
-            _context.Utilisateur.Add(user);
+            _context.Planning.Add(plan);
             await _context.SaveChangesAsync();
 
-            
+            var idPlanning = plan.Id_Planning;
 
-            var prf = new Professionnel
+            var createPfmp = new Pfmp
             {
-                Id_Utilisateur = user.Id_Utilisateur,
-                Fonction = request.FonctionMaitreStage,
-                AdresseMail = request.EmailMaitreStage,
-                NumTelephone = request.TelephoneMaitreStage,
+                DateDebut = request.DateDebut,
+                DateFin = request.DateFin,
+                Id_Planning = idPlanning,
+                SIRET = request.SIRET,
+                Id_Utilisateur_1 = request.IdEtudiant,
+                Id_Utilisateur =  request.IdAdministrateur,
 
             };
-            _context.Professionnel.Add(prf);
+            _context.Pfmp.Add(createPfmp);
             await _context.SaveChangesAsync();
 
+            var createPfmpDto = new PfmpDto
+            {
+                DateDebut = createPfmp.DateDebut,
+                DateFin = createPfmp.DateFin,
+                Id_Planning = createPfmp.Id_Planning,
+                SIRET = createPfmp.SIRET,
+                IdEtudiant = createPfmp.Id_Utilisateur_1,
+                IdAdministrateur = createPfmp.Id_Utilisateur,
+                IdPfmp = createPfmp.Id_PFMP,
 
+                JourRestants = createPfmp.DateFin.HasValue ? Math.Max(0, (createPfmp.DateFin.Value.Date - DateTime.Today).Days) : 0,
+            };
+
+            return Ok(createPfmpDto);
         }
+
+
+
+        // Update
 
         [HttpPut("{id}")]
 
-         public async Task<IActionResult> Update(CreatePfmpDto request, int id)
+        public async Task<IActionResult> Update(CreatePfmpDto request, int id)
         {
-            if(string.IsNullOrWhiteSpace(request.Siret))
+            if (string.IsNullOrWhiteSpace(request.Siret))
             {
                 return BadRequest();
             }
-            if(request.IdEtudiant <= 0 || request.IdPlanning <= 0 || request.IdAdministrateur <= 0)
+            if (request.IdEtudiant <= 0 || request.IdPlanning <= 0 || request.IdAdministrateur <= 0)
             {
                 return BadRequest();
             }
-            if(request.DateFin < request.DateDebut)
+            if (request.DateFin < request.DateDebut)
             {
                 return BadRequest();
             }
 
             var search = await _context.Pfmp.FirstOrDefaultAsync(p => p.Id_PFMP == id);
 
-            if(search == null)
+            if (search == null)
             {
                 return NotFound();
             }
-            
 
-                search.DateDebut = request.DateDebut;
-                search.DateFin = request.DateFin;
-                search.Id_Utilisateur = request.IdAdministrateur;
-                search.Id_Planning = request.IdPlanning;
-                search.SIRET = request.Siret;
-                search.Id_Utilisateur_1 = request.IdEtudiant;
-               
+
+            search.DateDebut = request.DateDebut;
+            search.DateFin = request.DateFin;
+            search.Id_Utilisateur = request.IdAdministrateur;
+            search.Id_Planning = request.IdPlanning;
+            search.SIRET = request.Siret;
+            search.Id_Utilisateur_1 = request.IdEtudiant;
+
 
             await _context.SaveChangesAsync();
 
@@ -242,19 +331,23 @@ namespace PFMPManager.Api.Controllers
                 DateDebut = search.DateDebut,
                 SIRET = search.SIRET,
                 IdEtudiant = search.Id_Utilisateur_1,
-                
+
             };
-                return Ok(update);
-                
-            }
+            return Ok(update);
 
-            [HttpDelete("{id}")]
+        }
 
-            public async Task<IActionResult> Delete(int id)
+
+
+        //Delete 
+
+        [HttpDelete("{id}")]
+
+        public async Task<IActionResult> Delete(int id)
         {
-            var del = await _context.Pfmp.FirstOrDefaultAsync(p => p.Id_PFMP == id) ;
-            
-            if (del== null)
+            var del = await _context.Pfmp.FirstOrDefaultAsync(p => p.Id_PFMP == id);
+
+            if (del == null)
             {
                 return NotFound();
             }
@@ -264,6 +357,6 @@ namespace PFMPManager.Api.Controllers
             return NoContent();
         }
 
-            
+
     }
 }

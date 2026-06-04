@@ -3,7 +3,6 @@ using PFMPManager.Api.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 
-
 [ApiController]
 [Route("api/login")]
 public class AuthController : ControllerBase
@@ -11,7 +10,7 @@ public class AuthController : ControllerBase
     private readonly AppDbContext _context; // Database context injected via DI (Dependency Injection)
 
     //DI container injects AppDbContext registered om program.cs
-    public AuthController(AppDbContext context) 
+    public AuthController(AppDbContext context)
     {
         _context = context;
     }
@@ -20,24 +19,22 @@ public class AuthController : ControllerBase
     [HttpPost]
     public IActionResult Login(LoginRequestDto request)
     {
-        
-        var loginFromFlutter = request.Login;
 
-        if (string.IsNullOrWhiteSpace(loginFromFlutter) )
+        var loginFromFlutter = request.Login;
+        var pwdFromFlutter = request.Pwd;
+
+        if (string.IsNullOrWhiteSpace(loginFromFlutter) || string.IsNullOrWhiteSpace(pwdFromFlutter))
         {
             return BadRequest();
         }
 
         var user = _context.Utilisateur
-            .FirstOrDefault(u => u.Login == loginFromFlutter);
+            .FirstOrDefault(u => u.Login == loginFromFlutter && u.Pwd == pwdFromFlutter);
 
         if (user == null)
         {
             return Unauthorized();
         }
-        var pwd = user.Pwd;
-
-        var pwdhash = PasswordHasher<request.Pwd>();
 
         //verify the Role
         string role = "";
@@ -57,7 +54,7 @@ public class AuthController : ControllerBase
             {
                 role = "Enseignant";
             }
-            else 
+            else
             {
                 var administrateur = _context.Administrateur
                     .FirstOrDefault(u => u.Id_Utilisateur == user.Id_Utilisateur);
@@ -65,7 +62,7 @@ public class AuthController : ControllerBase
                 {
                     role = "Administrateur";
                 }
-                
+
             }
 
 
@@ -76,12 +73,12 @@ public class AuthController : ControllerBase
         {
 
             Id_Utilisateur = user.Id_Utilisateur,
-            Nom = user.Nom ??  string.Empty,
-            Prenom = user.Prenom ??  string.Empty ,
-            
+            Nom = user.Nom ?? string.Empty,
+            Prenom = user.Prenom ?? string.Empty,
+
             Role = role,
         };
 
         return Ok(response);
-        }
     }
+}
