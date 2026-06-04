@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Server.HttpSys;
 using Microsoft.EntityFrameworkCore;
@@ -114,6 +115,86 @@ namespace PFMPManager.Api.Controllers
             };
 
             return Ok(pfmpDto);
+
+        }
+
+        [HttpPost("complete")]
+
+        public async Task<IActionResult> CompletePfmp(CreateCompletePfmpDto request)
+        {
+            //entreprise 
+            var RaisonSociale =request.RaisonSociale;
+            var SecteurActivite = request.SecteurActivite;
+            var SIRET = request.SIRET;
+            var Adresse = request.Adresse;
+            var NumTelephone = request.NumTelephone;
+
+            //Planning 
+            var Jour = request.Jour;
+            var HoraireDebut = request.HoraireDebut;
+            var HoraireFin = request.HoraireFin;
+            
+            //PFMP
+            var DateDebut = request.DateDebut;
+            var DateFin = request.DateFin;
+            var IdEtudiant = request.IdEtudiant;
+            var IdAdministrateur = request.IdAdministrateur;
+
+            //maître de stage fields
+            var PrenomMaitreStage = request.PrenomMaitreStage;
+            var NomMaitreStage = request.NomMaitreStage;
+            var FonctionMaitreStage = request.FonctionMaitreStage;
+            var TelephoneMaitreStage = request.TelephoneMaitreStage;
+            var EmailMaitreStage = request.EmailMaitreStage;
+            
+            if (string.IsNullOrWhiteSpace(RaisonSociale) ||  string.IsNullOrWhiteSpace(SecteurActivite) ||  string.IsNullOrWhiteSpace(SIRET)
+                ||  string.IsNullOrWhiteSpace(Adresse) ||  string.IsNullOrWhiteSpace(NumTelephone)  ||  string.IsNullOrWhiteSpace(Jour) 
+                ||  HoraireDebut <= 0 ||  HoraireFin <= 0 ||  !DateDebut.HasValue                                 
+                ||  !DateFin.HasValue || IdEtudiant <=0 || IdAdministrateur <=0 || string.IsNullOrWhiteSpace(PrenomMaitreStage)
+                || string.IsNullOrWhiteSpace(NomMaitreStage) || string.IsNullOrWhiteSpace(FonctionMaitreStage) || string.IsNullOrWhiteSpace(TelephoneMaitreStage)
+                || string.IsNullOrWhiteSpace(EmailMaitreStage) || HoraireFin <= HoraireDebut || DateFin.Value.Date < DateDebut.Value.Date)
+            {
+                return BadRequest();
+            }
+
+            var checkOrg = await _context.Organisation.FirstOrDefaultAsync(p=> p.SIRET == SIRET);
+            if (checkOrg == null)
+            {
+                checkOrg = new Organisation
+                {
+                    RaisonSociale = request.RaisonSociale,
+                    SecteurActivite = request.SecteurActivite,
+                    Adresse = request.Adresse,
+                    NumTelephone = request.NumTelephone,
+                    SIRET = request.SIRET,
+                };
+                _context.Organisation.Add(checkOrg);
+            await _context.SaveChangesAsync();
+            }
+
+            var user =  new Utilisateur
+            {
+                Nom = request.NomMaitreStage,
+                Prenom = request.PrenomMaitreStage,
+                Login = EmailMaitreStage,
+                Pwd = "pwd",
+            };
+            _context.Utilisateur.Add(user);
+            await _context.SaveChangesAsync();
+
+            
+
+            var prf = new Professionnel
+            {
+                Id_Utilisateur = user.Id_Utilisateur,
+                Fonction = request.FonctionMaitreStage,
+                AdresseMail = request.EmailMaitreStage,
+                NumTelephone = request.TelephoneMaitreStage,
+
+            };
+            _context.Professionnel.Add(prf);
+            await _context.SaveChangesAsync();
+
 
         }
 

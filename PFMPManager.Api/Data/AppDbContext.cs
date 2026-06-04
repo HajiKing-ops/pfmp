@@ -23,6 +23,7 @@ namespace PFMPManager.Api.Data
         public DbSet<Demarches> Demarches { get; set; }
         public DbSet<RapportJournalier> RapportJournalier { get; set; }
         public DbSet<Contacter> Contacter { get; set; }
+        public DbSet<Professionnel> Professionnel { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) // table rule/configuration
         {
