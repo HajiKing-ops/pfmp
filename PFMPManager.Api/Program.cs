@@ -1,6 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data; // AppDBContext our custom database context
-using Microsoft.Net.Http.Headers; 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Security.Cryptography;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +32,32 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+      {
+          var jwtKey = builder.Configuration["Jwt:Key"];
+          var jwtIssuer = builder.Configuration["jwt:Issuer"];
+          var jwtAudience = builder.Configuration["jwt:Audience"];
+
+          options.TokenValidationParameters = new TokenValidationParameters
+          {
+              ValidateIssuer = true,
+              ValidateAudience = true,
+              ValidateLifetime = true,
+              ValidateIssuerSigningKey - true,
+
+              ValidIssuer = jwtIssuer,
+              ValidAudience - jwtAudience,
+              IssuerSigningKey = new SymmetricSecurityKey(
+                  Encoding.UTF8.GetBytes(jwtKey!)),
+              ClockSkew = TimeSpan.Zero
+          };
+      });
+
+builder.Services.AddAuthorization();
+
+
+
 builder.Services.AddControllers(); // Enable API controller routing 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -45,7 +75,8 @@ app.UseHttpsRedirection(); // Redirect http -> https
 
 app.UseCors("AllowFlutterWeb"); // apply CORS policy 
 
-//app.UseAuthentication();
+app.UseAuthentication(); // read and verify  JWT token
+app.UseAuthorization(); // check permission/role
 
 app.MapControllers(); //Map [ApiController]routes ->  makes your controller reachable
 

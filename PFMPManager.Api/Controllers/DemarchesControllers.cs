@@ -29,7 +29,6 @@ namespace PFMPManager.Api.Controllers
             var idEtudiant = request.Id_Utilisateur;
             var nomEntreprise = request.Entreprise;
             var dateRefus = request.DateRefus;
-            var status = request.Status;
             var contact = request.Contact;
             var Adresse = request.Adresse;
             var SIRET = request.SIRET;
@@ -38,7 +37,7 @@ namespace PFMPManager.Api.Controllers
             {
                 return BadRequest();
             }
-            if (string.IsNullOrWhiteSpace(nomEntreprise) || string.IsNullOrWhiteSpace(status) || string.IsNullOrWhiteSpace(contact) || string.IsNullOrWhiteSpace(Adresse) || string.IsNullOrWhiteSpace(SIRET))
+            if (string.IsNullOrWhiteSpace(nomEntreprise) || string.IsNullOrWhiteSpace(contact) || string.IsNullOrWhiteSpace(Adresse) || string.IsNullOrWhiteSpace(SIRET))
             {
                 return BadRequest();
             }
@@ -59,7 +58,6 @@ namespace PFMPManager.Api.Controllers
                 dateRefus = dateRefus,
                 entreprise = nomEntreprise,
                 contact = contact,
-                status = status,
                 Adresse = Adresse,
             };
             _context.Demarches.Add(query);
@@ -72,7 +70,6 @@ namespace PFMPManager.Api.Controllers
                 DateRefus = query.dateRefus,
                 Entreprise = query.entreprise,
                 Contact = query.contact,
-                Status = query.status,
                 Adresse = query.Adresse,
             };
             return Ok(result);
@@ -99,10 +96,7 @@ namespace PFMPManager.Api.Controllers
                 return NotFound();
             }
 
-            check.Id_Utilisateur = request.Id_Utilisateur;
-            check.SIRET = request.SIRET;
             check.dateRefus = request.DateRefus;
-            check.status = request.Status;
             check.entreprise = request.Entreprise;
             check.contact = request.Contact;
             check.Adresse = request.Adresse;
@@ -112,8 +106,7 @@ namespace PFMPManager.Api.Controllers
             {
                 Id_Utilisateur = check.Id_Utilisateur,
                 SIRET = check.SIRET,
-                DateRefus = check.dateRefus,
-                Status = check.status,
+                DateRefus = check.dateRefus,  
                 Entreprise = check.entreprise,
                 Contact = check.contact,
                 Adresse = check.Adresse,

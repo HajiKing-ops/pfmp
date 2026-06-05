@@ -35,7 +35,6 @@ namespace  PFMPManager.Api.Controllers
                Description = i.Element("description")?.Value ?? string.Empty,
                PublishedDate = i.Element("pubDate")?.Value ?? string.Empty,
 
-
                
             }).ToList();
 

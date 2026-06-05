@@ -52,11 +52,9 @@ namespace PFMPManager.Api.Controllers
                 return NotFound();
             }
 
-            var heuresParJour = plan.HoraireFin - plan.HoraireDebut;
 
-            var heuresTotales = joursRenseignes * heuresParJour;
-
-
+            var heuresTotales = plan.TotalHebdo;
+     
 
             var dash = new DashboardDto
             {
@@ -68,7 +66,6 @@ namespace PFMPManager.Api.Controllers
                 IdEtudiant = search.Id_Utilisateur_1,
                 IdPfmp = search.Id_PFMP,
                 JourRestants = search.DateFin.HasValue ? Math.Max(0, (search.DateFin.Value.Date - DateTime.Today).Days) : 0,
-                HeuresParJour = heuresParJour,
                 HeuresTotales =  heuresTotales,
                 JoursRenseignes = joursRenseignes
             };

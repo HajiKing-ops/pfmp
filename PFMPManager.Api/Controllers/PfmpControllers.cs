@@ -1,5 +1,7 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
@@ -76,7 +78,7 @@ namespace PFMPManager.Api.Controllers
             return Ok(pfmpById);
         }
 
-        [HttpPost]
+       /* [HttpPost]
 
         public async Task<IActionResult> Create(CreatePfmpDto request)
         {
@@ -121,7 +123,7 @@ namespace PFMPManager.Api.Controllers
 
             return Ok(pfmpDto);
 
-        }
+        }*/
 
 
         [HttpPost("complete")]
@@ -135,10 +137,9 @@ namespace PFMPManager.Api.Controllers
             var Adresse = request.Adresse;
             var NumTelephone = request.NumTelephone;
 
-            //Planning 
-            var Jour = request.Jour;
-            var HoraireDebut = request.HoraireDebut;
-            var HoraireFin = request.HoraireFin;
+            //planning 
+            var TotalHebdo = request.TotalHebdo;
+
 
             //PFMP
             var DateDebut = request.DateDebut;
@@ -153,19 +154,46 @@ namespace PFMPManager.Api.Controllers
             var TelephoneMaitreStage = request.TelephoneMaitreStage;
             var EmailMaitreStage = request.EmailMaitreStage;
 
-           
 
-
-            if (string.IsNullOrWhiteSpace(RaisonSociale) || string.IsNullOrWhiteSpace(SecteurActivite) || string.IsNullOrWhiteSpace(SIRET)
-                || string.IsNullOrWhiteSpace(Adresse) || string.IsNullOrWhiteSpace(NumTelephone) || string.IsNullOrWhiteSpace(Jour)
-                || HoraireDebut <= 0 || HoraireFin <= 0 || !DateDebut.HasValue
-                || !DateFin.HasValue || IdEtudiant <= 0 || IdAdministrateur <= 0 || string.IsNullOrWhiteSpace(PrenomMaitreStage)
-                || string.IsNullOrWhiteSpace(NomMaitreStage) || string.IsNullOrWhiteSpace(FonctionMaitreStage) || string.IsNullOrWhiteSpace(TelephoneMaitreStage)
-                || string.IsNullOrWhiteSpace(EmailMaitreStage) || HoraireFin <= HoraireDebut || DateFin.Value.Date < DateDebut.Value.Date)
+            if (TotalHebdo > 35 || TotalHebdo <= 0)
             {
                 return BadRequest();
             }
 
+            if (string.IsNullOrWhiteSpace(RaisonSociale) || string.IsNullOrWhiteSpace(SecteurActivite) || string.IsNullOrWhiteSpace(SIRET)
+                || string.IsNullOrWhiteSpace(Adresse) || string.IsNullOrWhiteSpace(NumTelephone)
+                || IdEtudiant <= 0 || IdAdministrateur <= 0 || string.IsNullOrWhiteSpace(PrenomMaitreStage)
+                || string.IsNullOrWhiteSpace(NomMaitreStage) || string.IsNullOrWhiteSpace(FonctionMaitreStage) || string.IsNullOrWhiteSpace(TelephoneMaitreStage)
+                || string.IsNullOrWhiteSpace(EmailMaitreStage) ||!DateDebut.HasValue || !DateFin.HasValue || DateFin.Value.Date < DateDebut.Value.Date)
+            {
+                return BadRequest();
+            }
+
+            if (request.PlanningJours == null || !request.PlanningJours.Any())
+            {
+                return BadRequest();
+            }
+
+            foreach (var pj in request.PlanningJours)
+            {
+                if (pj.TotalHeures <= 0 || !pj.ApresMidiDebut.HasValue || !pj.ApresMidiFin.HasValue || !pj.MatinDebut.HasValue
+                    || !pj.MatinFin.HasValue || string.IsNullOrWhiteSpace(pj.Jour) || pj.MatinFin.Value <= pj.MatinDebut.Value
+                    || pj.ApresMidiFin.Value <= pj.ApresMidiDebut.Value || pj.ApresMidiDebut.Value <= pj.MatinFin.Value)
+                    {
+                    return BadRequest();
+                    }
+                
+               var totalFromDay = request.PlanningJours.Sum(p => pj.TotalHeures);
+                if (totalFromDay != request.TotalHebdo)
+                {
+                    return BadRequest();
+                }
+
+            }
+
+
+
+            //search the organisation with the SIRET
             var checkOrg = await _context.Organisation.FirstOrDefaultAsync(p => p.SIRET == SIRET);
 
             if (checkOrg == null)
@@ -181,16 +209,46 @@ namespace PFMPManager.Api.Controllers
                 _context.Organisation.Add(checkOrg);
                 await _context.SaveChangesAsync();
             }
+
+            //search the user wiht his login 
             var userExist = await _context.Utilisateur.FirstOrDefaultAsync(p => p.Login == EmailMaitreStage);
 
             var user = new Utilisateur();
 
             if (userExist == null)
             {
+
+                var pwd = "test1234";
+
+                // hashing  and stuff 
+                //make a new byte array  
+                byte[] salt;
+
+                //generate salt
+                new RNGCryptoServiceProvider().GetBytes(salt = new byte[16]);
+
+                //hash and salt it using PBKDF2
+                var pbkdf2 = new Rfc2898DeriveBytes(pwd, salt, 10000);
+
+                //place the string in the byte array (thats what getbytes does)
+                byte[] hash = pbkdf2.GetBytes(20);
+
+                //make new bytes array where to store the hashed password+salt 
+                //why 36 vause 20 are for the hash and 16 for the salt 
+                byte[] hashBytes = new byte[36];
+
+                //place the hash and salt in their respective places
+                Array.Copy(salt, 0, hashBytes, 0, 16);
+                Array.Copy(hash, 0, hashBytes, 16, 20);
+
+                //now, convert our fancy byte array to a string 
+                string savedPasswordHash = Convert.ToBase64String(hashBytes);
+
                 user.Nom = request.NomMaitreStage;
                 user.Prenom = request.PrenomMaitreStage;
                 user.Login = EmailMaitreStage;
-                user.Pwd = "pwd";
+                user.Pwd = savedPasswordHash;
+
 
                 _context.Utilisateur.Add(user);
                 await _context.SaveChangesAsync();
@@ -220,10 +278,7 @@ namespace PFMPManager.Api.Controllers
                 else
                 {
 
-                    prf.Id_Utilisateur = userprf.Id_Utilisateur;
-                    prf.Fonction = userprf.Fonction;
-                    prf.AdresseMail = userprf.AdresseMail;
-                    prf.NumTelephone = userprf.NumTelephone;
+                prf = userprf;
 
                 }
 
@@ -245,14 +300,31 @@ namespace PFMPManager.Api.Controllers
 
             var plan = new Planning
             {
-                Jour = request.Jour,
-                HoraireDebut = request.HoraireDebut,
-                HoraireFin = request.HoraireFin,
+                TotalHebdo = request.TotalHebdo,
             };
             _context.Planning.Add(plan);
             await _context.SaveChangesAsync();
-
+             
             var idPlanning = plan.Id_Planning;
+
+            
+            foreach (var pj in request.PlanningJours)
+            {
+                var planjour = new PlanningJours
+                {
+                    Jour = pj.Jour,
+                    MatinDebut = pj.MatinDebut,
+                    MatinFin = pj.MatinFin,
+                    ApresMidiDebut = pj.ApresMidiDebut,
+                    ApresMidiFin = pj.ApresMidiFin,
+                    TotalHeures = pj.TotalHeures,
+                    Id_Planning = idPlanning,
+                };
+                _context.PlanningJours.Add(planjour);
+
+            }
+
+            await _context.SaveChangesAsync();
 
             var createPfmp = new Pfmp
             {
@@ -346,12 +418,24 @@ namespace PFMPManager.Api.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var del = await _context.Pfmp.FirstOrDefaultAsync(p => p.Id_PFMP == id);
-
             if (del == null)
             {
                 return NotFound();
             }
+            var id_plan = del.Id_Planning;
+
             _context.Pfmp.Remove(del);
+
+            var delplanjour = await _context.PlanningJours.Where(p => p.Id_Planning == id_plan).ToListAsync();
+           
+            _context.PlanningJours.RemoveRange(delplanjour);
+
+            var delplan = await _context.Planning.FirstOrDefaultAsync(p => p.Id_Planning == id_plan);
+            if (delplan != null)
+            {
+                _context.Planning.Remove(delplan);
+            }
+            
             await _context.SaveChangesAsync();
 
             return NoContent();

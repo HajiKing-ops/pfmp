@@ -9,11 +9,13 @@ namespace PFMPManager.Api.DTOs
         public string? Adresse {get; set;}
         public string? NumTelephone {get; set;}
 
-        //Planning
-        
-        public string? Jour {get; set;}
-        public int HoraireDebut {get; set; }
-        public int HoraireFin {get; set; }
+        //Planning 
+
+        public int TotalHebdo { get; set; }
+
+        //PlanningJour
+        public List<CreatePlanningJoursDto> PlanningJours { get; set; } = new();
+
 
         //PFMP
         public DateTime? DateDebut { get; set; }

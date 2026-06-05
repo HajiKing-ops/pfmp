@@ -22,12 +22,8 @@ namespace PFMPManager.Api.Models
         public string? entreprise { get; set; }
 
         [Column("contact")]
-        [MaxLength(90)]
+        [MaxLength(80)]
         public string? contact { get; set; }
-
-        [Column("status")]
-        [MaxLength(50)]
-        public string? status { get; set; }
 
         [Column("Adresse")]
         [MaxLength(75)]
