@@ -1,11 +1,10 @@
-using System.Security.Cryptography;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
+using PFMPManager.Api.Helpers;
 using PFMPManager.Api.Models;
+
 
 
 namespace PFMPManager.Api.Controllers
@@ -24,6 +23,8 @@ namespace PFMPManager.Api.Controllers
             _context = context;
         }
 
+       //[Authorize(Roles = Admini)]
+
         [HttpGet] // GEt /api/Pfmp returns all PFMPs
         public async Task<IActionResult> GetAll()
         {
@@ -39,6 +40,8 @@ namespace PFMPManager.Api.Controllers
             }).ToListAsync(); //Query all rows
             return Ok(pfmps); // 200 ok with json array 
         }
+
+
 
 
         [HttpGet("recherche/{idEtudiant}/{idPfmp?}")] //address of the method
@@ -57,73 +60,46 @@ namespace PFMPManager.Api.Controllers
 
 
             var pfmps = await query.ToListAsync();
-            var pfmpById = pfmps.Select(p => new PfmpDto
-            {
-                DateDebut = p.DateDebut,
-                DateFin = p.DateFin,
-                IdAdministrateur = p.Id_Utilisateur,
-                Id_Planning = p.Id_Planning,
-                SIRET = p.SIRET,
-                IdEtudiant = p.Id_Utilisateur_1,
-                IdPfmp = p.Id_PFMP,
-                JourRestants = p.DateFin.HasValue ? Math.Max(0, (p.DateFin.Value.Date - DateTime.Today).Days) : 0,
-            }).ToList();
 
 
-            if (!pfmpById.Any())
+            if (!pfmps.Any())
             {
                 return NotFound();
             }
 
-            return Ok(pfmpById);
+            var result = new List<PfmpDto>();
+
+            foreach (var p in pfmps)
+            {
+
+                var organisation = await _context.Organisation.FirstOrDefaultAsync(o => o.SIRET == p.SIRET);
+                var dto = new PfmpDto
+                {
+                    DateDebut = p.DateDebut,
+                    DateFin = p.DateFin,
+                    IdAdministrateur = p.Id_Utilisateur,
+                    Id_Planning = p.Id_Planning,
+                    SIRET = p.SIRET,
+                    IdEtudiant = p.Id_Utilisateur_1,
+                    IdPfmp = p.Id_PFMP,
+                    JourRestants = p.DateFin.HasValue ? Math.Max(0, (p.DateFin.Value.Date - DateTime.Today).Days) : 0,
+                    RaisonSociale = organisation?.RaisonSociale ?? string.Empty
+                };
+
+                var semaine = dto.DateFin.Value.Date - dto.DateDebut.Value.Date;
+                var total = semaine.TotalDays / 7;
+                dto.semaine = (int)total;
+                result.Add(dto);
+
+            }
+
+
+            return Ok(result);
         }
 
-       /* [HttpPost]
-
-        public async Task<IActionResult> Create(CreatePfmpDto request)
-        {
-
-            if (string.IsNullOrWhiteSpace(request.Siret))
-            {
-                return BadRequest();
-            }
-            if (request.IdAdministrateur <= 0 || request.IdPlanning <= 0 || request.IdEtudiant <= 0)
-            {
-                return BadRequest();
-            }
-            if (request.DateFin < request.DateDebut)
-            {
-                return BadRequest();
-            }
 
 
-            var pfmp = new Pfmp
-            {
-                DateDebut = request.DateDebut,
-                DateFin = request.DateFin,
-                Id_Planning = request.IdPlanning,
-                SIRET = request.Siret,
-                Id_Utilisateur_1 = request.IdEtudiant,
-
-            };
-            _context.Pfmp.Add(pfmp);
-            await _context.SaveChangesAsync();
-
-            var pfmpDto = new PfmpDto
-            {
-                IdPfmp = pfmp.Id_PFMP,
-                IdAdministrateur = pfmp.Id_Utilisateur,
-                Id_Planning = pfmp.Id_Planning,
-                DateFin = pfmp.DateFin,
-                DateDebut = pfmp.DateDebut,
-                SIRET = pfmp.SIRET,
-                IdEtudiant = pfmp.Id_Utilisateur_1,
-
-            };
-
-            return Ok(pfmpDto);
-
-        }*/
+     
 
 
         [HttpPost("complete")]
@@ -220,29 +196,7 @@ namespace PFMPManager.Api.Controllers
 
                 var pwd = "test1234";
 
-                // hashing  and stuff 
-                //make a new byte array  
-                byte[] salt;
-
-                //generate salt
-                new RNGCryptoServiceProvider().GetBytes(salt = new byte[16]);
-
-                //hash and salt it using PBKDF2
-                var pbkdf2 = new Rfc2898DeriveBytes(pwd, salt, 10000);
-
-                //place the string in the byte array (thats what getbytes does)
-                byte[] hash = pbkdf2.GetBytes(20);
-
-                //make new bytes array where to store the hashed password+salt 
-                //why 36 vause 20 are for the hash and 16 for the salt 
-                byte[] hashBytes = new byte[36];
-
-                //place the hash and salt in their respective places
-                Array.Copy(salt, 0, hashBytes, 0, 16);
-                Array.Copy(hash, 0, hashBytes, 16, 20);
-
-                //now, convert our fancy byte array to a string 
-                string savedPasswordHash = Convert.ToBase64String(hashBytes);
+                string savedPasswordHash = PasswordHelper.HashPassword(pwd);
 
                 user.Nom = request.NomMaitreStage;
                 user.Prenom = request.PrenomMaitreStage;

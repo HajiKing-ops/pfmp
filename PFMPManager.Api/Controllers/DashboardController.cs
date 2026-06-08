@@ -36,7 +36,7 @@ namespace PFMPManager.Api.Controllers
                     on remplir.Id_RapportJournalier equals rapport.Id_RapportJournalier
                     where remplir.Id_Utilisateur == idEtudiant
                     && rapport.DateRapport.HasValue
-                    && rapport.DateRapport.Value.Date >= search.DateDebut.Value.Date ?? : NU
+                    && rapport.DateRapport.Value.Date >= search.DateDebut.Value.Date
                     && rapport.DateRapport.Value.Date <= search.DateFin.Value.Date
                     select rapport
                 ).CountAsync();

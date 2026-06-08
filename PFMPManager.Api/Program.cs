@@ -44,10 +44,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
               ValidateIssuer = true,
               ValidateAudience = true,
               ValidateLifetime = true,
-              ValidateIssuerSigningKey - true,
+              ValidateIssuerSigningKey = true,
 
               ValidIssuer = jwtIssuer,
-              ValidAudience - jwtAudience,
+              ValidAudience = jwtAudience,
               IssuerSigningKey = new SymmetricSecurityKey(
                   Encoding.UTF8.GetBytes(jwtKey!)),
               ClockSkew = TimeSpan.Zero

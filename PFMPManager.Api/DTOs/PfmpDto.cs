@@ -10,8 +10,8 @@ namespace PFMPManager.Api.DTOs
         public int IdEtudiant { get; set; }
         public int IdPfmp { get; set; }
         public int JourRestants { get; set; }
-        
-
+        public string RaisonSociale { get; set; } = string.Empty;
+        public int semaine { get; set; }
 
     }
 }

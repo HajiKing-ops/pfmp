@@ -1,0 +1,11 @@
+#VS code settings
+.vscode/
+
+
+
+# System files
+.DS_Store
+Thumbs.db
+
+# PHP error logs 
+*.log

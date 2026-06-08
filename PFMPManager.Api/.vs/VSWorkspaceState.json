@@ -4,8 +4,9 @@
     "\\Controllers",
     "\\Data",
     "\\DTOs",
+    "\\Helpers",
     "\\Models"
   ],
-  "SelectedNode": "\\appsettings.json",
+  "SelectedNode": "\\Controllers\\PfmpController.cs",
   "PreviewInSolutionExplorer": false
 }
