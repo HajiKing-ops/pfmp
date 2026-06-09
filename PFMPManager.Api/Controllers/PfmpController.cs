@@ -85,10 +85,13 @@ namespace PFMPManager.Api.Controllers
                     JourRestants = p.DateFin.HasValue ? Math.Max(0, (p.DateFin.Value.Date - DateTime.Today).Days) : 0,
                     RaisonSociale = organisation?.RaisonSociale ?? string.Empty
                 };
-
-                var semaine = dto.DateFin.Value.Date - dto.DateDebut.Value.Date;
-                var total = semaine.TotalDays / 7;
-                dto.semaine = (int)total;
+                if (p.DateDebut != null && p.DateFin != null)
+                {
+                    var semaine = p.DateFin.Value.Date - p.DateDebut.Value.Date;
+                    var total = semaine.TotalDays / 7;
+                    dto.semaine = (int)total;
+                }
+                
                 result.Add(dto);
 
             }
@@ -159,7 +162,7 @@ namespace PFMPManager.Api.Controllers
                     return BadRequest();
                     }
                 
-               var totalFromDay = request.PlanningJours.Sum(p => pj.TotalHeures);
+               var totalFromDay = request.PlanningJours.Sum(p => p.TotalHeures);
                 if (totalFromDay != request.TotalHebdo)
                 {
                     return BadRequest();

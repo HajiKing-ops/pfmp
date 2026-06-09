@@ -14,9 +14,9 @@ namespace PFMPManager.Api.Helpers
                 
             // hashing  and stuff 
             //make a new byte array  
-            byte[] salt;
+            byte[] salt  = new byte[SaltSize];
             //generate salt 
-            new RNGCryptoServiceProvider().GetBytes(salt = new byte[SaltSize]);
+            RandomNumberGenerator.Fill(salt);
 
             //hash and salt it using PBKDF2
             var pbkdf2 = new Rfc2898DeriveBytes(pwd, salt, Iteration, HashAlgorithmName.SHA256);

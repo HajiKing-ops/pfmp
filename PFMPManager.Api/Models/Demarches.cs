@@ -12,7 +12,7 @@ namespace PFMPManager.Api.Models
 
         [Column("SIRET")]
         [MaxLength(14)]
-        public string SIRET { get; set; }
+        public string SIRET { get; set; } = string.Empty;
         
         [Column("dateRefus")]
         public DateTime? dateRefus { get; set; }

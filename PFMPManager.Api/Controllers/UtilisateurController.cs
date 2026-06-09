@@ -55,7 +55,7 @@ namespace PFMPManager.Api.Controllers
                 Nom = nom,
                 Prenom = prenom,
                 Login = login,
-                Pwd = pwd,
+                Pwd = Pwd,
             };
             _context.Utilisateur.Add(query);
             await _context.SaveChangesAsync();
