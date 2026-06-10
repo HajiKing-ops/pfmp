@@ -18,7 +18,8 @@ namespace PFMPManager.Api.Models
 
 		[Column("LienVersFichier")]
 		public string LienVersFichier { get; set; } = string.Empty;
+        public int Id_PFMP { get; set; } 
 
 
-	}
+    }
 }

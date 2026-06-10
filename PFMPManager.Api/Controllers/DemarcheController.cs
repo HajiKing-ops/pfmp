@@ -50,6 +50,7 @@ namespace PFMPManager.Api.Controllers
             {
                 return Conflict();
             }
+            var organisation = await _context.Organisation.FirstOrDefaultAsync(d =>  d.SIRET == SIRET);
             var query = new Demarches
             {
 

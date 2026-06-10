@@ -35,7 +35,8 @@ namespace PFMPManager.Api.Controllers
                                         IdEtudiant = remplir.Id_Utilisateur,
                                         IdRapportJournalier = rapport.Id_RapportJournalier,
                                         DateRapport = rapport.DateRapport,
-                                        LienVersFichier = rapport.LienVersFichier
+                                        LienVersFichier = rapport.LienVersFichier,
+                                        Id_PFMP = rapport.Id_PFMP,
                                     }) .ToListAsync();
             if (!search.Any())
             {
@@ -53,32 +54,38 @@ namespace PFMPManager.Api.Controllers
         {
             if (request.IdEtudiant <= 0)
             {
-                return BadRequest();
+                return BadRequest("IdEtudiant invalide");
             }
             if (string.IsNullOrWhiteSpace(request.LienVersFichier))
             {
-                return BadRequest();
+                return BadRequest("Le lien vers le fichier est obligatoire");
             }
             if (!request.DateRapport.HasValue)
             {
-                return BadRequest();
+                return BadRequest("DateRapport obligatoire");
+            }
+            var query = await _context.Pfmp.FirstOrDefaultAsync(p => p.Id_Utilisateur_1 == request.IdEtudiant&& p.DateDebut.HasValue && p.DateFin.HasValue && p.DateDebut.Value.Date <= request.DateRapport && p.DateFin.Value.Date >= request.DateRapport);
+            if (query == null)
+            {
+                return NotFound("Aucune PFMP trouvee pour cette date");
             }
             var search = await (from remplir in _context.Remplir
                                 join repport in _context.RapportJournalier
                                 on remplir.Id_RapportJournalier equals repport.Id_RapportJournalier
                                 where remplir.Id_Utilisateur == request.IdEtudiant
                                 && repport.DateRapport.HasValue &&
-                                repport.DateRapport.Value.Date == request.DateRapport.Value.Date
+                                repport.DateRapport.Value.Date == request.DateRapport.Value.Date && repport.Id_PFMP == query.Id_PFMP
                                 select repport
                                 ).AnyAsync();
             if (search)
             {
-                return Conflict();
+                return Conflict("UN journal existe deja pour cette date");
             }
             var rapport = new RapportJournalier
             {
                 DateRapport = request.DateRapport,
                 LienVersFichier = request.LienVersFichier,
+                Id_PFMP = query.Id_PFMP,
             };
             _context.RapportJournalier.Add(rapport);
             await _context.SaveChangesAsync();
@@ -97,6 +104,7 @@ namespace PFMPManager.Api.Controllers
                 IdEtudiant = request.IdEtudiant,
                 DateRapport = request.DateRapport,
                 LienVersFichier = request.LienVersFichier,
+                Id_PFMP = query.Id_PFMP,
             };
             return Ok(journal);
         }

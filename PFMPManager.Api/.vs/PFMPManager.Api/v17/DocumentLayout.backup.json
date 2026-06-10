@@ -3,100 +3,56 @@
   "WorkspaceRootPath": "C:\\source\\new\\pfmp\\PFMPManager.Api\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DemarcheController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\DemarcheController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DashboardController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\DashboardController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\LoginResponseDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\LoginResponseDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\PfmpController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\PfmpController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreatePfmpDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\CreatePfmpDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Helpers\\PasswordHelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Helpers\\PasswordHelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\AuthControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\AuthControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\RapportJournalierControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\RapportJournalierControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\UtilisateurControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\UtilisateurControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Etudiant.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Models\\Etudiant.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\AuthControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\AuthControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\UtilisateurDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\UtilisateurDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DemarchesControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\DemarchesControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreateDemarchesDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\CreateDemarchesDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DashboardControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\DashboardControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\DemarchesDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\DemarchesDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\EtudiantDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\EtudiantDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Demarches.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Models\\Demarches.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\TravaillerDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\TravaillerDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Pfmp.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Models\\Pfmp.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\PfmpControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\PfmpControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\PlanningJours.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Models\\PlanningJours.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\PfmpDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\PfmpDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Data\\AppDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Data\\AppDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\ReferentControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\ReferentControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\DashboardDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\DashboardDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreatePLanningJoursDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\CreatePLanningJoursDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Planning.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Models\\Planning.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreateCompletePfmpDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\CreateCompletePfmpDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreateUtilisateurDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\CreateUtilisateurDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreateContacterDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\CreateContacterDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\OrganisationControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\OrganisationControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\NewsControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -107,20 +63,84 @@
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\EtudiantControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Travailler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Models\\Travailler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DemarchesControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\DemarchesControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\RapportJournalierControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\RapportJournalierControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DashboardControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\DashboardControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\OrganisationControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\OrganisationControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\EtudiantDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\EtudiantDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Etudiant.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Models\\Etudiant.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreatePlanningJoursDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\CreatePlanningJoursDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\LoginResponseDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\LoginResponseDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Data\\AppDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Data\\AppDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Organisation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Models\\Organisation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreatePfmpDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\CreatePfmpDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreateDemarchesDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\CreateDemarchesDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\DemarchesDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\DemarchesDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Demarches.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Models\\Demarches.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\TravaillerDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\TravaillerDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\DashboardDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\DashboardDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Planning.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Models\\Planning.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreateUtilisateurDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\CreateUtilisateurDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreateContacterDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\CreateContacterDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Travailler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Models\\Travailler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\RapportJournalier.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -129,10 +149,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreateJournalDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DTOs\\CreateJournalDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\ReferentControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Controllers\\ReferentControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\ReferentDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -158,59 +174,142 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAABYAAAAAAAAAAAAcwDUAAAAMAAAAAAAAAA==",
+              "Title": "DemarcheController.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DemarcheController.cs",
+              "RelativeDocumentMoniker": "Controllers\\DemarcheController.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DemarcheController.cs",
+              "RelativeToolTip": "Controllers\\DemarcheController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-05T14:20:59.96Z",
+              "WhenOpened": "2026-06-09T14:59:45.413Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "Etudiant.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Etudiant.cs",
-              "RelativeDocumentMoniker": "Models\\Etudiant.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Etudiant.cs",
-              "RelativeToolTip": "Models\\Etudiant.cs",
+              "DocumentIndex": 1,
+              "Title": "DashboardController.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DashboardController.cs",
+              "RelativeDocumentMoniker": "Controllers\\DashboardController.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DashboardController.cs",
+              "RelativeToolTip": "Controllers\\DashboardController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-05T14:00:11.974Z",
+              "WhenOpened": "2026-06-09T14:59:43.667Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "PfmpController.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\PfmpController.cs",
+              "RelativeDocumentMoniker": "Controllers\\PfmpController.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\PfmpController.cs",
+              "RelativeToolTip": "Controllers\\PfmpController.cs",
+              "ViewState": "AgIAADYAAAAAAAAAAAAcwBEAAABDAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-08T14:50:44.733Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "PasswordHelper.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Helpers\\PasswordHelper.cs",
+              "RelativeDocumentMoniker": "Helpers\\PasswordHelper.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Helpers\\PasswordHelper.cs",
+              "RelativeToolTip": "Helpers\\PasswordHelper.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-08T13:31:38.261Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "RapportJournalierControllers.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\RapportJournalierControllers.cs",
+              "RelativeDocumentMoniker": "Controllers\\RapportJournalierControllers.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\RapportJournalierControllers.cs",
+              "RelativeToolTip": "Controllers\\RapportJournalierControllers.cs",
+              "ViewState": "AgIAABIAAAAAAAAAAAAAAA8AAAA9AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-03T13:40:40.449Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "NewsControllers.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\NewsControllers.cs",
+              "RelativeDocumentMoniker": "Controllers\\NewsControllers.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\NewsControllers.cs",
+              "RelativeToolTip": "Controllers\\NewsControllers.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-04T07:21:31.559Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "OrganisationControllers.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\OrganisationControllers.cs",
+              "RelativeDocumentMoniker": "Controllers\\OrganisationControllers.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\OrganisationControllers.cs",
+              "RelativeToolTip": "Controllers\\OrganisationControllers.cs",
+              "ViewState": "AgIAADwAAAAAAAAAAAAAAC4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-03T12:33:41.155Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "ReferentControllers.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\ReferentControllers.cs",
+              "RelativeDocumentMoniker": "Controllers\\ReferentControllers.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\ReferentControllers.cs",
+              "RelativeToolTip": "Controllers\\ReferentControllers.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-04T07:21:25.003Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 10,
-              "Title": "DashboardControllers.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DashboardControllers.cs",
-              "RelativeDocumentMoniker": "Controllers\\DashboardControllers.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DashboardControllers.cs",
-              "RelativeToolTip": "Controllers\\DashboardControllers.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACEAAAAPAAAAAAAAAA==",
+              "Title": "PfmpDto.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\PfmpDto.cs",
+              "RelativeDocumentMoniker": "DTOs\\PfmpDto.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\PfmpDto.cs",
+              "RelativeToolTip": "DTOs\\PfmpDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAXAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-03T13:46:53.259Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-08T07:07:19.111Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "PfmpControllers.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\PfmpControllers.cs",
+              "RelativeDocumentMoniker": "Controllers\\PfmpControllers.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\PfmpControllers.cs",
+              "RelativeToolTip": "Controllers\\PfmpControllers.cs",
+              "ViewState": "AgIAALkAAAAAAAAAAAAAAOsAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-08T09:17:04.144Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 8,
-              "Title": "DemarchesControllers.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DemarchesControllers.cs",
-              "RelativeDocumentMoniker": "Controllers\\DemarchesControllers.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DemarchesControllers.cs",
-              "RelativeToolTip": "Controllers\\DemarchesControllers.cs",
-              "ViewState": "AgIAABcAAAAAAAAAAAAcwDQAAAAlAAAAAAAAAA==",
+              "Title": "Pfmp.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Pfmp.cs",
+              "RelativeDocumentMoniker": "Models\\Pfmp.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Pfmp.cs",
+              "RelativeToolTip": "Models\\Pfmp.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-03T07:43:56.378Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-08T07:25:26.59Z"
             },
             {
               "$type": "Document",
@@ -222,90 +321,47 @@
               "RelativeToolTip": "DTOs\\UtilisateurDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-03T14:05:38.254Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-03T14:05:38.254Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "UtilisateurControllers.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\UtilisateurControllers.cs",
-              "RelativeDocumentMoniker": "Controllers\\UtilisateurControllers.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\UtilisateurControllers.cs",
-              "RelativeToolTip": "Controllers\\UtilisateurControllers.cs",
-              "ViewState": "AgIAACEAAAAAAAAAAAAAAE8AAAAJAAAAAAAAAA==",
+              "DocumentIndex": 14,
+              "Title": "EtudiantControllers.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\EtudiantControllers.cs",
+              "RelativeDocumentMoniker": "Controllers\\EtudiantControllers.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\EtudiantControllers.cs",
+              "RelativeToolTip": "Controllers\\EtudiantControllers.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAACQAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-05T06:43:34.38Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-04T07:21:32.528Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
-              "Title": "Planning.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Planning.cs",
-              "RelativeDocumentMoniker": "Models\\Planning.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Planning.cs",
-              "RelativeToolTip": "Models\\Planning.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAABAAAAAAAAAA==",
+              "DocumentIndex": 15,
+              "Title": "DemarchesControllers.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DemarchesControllers.cs",
+              "RelativeDocumentMoniker": "Controllers\\DemarchesControllers.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DemarchesControllers.cs",
+              "RelativeToolTip": "Controllers\\DemarchesControllers.cs",
+              "ViewState": "AgIAAG8AAAAAAAAAAAAAADQAAAAlAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-03T13:01:31.174Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-03T07:43:56.378Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "DemarchesDto.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\DemarchesDto.cs",
-              "RelativeDocumentMoniker": "DTOs\\DemarchesDto.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\DemarchesDto.cs",
-              "RelativeToolTip": "DTOs\\DemarchesDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAABAAAAAAAAAA==",
+              "DocumentIndex": 16,
+              "Title": "DashboardControllers.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DashboardControllers.cs",
+              "RelativeDocumentMoniker": "Controllers\\DashboardControllers.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\DashboardControllers.cs",
+              "RelativeToolTip": "Controllers\\DashboardControllers.cs",
+              "ViewState": "AgIAACoAAAAAAAAAAAAAABUAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-04T12:28:07.229Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-03T13:46:53.259Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "AuthControllers.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\AuthControllers.cs",
-              "RelativeDocumentMoniker": "Controllers\\AuthControllers.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\AuthControllers.cs",
-              "RelativeToolTip": "Controllers\\AuthControllers.cs",
-              "ViewState": "AgIAACwAAAAAAAAAAAAowEsAAAAiAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-03T14:07:50.621Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "LoginResponseDto.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\LoginResponseDto.cs",
-              "RelativeDocumentMoniker": "DTOs\\LoginResponseDto.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\LoginResponseDto.cs",
-              "RelativeToolTip": "DTOs\\LoginResponseDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-05T07:52:10.12Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\appsettings.json",
-              "RelativeDocumentMoniker": "appsettings.json",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\appsettings.json",
-              "RelativeToolTip": "appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAEAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-06-05T11:55:55.304Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 17,
               "Title": "EtudiantDto.cs",
               "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\EtudiantDto.cs",
               "RelativeDocumentMoniker": "DTOs\\EtudiantDto.cs",
@@ -313,12 +369,119 @@
               "RelativeToolTip": "DTOs\\EtudiantDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-03T14:06:26.96Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-03T14:06:26.96Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 18,
+              "Title": "Etudiant.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Etudiant.cs",
+              "RelativeDocumentMoniker": "Models\\Etudiant.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Etudiant.cs",
+              "RelativeToolTip": "Models\\Etudiant.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-05T14:00:11.974Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADEAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-05T14:20:59.96Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "CreatePlanningJoursDto.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreatePlanningJoursDto.cs",
+              "RelativeDocumentMoniker": "DTOs\\CreatePlanningJoursDto.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreatePlanningJoursDto.cs",
+              "RelativeToolTip": "DTOs\\CreatePlanningJoursDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-05T09:18:24.279Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAABEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-06-05T11:55:55.304Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "LoginResponseDto.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\LoginResponseDto.cs",
+              "RelativeDocumentMoniker": "DTOs\\LoginResponseDto.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\LoginResponseDto.cs",
+              "RelativeToolTip": "DTOs\\LoginResponseDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-05T07:52:10.12Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "AppDbContext.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Data\\AppDbContext.cs",
+              "RelativeDocumentMoniker": "Data\\AppDbContext.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Data\\AppDbContext.cs",
+              "RelativeToolTip": "Data\\AppDbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-03T07:40:19.224Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "Organisation.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Organisation.cs",
+              "RelativeDocumentMoniker": "Models\\Organisation.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Organisation.cs",
+              "RelativeToolTip": "Models\\Organisation.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-04T09:13:50.555Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "DemarchesDto.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\DemarchesDto.cs",
+              "RelativeDocumentMoniker": "DTOs\\DemarchesDto.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\DemarchesDto.cs",
+              "RelativeToolTip": "DTOs\\DemarchesDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-04T12:28:07.229Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "Planning.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Planning.cs",
+              "RelativeDocumentMoniker": "Models\\Planning.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Planning.cs",
+              "RelativeToolTip": "Models\\Planning.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-03T13:01:31.174Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
               "Title": "Demarches.cs",
               "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Demarches.cs",
               "RelativeDocumentMoniker": "Models\\Demarches.cs",
@@ -326,12 +489,11 @@
               "RelativeToolTip": "Models\\Demarches.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-03T12:54:32.467Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-03T12:54:32.467Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 29,
               "Title": "TravaillerDto.cs",
               "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\TravaillerDto.cs",
               "RelativeDocumentMoniker": "DTOs\\TravaillerDto.cs",
@@ -339,25 +501,11 @@
               "RelativeToolTip": "DTOs\\TravaillerDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAqAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-04T07:14:44.321Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-04T07:14:44.321Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
-              "Title": "PfmpControllers.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\PfmpControllers.cs",
-              "RelativeDocumentMoniker": "Controllers\\PfmpControllers.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\PfmpControllers.cs",
-              "RelativeToolTip": "Controllers\\PfmpControllers.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAALoBAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-03T08:21:00.278Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 26,
               "Title": "CreateDemarchesDto.cs",
               "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreateDemarchesDto.cs",
               "RelativeDocumentMoniker": "DTOs\\CreateDemarchesDto.cs",
@@ -365,25 +513,11 @@
               "RelativeToolTip": "DTOs\\CreateDemarchesDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-03T14:30:35.45Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-03T14:30:35.45Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
-              "Title": "AppDbContext.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Data\\AppDbContext.cs",
-              "RelativeDocumentMoniker": "Data\\AppDbContext.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Data\\AppDbContext.cs",
-              "RelativeToolTip": "Data\\AppDbContext.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAAxAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-03T07:40:19.224Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 30,
               "Title": "DashboardDto.cs",
               "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\DashboardDto.cs",
               "RelativeDocumentMoniker": "DTOs\\DashboardDto.cs",
@@ -391,25 +525,11 @@
               "RelativeToolTip": "DTOs\\DashboardDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-05T12:04:02.435Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-05T12:04:02.435Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
-              "Title": "CreatePlanningJoursDto.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreatePlanningJoursDto.cs",
-              "RelativeDocumentMoniker": "DTOs\\CreatePlanningJoursDto.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreatePlanningJoursDto.cs",
-              "RelativeToolTip": "DTOs\\CreatePlanningJoursDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAYAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-05T09:18:24.279Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 33,
               "Title": "CreateContacterDto.cs",
               "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreateContacterDto.cs",
               "RelativeDocumentMoniker": "DTOs\\CreateContacterDto.cs",
@@ -417,48 +537,11 @@
               "RelativeToolTip": "DTOs\\CreateContacterDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-03T12:57:46.313Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-03T12:57:46.313Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
-              "Title": "EtudiantControllers.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\EtudiantControllers.cs",
-              "RelativeDocumentMoniker": "Controllers\\EtudiantControllers.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\EtudiantControllers.cs",
-              "RelativeToolTip": "Controllers\\EtudiantControllers.cs",
-              "ViewState": "AgIAAAkAAAAAAAAAAAAAABUAAAAfAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-04T07:21:32.528Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 24,
-              "Title": "NewsControllers.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\NewsControllers.cs",
-              "RelativeDocumentMoniker": "Controllers\\NewsControllers.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\NewsControllers.cs",
-              "RelativeToolTip": "Controllers\\NewsControllers.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAACQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-04T07:21:31.559Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 29,
-              "Title": "Organisation.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Organisation.cs",
-              "RelativeDocumentMoniker": "Models\\Organisation.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Organisation.cs",
-              "RelativeToolTip": "Models\\Organisation.cs",
-              "ViewState": "AgIAABIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-04T09:13:50.555Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 35,
               "Title": "RapportJournalier.cs",
               "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\RapportJournalier.cs",
               "RelativeDocumentMoniker": "Models\\RapportJournalier.cs",
@@ -470,7 +553,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 34,
               "Title": "Travailler.cs",
               "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Travailler.cs",
               "RelativeDocumentMoniker": "Models\\Travailler.cs",
@@ -482,31 +565,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
-              "Title": "RapportJournalierControllers.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\RapportJournalierControllers.cs",
-              "RelativeDocumentMoniker": "Controllers\\RapportJournalierControllers.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\RapportJournalierControllers.cs",
-              "RelativeToolTip": "Controllers\\RapportJournalierControllers.cs",
-              "ViewState": "AgIAADYAAAAAAAAAAAAcwEsAAAAiAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-03T13:40:40.449Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 28,
-              "Title": "OrganisationControllers.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\OrganisationControllers.cs",
-              "RelativeDocumentMoniker": "Controllers\\OrganisationControllers.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\OrganisationControllers.cs",
-              "RelativeToolTip": "Controllers\\OrganisationControllers.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAC4AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-03T12:33:41.155Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 36,
               "Title": "CreateJournalDto.cs",
               "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreateJournalDto.cs",
               "RelativeDocumentMoniker": "DTOs\\CreateJournalDto.cs",
@@ -518,19 +577,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
-              "Title": "ReferentControllers.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\ReferentControllers.cs",
-              "RelativeDocumentMoniker": "Controllers\\ReferentControllers.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\ReferentControllers.cs",
-              "RelativeToolTip": "Controllers\\ReferentControllers.cs",
-              "ViewState": "AgIAACEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-04T07:21:25.003Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 33,
+              "DocumentIndex": 37,
               "Title": "ReferentDto.cs",
               "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\ReferentDto.cs",
               "RelativeDocumentMoniker": "DTOs\\ReferentDto.cs",
@@ -542,7 +589,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 34,
+              "DocumentIndex": 38,
               "Title": "Referent.cs",
               "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Referent.cs",
               "RelativeDocumentMoniker": "Models\\Referent.cs",
@@ -554,7 +601,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 35,
+              "DocumentIndex": 39,
               "Title": "Remplir.cs",
               "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Remplir.cs",
               "RelativeDocumentMoniker": "Models\\Remplir.cs",
@@ -566,7 +613,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 36,
+              "DocumentIndex": 40,
               "Title": "Contacter.cs",
               "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\Contacter.cs",
               "RelativeDocumentMoniker": "Models\\Contacter.cs",
@@ -599,7 +646,7 @@
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 32,
               "Title": "CreateUtilisateurDto.cs",
               "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreateUtilisateurDto.cs",
               "RelativeDocumentMoniker": "DTOs\\CreateUtilisateurDto.cs",
@@ -607,12 +654,11 @@
               "RelativeToolTip": "DTOs\\CreateUtilisateurDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAlAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-05T06:43:07.177Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-05T06:43:07.177Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 25,
               "Title": "CreatePfmpDto.cs",
               "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreatePfmpDto.cs",
               "RelativeDocumentMoniker": "DTOs\\CreatePfmpDto.cs",
@@ -631,12 +677,12 @@
       "Orientation": 0,
       "VerticalTabListWidth": 256,
       "FloatingWindowState": {
-        "Id": "571fd131-690e-4f02-ab29-c31605541551",
+        "Id": "c7136e4a-ac51-4cf6-91bf-1b6ec094631b",
         "Display": 1,
-        "X": 157,
-        "Y": 157,
+        "X": 213,
+        "Y": 145,
         "Width": 1681,
-        "Height": 787,
+        "Height": 778,
         "WindowState": 0
       },
       "DocumentGroups": [
@@ -646,16 +692,14 @@
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 16,
-              "Title": "PlanningJours.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\PlanningJours.cs",
-              "RelativeDocumentMoniker": "Models\\PlanningJours.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Models\\PlanningJours.cs",
-              "RelativeToolTip": "Models\\PlanningJours.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAZAAAAAAAAAA==",
+              "DocumentIndex": 5,
+              "Title": "UtilisateurControllers.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\UtilisateurControllers.cs",
+              "RelativeDocumentMoniker": "Controllers\\UtilisateurControllers.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\UtilisateurControllers.cs",
+              "RelativeToolTip": "Controllers\\UtilisateurControllers.cs",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-05T08:27:27.46Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-08T13:33:02.886Z"
             }
           ]
         }
@@ -665,10 +709,10 @@
       "Orientation": 0,
       "VerticalTabListWidth": 256,
       "FloatingWindowState": {
-        "Id": "79224247-48a6-4ef0-b9f4-9434ffd20d24",
-        "Display": 0,
-        "X": 91,
-        "Y": 124,
+        "Id": "50f50fb3-3b1f-45f6-908b-5fc197acd313",
+        "Display": 1,
+        "X": 592,
+        "Y": 166,
         "Width": 1681,
         "Height": 787,
         "WindowState": 0
@@ -680,16 +724,14 @@
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 21,
-              "Title": "CreateCompletePfmpDto.cs",
-              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreateCompletePfmpDto.cs",
-              "RelativeDocumentMoniker": "DTOs\\CreateCompletePfmpDto.cs",
-              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\DTOs\\CreateCompletePfmpDto.cs",
-              "RelativeToolTip": "DTOs\\CreateCompletePfmpDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAuAAAAAAAAAA==",
+              "DocumentIndex": 6,
+              "Title": "AuthControllers.cs",
+              "DocumentMoniker": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\AuthControllers.cs",
+              "RelativeDocumentMoniker": "Controllers\\AuthControllers.cs",
+              "ToolTip": "C:\\source\\new\\pfmp\\PFMPManager.Api\\Controllers\\AuthControllers.cs",
+              "RelativeToolTip": "Controllers\\AuthControllers.cs",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-05T07:17:07.639Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-03T14:07:50.621Z"
             }
           ]
         }
