@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
-    [Table("groupeclasse ")]
+    [Table("groupeclasse")]
     public class GroupeClasse
     {
         [Column("Id_Etablissement")]
@@ -19,7 +19,7 @@ namespace PFMPManager.Api.Models
 
         [Column("Grade")]
         [MaxLength(15)]
-        public int Grade { get; set; }
+        public string? Grade { get; set; }
 
         [Column("Id_Filiere")]
         public int Id_Filiere { get; set; }

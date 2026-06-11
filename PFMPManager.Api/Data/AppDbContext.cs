@@ -25,7 +25,7 @@ namespace PFMPManager.Api.Data
         public DbSet<PlanningJours> PlanningJours { get; set; }
         public DbSet<Professionnel> Professionnel { get; set; }
         public DbSet<Travailler> Travailler { get; set; }
-        public DbSet<Etudier> Etudier { get; set; }
+       public DbSet<Etudier> Etudier { get; set; }
         public DbSet<GroupeClasse> GroupeClasse { get; set; }
         public DbSet<Filiere> Filiere { get; set; }
         public DbSet<TablePresence> TablePresence { get; set; }
@@ -42,7 +42,7 @@ namespace PFMPManager.Api.Data
             modelBuilder.Entity<Travailler>()
               .HasKey(c => new { c.Id_Utilisateur, c.SIRET });
 
-            modelBuilder.Entity<Etudier>()
+           modelBuilder.Entity<Etudier>()
               .HasKey(c => new { c.Id_Utilisateur, c.Id_Etablissement, c.Id_Classe });
 
             modelBuilder.Entity<GroupeClasse>()

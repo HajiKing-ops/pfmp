@@ -15,6 +15,7 @@ namespace PFMPManager.Api.DTOs
         public int Restants { get; set; }
         public bool? Status { get; set; }
         public int Id_PFMP { get; set; }
+        public string? NumTelephone { get; set; }
 
 
     }

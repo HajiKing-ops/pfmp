@@ -7,10 +7,9 @@ namespace PFMPManager.Api.Models
     public class Etudier
     {
 
-        [Column("Id_Utilisateur_1")]
-        public int Id_Utilisateur_1 { get; set; }
+        [Column("Id_Utilisateur")]
+        public int Id_Utilisateur { get; set; }
       
-
 
         [Column("Id_Etablissement")]
         public int Id_Etablissement{ get; set; }

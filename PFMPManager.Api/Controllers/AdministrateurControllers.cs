@@ -5,6 +5,7 @@ using PFMPManager.Api.Models;
 using PFMPManager.Api.DTOs;
 using Microsoft.VisualBasic;
 using System.Reflection.Metadata;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 
 namespace PFMPManager.Api.Controllers
@@ -22,8 +23,8 @@ namespace PFMPManager.Api.Controllers
         {
             _context = context;
         }
-
-        public async Task<IActionResult> GetALl()
+        
+       public async Task<IActionResult> GetALl()
         {
             var  pfmps = await _context.Pfmp.Select(p => new PfmpDto///p => p.DateDebut.HasValue && p.DateDebut.Value.Date <= DateTime.Today && p.DateFin.HasValue && p.DateFin.Value.Date >= DateTime.Today
             {
@@ -36,98 +37,197 @@ namespace PFMPManager.Api.Controllers
                 IdPfmp = p.Id_PFMP,
             }).ToListAsync();
 
+            var adminRowDto = new List<AdminStageRowDto>();
 
             foreach (var pfmp in pfmps)
             {
-                var query = await _context.Etudiant.FirstOrDefaultAsync(f => f.Id_Utilisateur_1 == pfmp.IdEtudiant);
-                var etudiant = new EtudiantDto
-                {
-                    Id_Utilisateur_1 = query.Id_Utilisateur_1,
-                    Date_Naissance = query.Date_Naissance,
-                    Adresse = query.Adresse,
-                    CodePostal = query.CodePostal,
-                    Ville = query.Ville,
-                    NumTelephone = query.NumTelephone,
-                    AdresseMail = query.AdresseMail,
-                    Id_Utilisateur = query.Id_Utilisateur,
+                var IdEtudiant = pfmp.IdEtudiant;
+                int? pfmpAnnee =null;
+                string libelleFiliere = "Non renseigné";
+                string nomEtudiant = "Non renseigné";
+                string prenomEtudiant = "Non renseigné";
+                int totalJourStage = 0;
+                bool status = false;
+                int Absences = 0;
+                int Presences = 0;
+                int Restants = 0;
+                string nom = "Non renseigné";
+                string prenom = "Non renseigné";
+                string telephone = "Non renseigné";
+                string nomEntreprise = "Non renseigné";
+                int comptJour = 0;
 
-                }).ToListAsync();
-                var IdEtudiant = etudiant.Id_Utilisateur_1;
 
-                //etudiant -> utilisateur 
                 var utSearch = await _context.Utilisateur.FirstOrDefaultAsync(ut => ut.Id_Utilisateur == IdEtudiant);
 
+                if (utSearch != null)
+                {
+                    nomEtudiant = utSearch.Nom;
+                    prenomEtudiant = utSearch.Prenom;
+                }
 
-                //etudier -> groupeclasse
-                var search = await (from etudier in _context.Etudier
-                                    join gc in _context.GroupeClasse
-                                    on etudier.Id_Etablissement == gc.Id_Etablissement 
-                                    && etudier.Id_Classe == gc.Id_Classe
-                                    where etudier.Id_Utilisateur == IdEtudiant 
-                                    && pfmp.DateDebut.Value.Date <= etudier.AnneeSortie && pfmp.DateDebut.Value.Date >= etudier.AnneeRentree
+                if (pfmp.DateDebut.HasValue)
+                {
+                    pfmpAnnee = pfmp.DateDebut.Value.Date.Year;
 
-                                    select gc).FirstOrDefaultAsync();
-              
 
-                // groupeclasse -> filieres
-                var fil = await (from gc in _context.GroupeClasse
-                                 join filiere in _context.Filiere
-                                 on gc.Id_Filiere equals filiere.Id_Filiere
-                                 where gc.Id_Classe == search.Id_Classe
-                                 select filiere).FirstOrDefaultAsync();
+                    //etudiant -> utilisateur 
+                    
 
-               
+
+                    //etudier -> groupeclasse
+                    var search = await (from etudier in _context.Etudier
+                                        join gc in _context.GroupeClasse
+                                        on new { etudier.Id_Etablissement, etudier.Id_Classe }
+                                        equals new { gc.Id_Etablissement, gc.Id_Classe }
+                                        where pfmpAnnee <= etudier.AnneeSortie
+                                         && pfmpAnnee >= etudier.AnneeRentree
+                                         && etudier.Id_Utilisateur == IdEtudiant
+
+                                        select gc).FirstOrDefaultAsync();
+
+
+                    if (search != null)
+                    {
+
+                        // groupeclasse -> filieres
+                        var fil = await _context.Filiere.FirstOrDefaultAsync(fi => fi.Id_Filiere == search.Id_Filiere);
+
+                       
+                        if (fil != null)
+                        {
+                            libelleFiliere = fil.LibelleFiliere;
+                        }
+                    }
+                }
+                else
+                {
+                    libelleFiliere = "Non renseigné";
+                }
+
 
 
 
                 var siret = pfmp.SIRET;
-
+              
                 // organisation
                 var orgSearch = await _context.Organisation.FirstOrDefaultAsync(o => o.SIRET == siret);
 
-                // travailler
+                if (orgSearch != null)
+                {
+                    nomEntreprise = orgSearch.RaisonSociale;
+                }
+                else {
+                    nomEntreprise = "Non renseigné";
+                } 
+
+
+             //travailler
+           
+
                 var tSearch = await _context.Travailler.FirstOrDefaultAsync(t => t.SIRET == siret);
-                var idProf = tsearch.Id_Utilisateur;
-
-                //Professionnel
-                var pSearch = await _context.Professionnel.FirstOrDefaultAsync(p => p.Id_Utilisateur == idProf);
 
 
-
-                //Utilisateur
-                var uSearch = await _context.Utilisateur.FirstOrDefaultAsync(u => u.Id_Utilisateur == idProf);
+                if (tSearch != null)
+                {
+                    var idProf = tSearch.Id_Utilisateur;
 
 
 
+                    //Professionnel
+                    var pSearch = await _context.Professionnel.FirstOrDefaultAsync(p => p.Id_Utilisateur == idProf);
 
-                //planning 
+                    if (pSearch != null)
+                    {
+                        //Utilisateur
+                        var uSearch = await _context.Utilisateur.FirstOrDefaultAsync(u => u.Id_Utilisateur == idProf);
+                        if (uSearch != null)
+                        {
+                            nom = uSearch.Nom;
+                            prenom = uSearch.Prenom;
+                            telephone = pSearch.NumTelephone;
+                        }
+                    }
+
+                }
+                else
+                {
+                    nom = "Non renseigné";
+                    prenom = "Non renseigné";
+                    telephone = "Non renseigné";
+
+                }
+
+
+
+                    //planning 
                 var planSearch = await _context.Planning.FirstOrDefaultAsync(pl => pl.Id_Planning == pfmp.Id_Planning);
-                var planjour = await _context.PlanningJours.ToListAsync(plan => plan.Id_Planning == plansearch.Id_Planning);
-
-                var JourRestants = orgSearch.DateFin.HasValue ? Math.Max(0, (orgSearch.DateFin.Value.Date - DateTime.Today).Days) : 0,
-
-                //TablePresence
-                var tableSearch = await _context.TablePresence.ToListAsync(tp => tp.Id_Utilisateur == IdEtudiant && tp.DateJour >= pfmp.DateDebut.Value.Date && tp.DateJour <= pfmp.DateFin.Value.Date);
+              
 
                
 
-
-
-                var adminRowDto = new AdminStageRowDto
+                //TablePresence
+                if (pfmp.DateDebut.HasValue && pfmp.DateFin.HasValue)
                 {
-                    Nom = utSearch.Nom,
-                    Prenom = utSearch.Prenom,
-                    LibelleFiliere = fil.LibelleFiliere,
-                    Entreprise = orgSearch.RaisonSociale,
-                    NomMaitreDeStage = uSearch.Nom,
-                    PrenomMaitreDeStage = uSearch.Prenom,
-                    DateDebut = etudiant.DateDebut,
-                    DateFin = etudiant.DateFin,
-                    Id_PFMP = pfmp.IdPFMP,
+                    if (planSearch != null)
+                    {
+                        var planjour = await _context.PlanningJours.Where(plan => plan.Id_Planning == planSearch.Id_Planning).ToListAsync();
+                        if (planjour.Any())
+                        {
 
+                            for (var date = pfmp.DateDebut; date <= pfmp.DateFin; date++)
+                            { 
+                                var jourFrancais = Convert.date.DayOfWeek to French;
+
+
+                            }
+
+                            //totalJourStage = planjour.Count(c => c.Jour);
+                        }
+                    }
+
+                    //totalJourStage = (pfmp.DateFin.Value.Date - pfmp.DateDebut.Value.Date).Days;
+                    var tableSearch = await _context.TablePresence.Where(tp => tp.Id_Utilisateur == IdEtudiant && tp.DateJour.HasValue && tp.DateJour.Value.Date >= pfmp.DateDebut.Value.Date && tp.DateJour.Value.Date <= pfmp.DateFin.Value.Date).ToListAsync();
+                    if (tableSearch.Any())
+                    {
+                        Absences = tableSearch.Count(a => a.Etat.Contains("Absent"));
+                        Presences = tableSearch.Count(c => c.Etat.Contains("Présent"));
+
+                        Restants = totalJourStage - Presences - Absences;
+
+                        if (Restants == 0)
+                        {
+                            status = true;
+                        }
+                    }
+                    
                 }
-            }
+                
+                
 
+
+                var dto = new AdminStageRowDto
+                {
+                    Nom = nomEtudiant,
+                    Prenom = prenomEtudiant,
+                    LibelleFiliere = libelleFiliere,
+                    Entreprise = nomEntreprise,
+                    NomMaitreDeStage = nom,
+                    PrenomMaitreDeStage = prenom ,
+                    DateDebut = pfmp.DateDebut,
+                    DateFin = pfmp.DateFin,
+                    Id_PFMP = pfmp.IdPfmp,
+                    Presence = Presences ,
+                    Absence = Absences ,
+                    Status = status,
+                    Restants = Restants,
+                    NumTelephone = telephone,
+                };
+                adminRowDto.Add(dto);
+            }
+            return Ok(adminRowDto);
         }
+
+
     }
 }

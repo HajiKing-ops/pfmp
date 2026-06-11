@@ -35,7 +35,8 @@ namespace PFMPManager.Api.Controllers
                     join rapport in _context.RapportJournalier
                     on remplir.Id_RapportJournalier equals rapport.Id_RapportJournalier
                     where remplir.Id_Utilisateur == idEtudiant
-                    && rapport.DateRapport.HasValue
+                    && rapport.DateRapport.HasValue && search.DateDebut.HasValue
+                    && search.DateFin.HasValue
                     && rapport.DateRapport.Value.Date >= search.DateDebut.Value.Date
                     && rapport.DateRapport.Value.Date <= search.DateFin.Value.Date
                     select rapport
@@ -71,8 +72,5 @@ namespace PFMPManager.Api.Controllers
                 return Ok(dash);
             }
 
-
-        
-            
         }  
 }

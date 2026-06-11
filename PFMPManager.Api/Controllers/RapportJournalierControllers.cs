@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Validations;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
 using PFMPManager.Api.Models;
@@ -29,7 +30,8 @@ namespace PFMPManager.Api.Controllers
             var search = await ( from remplir in _context.Remplir 
                                  join rapport in _context.RapportJournalier 
                                     on remplir.Id_RapportJournalier equals  rapport.Id_RapportJournalier 
-                                    where remplir.Id_Utilisateur ==  idEtudiant
+                                    where remplir.Id_Utilisateur ==  idEtudiant 
+                                    orderby rapport.Id_RapportJournalier descending
                                     select new JournalDto
                                     {
                                         IdEtudiant = remplir.Id_Utilisateur,
@@ -52,7 +54,7 @@ namespace PFMPManager.Api.Controllers
 
         public async Task<IActionResult> Create(CreateJournalDto  request) 
         {
-            if (request.IdEtudiant <= 0)
+            if (request.IdEtudiant ==  null)
             {
                 return BadRequest("IdEtudiant invalide");
             }
@@ -106,6 +108,7 @@ namespace PFMPManager.Api.Controllers
                 LienVersFichier = request.LienVersFichier,
                 Id_PFMP = query.Id_PFMP,
             };
+            
             return Ok(journal);
         }
 

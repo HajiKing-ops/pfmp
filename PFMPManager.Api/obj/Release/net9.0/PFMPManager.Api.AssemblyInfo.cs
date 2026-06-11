@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PFMPManager.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fc2e32b58ef6370a46d999eeb749142668eb6498")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+461d9e4337c100355971b5dcb4646481be69ec17")]
 [assembly: System.Reflection.AssemblyProductAttribute("PFMPManager.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PFMPManager.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
