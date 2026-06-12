@@ -170,8 +170,6 @@ namespace PFMPManager.Api.Controllers
 
             }
 
-
-
             //search the organisation with the SIRET
             var checkOrg = await _context.Organisation.FirstOrDefaultAsync(p => p.SIRET == SIRET);
 

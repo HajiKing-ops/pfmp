@@ -1,7 +1,9 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Validations;
+using Microsoft.VisualBasic;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
 using PFMPManager.Api.Models;
@@ -110,6 +112,59 @@ namespace PFMPManager.Api.Controllers
             };
             
             return Ok(journal);
+        }
+
+        //update 
+        [HttpPut("update/{id}")]
+
+        public async Task<IActionResult> UpdateJournal(UpdateRapportJournalierDto request, int id)
+        {
+            if (string.IsNullOrWhiteSpace(request.LienVersFichier))
+            {
+                return BadRequest("LienVersFichier est vide");
+            }
+            if (!request.DateRapport.HasValue)
+            {
+                return BadRequest("DateRapport est invalide");
+            }
+           
+            
+
+            var search = await _context.RapportJournalier.FirstOrDefaultAsync(r => r.Id_RapportJournalier == id);
+            if(search == null)
+            {
+                return NotFound("Aucune journal trouvée");
+            }
+
+            var pfmp = await _context.Pfmp.FirstOrDefaultAsync(p => p.Id_PFMP == search.Id_PFMP);
+
+            if (pfmp == null)
+            {
+                return BadRequest("la PFMP n'existe pas");
+            }
+            if (!pfmp.DateDebut.HasValue || !pfmp.DateFin.HasValue)
+            {
+                return BadRequest("Impossible de modifier ce rapport car les dates de la PFMP sont manquantes");
+            }
+            if (request.DateRapport.Value.Date < pfmp.DateDebut.Value.Date || request.DateRapport.Value.Date > pfmp.DateFin.Value.Date)
+            {
+                return BadRequest("La date du rapport doit être comprise entre la date de début et la date de fin de la PFMP");
+            }
+
+
+            search.DateRapport = request.DateRapport;
+            search.LienVersFichier = request.LienVersFichier;
+
+          await _context.SaveChangesAsync();
+
+            var update = new JournalDto
+            {
+                IdRapportJournalier = search.Id_RapportJournalier,
+                DateRapport = search.DateRapport,
+                LienVersFichier = search.LienVersFichier,
+                Id_PFMP = search.Id_PFMP,
+            };
+            return Ok(update);
         }
 
         
