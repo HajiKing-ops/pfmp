@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.Models;
 using PFMPManager.Api.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 
 
@@ -21,6 +22,7 @@ namespace PFMPManager.Api.Controllers
         {
             _context = context;
         }
+        [Authorize(Roles = "Administrateur")]
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetAll(int id)

@@ -11,6 +11,7 @@ namespace PFMPManager.Api.Data
             : base(options)
         {
         }
+
          // Maps to the tables
         public DbSet<Utilisateur> Utilisateur { get; set; }
         public DbSet<Referent> Referent { get; set; }

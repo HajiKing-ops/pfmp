@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Cryptography;
+using QuestPDF.Infrastructure;
+
 
 
 
@@ -54,8 +56,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
           };
       });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(); 
 
+QuestPDF.Settings.License = LicenseType.Community; // I tell QuestPDF that I use the Community license mode. 
 
 
 builder.Services.AddControllers(); // Enable API controller routing 
