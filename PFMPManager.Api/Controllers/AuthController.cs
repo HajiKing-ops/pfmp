@@ -1,31 +1,38 @@
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
+using PFMPManager.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt; // create/writes JWT
 using System.Security.Claims; // creates  claims 
 using Microsoft.IdentityModel.Tokens; // signing key and credentials
 using System.Text; //converts secret key text to bytes
 using PFMPManager.Api.Helpers;
+using System.Threading.Tasks;
+using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
+
 
 
 
 [ApiController]
-[Route("api/login")]
+[Route("api")]
 public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context; // Database context injected via DI (Dependency Injection)
     private readonly IConfiguration _configuration;
+    private readonly IRoleService _roleService;
 
     //DI container injects AppDbContext registered om program.cs
-    public AuthController(AppDbContext context, IConfiguration configuration)
+    public AuthController(AppDbContext context, IConfiguration configuration, IRoleService roleService)
     {
         _context = context;
         _configuration = configuration;
+        _roleService = roleService;
     }
 
 
-    [HttpPost]
-    public IActionResult Login(LoginRequestDto request)
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(LoginRequestDto request)
     {
 
         var loginFromFlutter = request.Login;
@@ -36,8 +43,8 @@ public class AuthController : ControllerBase
             return BadRequest();
         }
 
-        var user = _context.Utilisateur
-            .FirstOrDefault(u => u.Login == loginFromFlutter);
+        var user = await _context.Utilisateur
+            .FirstOrDefaultAsync(u => u.Login == loginFromFlutter);
 
         if (user == null)
         {
@@ -58,77 +65,36 @@ public class AuthController : ControllerBase
 
 
         //verify the Role
-        string role = "";
+        var role = await _roleService.GetUserRoleAsync(user.Id_Utilisateur);
 
-        var student = _context.Etudiant
-            .FirstOrDefault(u => u.Id_Utilisateur_1 == user.Id_Utilisateur);
 
-        if (student != null)
-        {
-            role = "Etudiant";
-        }
-        else
-        {
-            var referent = _context.Referent
-                .FirstOrDefault(u => u.Id_Utilisateur == user.Id_Utilisateur);
-            if (referent != null)
-            {
-                role = "Enseignant";
-            }
-            else
-            {
-                var administrateur = _context.Administrateur
-                    .FirstOrDefault(u => u.Id_Utilisateur == user.Id_Utilisateur);
-                if (administrateur != null)
-                {
-                    role = "Administrateur";
-                }
 
-            }
-        }
         if (string.IsNullOrWhiteSpace(role))
         {
             return NotFound("Role not found");
         }
 
-        var jwtKey = _configuration["Jwt:Key"];
-        var jwtIssuer = _configuration["Jwt:Issuer"];
-        var jwtAudience = _configuration["Jwt:Audience"];
-        var jwtExpiration = int.Parse(_configuration["Jwt:ExpireMinutes"]!); // ! promis this is not null
 
-        var expires = DateTime.UtcNow.AddMinutes(jwtExpiration);
+        var (refreshTokenHash, accessToken, refreshToken) = JwtHelper.CreateTokens(_configuration , user.Id_Utilisateur, role, user.Login);
 
-        var claims = new List<Claim>
+        var refreshTokenEntity = new RefreshToken()
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id_Utilisateur.ToString()), // inside the token, store the user ID
-            new Claim(ClaimTypes.Role, role),
-            new Claim(ClaimTypes.Name, user.Login!),
+            TokenHash = refreshTokenHash,
+            Id_Utilisateur = user.Id_Utilisateur,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            RevokedAt = null,
+            ReplacedByTokenHash = null
         };
+         _context.RefreshToken.Add(refreshTokenEntity);
+        await _context.SaveChangesAsync();
 
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtKey!)); //convert the secret key string into bytes and ! -> promis this value is not null
-
-        var credentials = new SigningCredentials( // use the HMAC ShA-256 algoritm to sign the token 
-            key,
-            SecurityAlgorithms.HmacSha256
-        );
-
-        var token = new JwtSecurityToken // crea5te token object
-        (
-            issuer: jwtIssuer,
-            audience: jwtAudience,
-            claims: claims,
-            expires: expires,
-            signingCredentials: credentials
-        );
-
-        var tokenString = new JwtSecurityTokenHandler().WriteToken(token); // take my token and transform it into the final token text 
-
-        // created object of the  LoginResponseDto and passsed the info i want 
+      
+          
         var response = new LoginResponseDto
         {
-
-            Token = tokenString,
+            RefreshToken = refreshToken,
+            AccessToken = accessToken,
             Id_Utilisateur = user.Id_Utilisateur,
             Nom = user.Nom ?? string.Empty,
             Prenom = user.Prenom ?? string.Empty,
@@ -137,4 +103,111 @@ public class AuthController : ControllerBase
 
         return Ok(response);
     }
+
+
+
+
+    [HttpPost("login/refresh")]
+
+    public async Task<IActionResult> Refresh(RefreshRequestDto request)
+    { 
+        if(string.IsNullOrWhiteSpace(request.RefreshTokenHash))
+        {
+            return BadRequest("RefreshToken n'existe pas");
+        }
+        var refreshTokenHash = JwtHelper.HashRefreshToken(request.RefreshTokenHash);
+
+        var search = await _context.RefreshToken.FirstOrDefaultAsync(r => r.TokenHash == refreshTokenHash);
+
+        if (search == null)
+        {
+            return Unauthorized("Le jeton n'existe pas.");
+        }
+        if (search.RevokedAt != null)
+        {
+            return Unauthorized("Ce jeton a déjà été utilisé ou vous êtes déconnecté");
+        }
+        if (!search.ExpiresAt.HasValue || search.ExpiresAt.Value <= DateTime.UtcNow)
+        {
+            return Unauthorized("L'utilisateur doit se reconnecter.");
+        }
+
+
+
+        var utilisateur = await _context.Utilisateur.FirstOrDefaultAsync(u => u.Id_Utilisateur == search.Id_Utilisateur);
+        if (utilisateur == null)
+        {
+            return Unauthorized("Utilisateur introuvable");
+        }
+
+        var role = await _roleService.GetUserRoleAsync(utilisateur.Id_Utilisateur);
+
+        if (string.IsNullOrWhiteSpace(role))
+        {
+            return Unauthorized("Rôle introuvable.");
+        }
+
+        var (newRefreshTokenHash, accessToken, newRefreshToken) = JwtHelper.CreateTokens( _configuration, utilisateur.Id_Utilisateur, role, utilisateur.Login);
+
+
+        search.RevokedAt = DateTime.UtcNow;
+        search.ReplacedByTokenHash = newRefreshTokenHash;
+
+
+        var newRefreshTokenEntity = new RefreshToken
+        {
+            Id_Utilisateur = utilisateur.Id_Utilisateur,
+            TokenHash = newRefreshTokenHash,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            RevokedAt = null,
+            ReplacedByTokenHash = null
+        };
+
+        _context.RefreshToken.Add(newRefreshTokenEntity);
+        await _context.SaveChangesAsync();
+
+        var response = new LoginResponseDto
+        {
+            RefreshToken = newRefreshToken,
+            AccessToken = accessToken,
+            Id_Utilisateur = utilisateur.Id_Utilisateur,
+            Nom = utilisateur.Nom ?? string.Empty,
+            Prenom = utilisateur.Prenom ?? string.Empty,
+            Role = role,
+        };
+
+        return Ok(response);
+
+    }
+
+    [HttpPost("logout")]
+
+    public async Task<IActionResult> Logout(RefreshRequestDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefreshTokenHash))
+        {
+            return BadRequest("RefreshToken n'existe pas");
+        }
+        var refreshTokenHash = JwtHelper.HashRefreshToken(request.RefreshTokenHash);
+
+        var search = await _context.RefreshToken.FirstOrDefaultAsync(r => r.TokenHash == refreshTokenHash);
+
+        if (search == null)
+        {
+            return Unauthorized("Le jeton n'existe pas.");
+        }
+        if (search.RevokedAt != null)
+        {
+            return Unauthorized("Ce jeton a déjà été utilisé ou vous êtes déconnecté");
+        }
+
+        search.RevokedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return Ok("Vous êtes déconnecté");
+
+    }
+
+
 }

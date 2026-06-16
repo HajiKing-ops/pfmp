@@ -1,8 +1,8 @@
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using PFMPManager.Api.Models;
 
 
@@ -12,6 +12,7 @@ namespace PFMPManager.Api.Controllers
     [ApiController]
 
     [Route("api/demarches")]
+    [Authorize]
 
     public class DemarcheController : ControllerBase 
     {

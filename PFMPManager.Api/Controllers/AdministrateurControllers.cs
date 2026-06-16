@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
-using PFMPManager.Api.Models;
 using PFMPManager.Api.DTOs;
 using Microsoft.AspNetCore.Authorization;
 
@@ -22,6 +21,7 @@ namespace PFMPManager.Api.Controllers
         {
             _context = context;
         }
+
         [Authorize(Roles = "Administrateur")]
 
         [HttpGet("{id}")]
@@ -45,7 +45,7 @@ namespace PFMPManager.Api.Controllers
             var classes = await _context.GroupeClasse.Where(gc => etablissementIds.Contains(gc.Id_Etablissement)).ToListAsync();
             if (!classes.Any())
             {
-                return NotFound("Aucune classe trouvée pour cet administrateur");
+                return NotFound("Aucune classe trouvï¿½e pour cet administrateur");
             }
 
 
@@ -81,7 +81,7 @@ namespace PFMPManager.Api.Controllers
 
             if (!pfmps.Any())
             {
-                return NotFound("Aucune PFMP trouvée pour cet administrateur");
+                return NotFound("Aucune PFMP trouvï¿½e pour cet administrateur");
             }
 
 
@@ -91,18 +91,18 @@ namespace PFMPManager.Api.Controllers
             {
                 var IdEtudiant = pfmp.IdEtudiant;
               
-                string libelleFiliere = "Non renseigné";
-                string nomEtudiant = "Non renseigné";
-                string prenomEtudiant = "Non renseigné";
+                string libelleFiliere = "Non renseignï¿½";
+                string nomEtudiant = "Non renseignï¿½";
+                string prenomEtudiant = "Non renseignï¿½";
                 int totalJourStage = 0;
                 bool status = false;
                 int Absences = 0;
                 int Presences = 0;
                 int Restants = 0;
-                string nom = "Non renseigné";
-                string prenom = "Non renseigné";
-                string telephone = "Non renseigné";
-                string nomEntreprise = "Non renseigné";
+                string nom = "Non renseignï¿½";
+                string prenom = "Non renseignï¿½";
+                string telephone = "Non renseignï¿½";
+                string nomEntreprise = "Non renseignï¿½";
                 var siret = pfmp.SIRET;
                 
 
@@ -149,7 +149,7 @@ namespace PFMPManager.Api.Controllers
 
                 if (utSearch != null)
                 {
-                    nomEtudiant = utSearch.Nom;
+                    nomEtudiant = utSearch.Nom!;
                     prenomEtudiant = utSearch.Prenom;
                 }
               
@@ -163,7 +163,7 @@ namespace PFMPManager.Api.Controllers
                     nomEntreprise = orgSearch.RaisonSociale;
                 }
                 else {
-                    nomEntreprise = "Non renseigné";
+                    nomEntreprise = "Non renseignï¿½";
                 }
 
 
@@ -193,9 +193,9 @@ namespace PFMPManager.Api.Controllers
                 }
                 else
                 {
-                    nom = "Non renseigné";
-                    prenom = "Non renseigné";
-                    telephone = "Non renseigné";
+                    nom = "Non renseignï¿½";
+                    prenom = "Non renseignï¿½";
+                    telephone = "Non renseignï¿½";
 
                 }
 

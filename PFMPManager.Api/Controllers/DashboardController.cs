@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
+using Microsoft.AspNetCore.Authorization;
 using PFMPManager.Api.DTOs;
 
 namespace PFMPManager.Api.Controllers 
@@ -15,9 +16,11 @@ namespace PFMPManager.Api.Controllers
 
             public DashboardController(AppDbContext context)
             {
-            _context = context;
-
+                _context = context;
             }
+
+        [Authorize]
+
         [HttpGet("{idEtudiant}")]
 
         public async Task<IActionResult> GetById(int idEtudiant)

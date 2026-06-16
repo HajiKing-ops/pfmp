@@ -23,6 +23,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         );
 });
 
+builder.Services.AddScoped<IRoleService, RoleService>();
+
+
 // CORS policy - allows the Flutter web client to call this API from any origin 
 builder.Services.AddCors(options => 
 {
@@ -38,8 +41,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
       {
           var jwtKey = builder.Configuration["Jwt:Key"];
-          var jwtIssuer = builder.Configuration["jwt:Issuer"];
-          var jwtAudience = builder.Configuration["jwt:Audience"];
+          var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+          var jwtAudience = builder.Configuration["Jwt:Audience"];
 
           options.TokenValidationParameters = new TokenValidationParameters
           {

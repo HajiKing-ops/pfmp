@@ -1,4 +1,4 @@
-using System.Net.Http;
+using Microsoft.AspNetCore.Authorization;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Mvc;
 using PFMPManager.Api.DTOs;
@@ -11,8 +11,9 @@ namespace  PFMPManager.Api.Controllers
 
     public class NewsController : ControllerBase
     {
-    
-    
+
+
+        [Authorize]
 
         [HttpGet]
 
@@ -35,7 +36,7 @@ namespace  PFMPManager.Api.Controllers
                Description = i.Element("description")?.Value ?? string.Empty,
                PublishedDate = i.Element("pubDate")?.Value ?? string.Empty,
 
-               
+
             }).ToList();
 
 

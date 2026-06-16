@@ -4,6 +4,7 @@ using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
 using PFMPManager.Api.Helpers;
 using PFMPManager.Api.Models;
+using Microsoft.AspNetCore.Authorization;
 
 
 
@@ -23,7 +24,8 @@ namespace PFMPManager.Api.Controllers
             _context = context;
         }
 
-       //[Authorize(Roles = Admini)]
+        //[Authorize(Roles = Admini)]
+        [Authorize]
 
         [HttpGet] // GEt /api/Pfmp returns all PFMPs
         public async Task<IActionResult> GetAll()

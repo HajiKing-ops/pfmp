@@ -1,10 +1,8 @@
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
-using PFMPManager.Api.Models;
 using PFMPManager.Api.DTOs;
-
+using Microsoft.AspNetCore.Authorization;
 
 namespace PFMPManager.Api.Controllers
 {
@@ -21,6 +19,7 @@ namespace PFMPManager.Api.Controllers
         {
             _context = context;
         }
+        [Authorize]
 
         [HttpGet] // GEt /api/organisation returns all organisations as JSON
         public async Task<IActionResult> GetAll()

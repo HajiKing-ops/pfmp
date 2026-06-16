@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
-
+using Microsoft.AspNetCore.Authorization;
 namespace PFMPManager.Api.Controllers
 {
     [ApiController] // Enables model validation and smart binding 
@@ -18,6 +18,8 @@ namespace PFMPManager.Api.Controllers
         {
             _context = context;
         }
+
+        [Authorize]
 
         [HttpGet]
         public async Task<IActionResult> GetAll()

@@ -5,8 +5,8 @@
     "\\Data",
     "\\DTOs",
     "\\Helpers",
-    "\\Models"
+    "\\Services"
   ],
-  "SelectedNode": "\\Controllers\\DemarcheController.cs",
+  "SelectedNode": "\\Controllers\\AuthController.cs",
   "PreviewInSolutionExplorer": false
 }

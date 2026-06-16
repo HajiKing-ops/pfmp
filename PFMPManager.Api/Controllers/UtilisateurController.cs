@@ -32,7 +32,6 @@ namespace PFMPManager.Api.Controllers
         }
 
 
-        [Authorize(Roles = "Administrateur")]        
         [HttpPost]
 
         public async Task<IActionResult> CreateUtilisateur(CreateUtilisateurDto request)

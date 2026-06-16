@@ -20,6 +20,7 @@ namespace PFMPManager.Api.Controllers
     [ApiController]
 
     [Route("api/journal")]
+    [Authorize]
 
     public class RapportJournalierController : ControllerBase
     {
