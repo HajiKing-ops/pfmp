@@ -2,12 +2,7 @@ using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
 using PFMPManager.Api.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.IdentityModel.Tokens.Jwt; // create/writes JWT
-using Microsoft.IdentityModel.Tokens; // signing key and credentials
-using System.Text; //converts secret key text to bytes
 using PFMPManager.Api.Helpers;
-using System.Threading.Tasks;
-using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -124,7 +119,7 @@ public class AuthController : ControllerBase
         }
         if (search.RevokedAt != null)
         {
-            return Unauthorized("Ce jeton a déjà été utilisé ou vous êtes déconnecté");
+            return Unauthorized("Ce jeton a dï¿½jï¿½ ï¿½tï¿½ utilisï¿½ ou vous ï¿½tes dï¿½connectï¿½");
         }
         if (!search.ExpiresAt.HasValue || search.ExpiresAt.Value <= DateTime.UtcNow)
         {
@@ -143,7 +138,7 @@ public class AuthController : ControllerBase
 
         if (string.IsNullOrWhiteSpace(role))
         {
-            return Unauthorized("Rôle introuvable.");
+            return Unauthorized("Rï¿½le introuvable.");
         }
 
         var (newRefreshTokenHash, accessToken, newRefreshToken) = JwtHelper.CreateTokens( _configuration, utilisateur.Id_Utilisateur, role, utilisateur.Login);
@@ -198,13 +193,13 @@ public class AuthController : ControllerBase
         }
         if (search.RevokedAt != null)
         {
-            return Unauthorized("Ce jeton a déjà été utilisé ou vous êtes déconnecté");
+            return Unauthorized("Ce jeton a dï¿½jï¿½ ï¿½tï¿½ utilisï¿½ ou vous ï¿½tes dï¿½connectï¿½");
         }
 
         search.RevokedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
-        return Ok("Vous êtes déconnecté");
+        return Ok("Vous ï¿½tes dï¿½connectï¿½");
 
     }
 

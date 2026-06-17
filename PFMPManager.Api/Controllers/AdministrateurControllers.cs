@@ -6,6 +6,7 @@ using PFMPManager.Api.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims; // creates  claims 
 using Microsoft.VisualBasic;
+using System.Net;
 
 
 
@@ -25,7 +26,7 @@ namespace PFMPManager.Api.Controllers
             _context = context;
         }
 
-        [Authorize(Roles = "Administrateur")]
+       // [Authorize(Roles = "Administrateur")]
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetAll(int id)
@@ -88,229 +89,14 @@ namespace PFMPManager.Api.Controllers
             }
 
 
-            var adminRowDto = new List<AdminStageRowDto>();
+            var adminRowDto = await AdminListHelper.CreateList(_context, pfmps, etablissementIds);
 
-            foreach (var pfmp in pfmps)
-            {
-                var IdEtudiant = pfmp.IdEtudiant;
-              
-                string libelleFiliere = "Non renseign�";
-                string nomEtudiant = "Non renseign�";
-                string prenomEtudiant = "Non renseign�";
-                int totalJourStage = 0;
-                bool status = false;
-                int Absences = 0;
-                int Presences = 0;
-                int Restants = 0;
-                string nom = "Non renseign�";
-                string prenom = "Non renseign�";
-                string telephone = "Non renseign�";
-                string nomEntreprise = "Non renseign�";
-                var siret = pfmp.SIRET;
-                
-
-
-
-
-
-                if (pfmp.DateDebut.HasValue)
-                {
-                    var pfmpAnnee = pfmp.DateDebut.Value.Date.Year;
-
-                    //varifier que l'etudiant appartenait bien a l'etablissement de l'admin pendant l'annee de la PFMP
-                    var search = await (from etudier in _context.Etudier
-                                        join gc in _context.GroupeClasse
-                                        on new { etudier.Id_Etablissement, etudier.Id_Classe }
-                                        equals new { gc.Id_Etablissement, gc.Id_Classe }
-                                        where pfmpAnnee <= etudier.AnneeSortie
-                                         && pfmpAnnee >= etudier.AnneeRentree
-                                         && etudier.Id_Utilisateur == IdEtudiant
-
-                                        select gc).FirstOrDefaultAsync();
-
-
-                    if (search == null || !etablissementIds.Contains(search.Id_Etablissement))
-                    {
-                        continue;
-
-
-                    }
-                    // Recuperer les informations d'affichage : eleve, filier, entreprise, maitre de stage
+            var stat = AdminListHelper.Calculation(adminRowDto);
+                        
                     
-                    var fil = await _context.Filiere.FirstOrDefaultAsync(fi => fi.Id_Filiere == search.Id_Filiere);
 
 
-                    if (fil != null)
-                    {
-                        libelleFiliere = fil.LibelleFiliere;
-                    }
-
-                }
-                else { continue; }
-
-                    var utSearch = await _context.Utilisateur.FirstOrDefaultAsync(ut => ut.Id_Utilisateur == IdEtudiant);
-
-                if (utSearch != null)
-                {
-                    nomEtudiant = utSearch.Nom!;
-                    prenomEtudiant = utSearch.Prenom;
-                }
-              
-
-
-
-                var orgSearch = await _context.Organisation.FirstOrDefaultAsync(o => o.SIRET == siret);
-
-                if (orgSearch != null)
-                {
-                    nomEntreprise = orgSearch.RaisonSociale;
-                }
-                else {
-                    nomEntreprise = "Non renseign�";
-                }
-
-
-                var tSearch = await _context.Travailler.FirstOrDefaultAsync(t => t.SIRET == siret);
-
-
-                if (tSearch != null)
-                {
-                    var idProf = tSearch.Id_Utilisateur;
-
-
-
-                    var pSearch = await _context.Professionnel.FirstOrDefaultAsync(p => p.Id_Utilisateur == idProf);
-
-                    if (pSearch != null)
-                    {
-
-                        var uSearch = await _context.Utilisateur.FirstOrDefaultAsync(u => u.Id_Utilisateur == idProf);
-                        if (uSearch != null)
-                        {
-                            nom = uSearch.Nom;
-                            prenom = uSearch.Prenom;
-                            telephone = pSearch.NumTelephone;
-                        }
-                    }
-
-                }
-                else
-                {
-                    nom = "Non renseign�";
-                    prenom = "Non renseign�";
-                    telephone = "Non renseign�";
-
-                }
-
-
-
-                var planSearch = await _context.Planning.FirstOrDefaultAsync(pl => pl.Id_Planning == pfmp.Id_Planning);
-
-
-
-
-                //Calculer le nombre de jours prevus selon le planning
-                if (pfmp.DateDebut.HasValue && pfmp.DateFin.HasValue)
-                {
-                    if (planSearch != null)
-                    {
-                        var planjour = await _context.PlanningJours.Where(plan => plan.Id_Planning == planSearch.Id_Planning).ToListAsync();
-                        if (planjour.Any())
-                        {
-                            var jourPlanning = planjour.Select(pj => pj.Jour).ToList();
-
-                            for (var date = pfmp.DateDebut.Value.Date; date <= pfmp.DateFin.Value.Date; date = date.AddDays(1))
-                            {
-                                string jourFrancais = date.DayOfWeek switch
-                                {
-                                    DayOfWeek.Monday => "Lundi",
-                                    DayOfWeek.Tuesday => "Mardi",
-                                    DayOfWeek.Wednesday => "Mercredi",
-                                    DayOfWeek.Thursday => "Jeudi",
-                                    DayOfWeek.Friday => "Vendredi",
-                                    DayOfWeek.Saturday => "Samedi",
-                                    DayOfWeek.Sunday => "Dimanche",
-                                    _ => ""
-                                };
-
-                                if (jourPlanning.Contains(jourFrancais))
-                                {
-                                    totalJourStage++;
-                                }
-
-                            }
-                        }
-                    }
-
-
-                    // Calculer les presences, absences, jours restants et statut
-                    var tableSearch = await _context.TablePresence.Where(tp => tp.Id_Utilisateur == IdEtudiant && tp.DateJour.HasValue && tp.DateJour.Value.Date >= pfmp.DateDebut.Value.Date && tp.DateJour.Value.Date <= pfmp.DateFin.Value.Date).ToListAsync();
-                    if (tableSearch.Any())
-                    {
-                        Absences = tableSearch.Count(a => a.Etat.Contains("ABSENT"));
-                        Presences = tableSearch.Count(c => c.Etat.Contains("PRESENT"));
-                    }
-                }
-
-                Restants = Math.Max(0, totalJourStage - Presences - Absences);
-
-                if (totalJourStage > 0 && Restants == 0)
-                {
-                    status = true;
-                }
-
-               
-                // Construire le DTO retourne auy frontend
-                var dto = new AdminStageRowDto
-                {
-                    Nom = nomEtudiant,
-                    Prenom = prenomEtudiant,
-                    LibelleFiliere = libelleFiliere,
-                    Entreprise = nomEntreprise,
-                    NomMaitreDeStage = nom,
-                    PrenomMaitreDeStage = prenom,
-                    NumTelephone = telephone,
-                    DateDebut = pfmp.DateDebut,
-                    DateFin = pfmp.DateFin,
-                    Id_PFMP = pfmp.IdPfmp,
-                    Presence = Presences,
-                    Absence = Absences,
-                    Status = status,
-                    Restants = Restants,
-
-                };
-                adminRowDto.Add(dto);
-
-            }
-            
-            int enCours =0;
-            int valides =0;
-            int absencesTotal = 0;
-            int stageTotal = adminRowDto.Count;
-
-            foreach (var pf in adminRowDto)
-            {
-                
-                if (pf.DateDebut.HasValue && pf.DateFin.HasValue)
-                {
-                    if (pf.DateDebut.Value.Date <= DateTime.Today.Date && DateTime.Today.Date <= pf.DateFin.Value.Date)
-                    {
-                        enCours += 1;
-                    }
-                }
-                if (pf.Status)
-                {
-                    valides += 1;
-                }
-                absencesTotal += pf.Absence;
-            }
-            var stat = new AdminStageStatsDto
-            {
-                StageTotal = stageTotal,
-                Encours = enCours,
-                Valide = valides,
-                AbsencesTotal = absencesTotal,
-            };
+                   
             return Ok(new { adminRowDto, stat });
         }
 
@@ -322,7 +108,7 @@ namespace PFMPManager.Api.Controllers
         [Authorize(Roles = "Administrateur")]
 
         [HttpGet("recherche")]
-        public async Task<IActionResult> GetAll(string? nomRecherche, string? entrepriseRecherche)
+        public async Task<IActionResult> GetAll(string? nomRecherche, string? entrepriseRecherche, string? status, int? idEtablissement, int? idClasse)
         {
 
             var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -338,12 +124,12 @@ namespace PFMPManager.Api.Controllers
             }
 
             var etablissementIds = admin.Select(a => a.Id_Etablissement).Distinct().ToList();
-
+            
             if (!etablissementIds.Any())
             {
                 return NotFound("L'Etablissement n'existe pas");
             }
-
+            
             //Recuperer les etudiants appartenant aux etablissements de l'administrateur
             var classes = await _context.GroupeClasse.Where(gc => etablissementIds.Contains(gc.Id_Etablissement)).ToListAsync();
             if (!classes.Any())
@@ -364,6 +150,23 @@ namespace PFMPManager.Api.Controllers
             {
                 return NotFound();
             }
+            if (idEtablissement.HasValue != idClasse.HasValue)
+                {
+                    return BadRequest("Il faut fournir idEtablissement et idClasse ensemble ");
+                }
+            if(idEtablissement.HasValue && idClasse.HasValue)
+            {
+                if(!etablissementIds.Contains(idEtablissement.Value))
+                {
+                    return Forbid();
+                }
+                etud = etud.Where(e=> e.Id_Etablissement == idEtablissement.Value && e.Id_Classe == idClasse.Value).ToList();
+                if(!etud.Any())
+                {
+                    return NotFound("Aucun étudiant trouvé pour cette classe "); 
+                }
+            }
+
             var etudiantIds = etud.Select(e => e.Id_Utilisateur).Distinct().ToList(); // extract students ids
 
 
@@ -386,8 +189,7 @@ namespace PFMPManager.Api.Controllers
                 return NotFound("Aucune PFMP trouv�e pour cet administrateur");
             }
 
-            var adminRowDto = new List<AdminStageRowDto>();
-            adminRowDto = Helpers.adminListHelper.CreateList(_context, pfmps, adminRowDto);
+            var adminRowDto = await AdminListHelper.CreateList(_context, pfmps, etablissementIds);
 
 
 
@@ -405,17 +207,47 @@ namespace PFMPManager.Api.Controllers
                 adminRowDto = adminRowDto.Where(r => r.Entreprise.ToLower().Contains(search)).ToList();
             }
 
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                var statutRecherche = status.Trim().ToLower();
+                if(statutRecherche == "encours")
+                {
+                    adminRowDto = adminRowDto.Where(r => r.DateDebut.HasValue&& r.DateFin.HasValue &&r.DateDebut.Value.Date <= DateTime.Today.Date && r.DateFin.Value.Date >= DateTime.Today.Date).ToList();
+                }
+                else if(statutRecherche == "valide")
+                {
+                    adminRowDto = adminRowDto.Where(r => r.Status == true).ToList();
+                }
+                else if(statutRecherche == "incomplet")
+                {
+                    adminRowDto = adminRowDto.Where(r => r.Restants > 0).ToList();
+                }else if(statutRecherche == "tous")
+                {
+                    
+                }
+                else
+                {
+                    return BadRequest("Statut invalide. Valeurs acceptées : tous, encours, valide, incomplet.");
+                }
+            }
+         
 
-            var adminRowDto = new List<AdminStageRowDto>();
-            adminRowDto = Helpers.adminListHelper.CreateList(_context, pfmps, adminRowDto);
-
-            var stat = new List<AdminStageStatsDto>();
-            stat = Helpers.adminListHelper.Calculation(adminRowDto);
+            var stat = AdminListHelper.Calculation(adminRowDto);
 
 
 
             return Ok(new { adminRowDto, stat });
         }
+
+        [HttpGet("classes")]
+        public async Task<IActionResult> GetClasses()
+        {
+            
+
+
+        }
+
+
     }
     
 }

@@ -7,11 +7,11 @@ using System.Security.Claims; // creates  claims
 
 namespace PFMPManager.Api.Helpers
 {
-    public static class adminListHelper
+    public static class AdminListHelper
     {
 
 
-        public static async Task<List<AdminStageRowDto>> CreateList(AppDbContext _context, pfmps, etablissementIds)
+        public static async Task<List<AdminStageRowDto>> CreateList(AppDbContext _context, List<PfmpDto> pfmps, List<int> etablissementIds)
         {
             var adminRowDto = new List<AdminStageRowDto>();
 
@@ -211,9 +211,8 @@ namespace PFMPManager.Api.Helpers
             return adminRowDto;
         }
 
-            public static List<AdminStageRowDto> Calculation(List<AdminStageRowDto> adminRowDto)
+            public static AdminStageStatsDto Calculation(List<AdminStageRowDto> adminRowDto)
             {
-                var stat = new List<AdminStageStatsDto>();
                 int stageTotal = adminRowDto.Count;
 
                 int enCours = adminRowDto.Count(r =>
@@ -233,6 +232,8 @@ namespace PFMPManager.Api.Helpers
                     Valide = valides,
                     AbsencesTotal = absencesTotal,
                 };
+                return stat;
+
             }
 
         
