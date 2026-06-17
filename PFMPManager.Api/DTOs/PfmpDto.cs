@@ -12,6 +12,5 @@ namespace PFMPManager.Api.DTOs
         public int JourRestants { get; set; }
         public string RaisonSociale { get; set; } = string.Empty;
         public int semaine { get; set; }
-
     }
 }

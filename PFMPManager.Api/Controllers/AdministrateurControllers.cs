@@ -2,7 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
+using PFMPManager.Api.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims; // creates  claims 
+using Microsoft.VisualBasic;
 
 
 
@@ -308,6 +311,109 @@ namespace PFMPManager.Api.Controllers
                 Valide = valides,
                 AbsencesTotal = absencesTotal,
             };
+            return Ok(new { adminRowDto, stat });
+        }
+
+
+
+
+
+       
+        [Authorize(Roles = "Administrateur")]
+
+        [HttpGet("recherche")]
+        public async Task<IActionResult> GetAll(string? nomRecherche, string? entrepriseRecherche)
+        {
+
+            var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdTest, out int idAdmin))
+            {
+                return Unauthorized("Token invalide : identifiant utilisateur manquant.");
+            }
+            //Verifie que l'administrateur gere au moins un etablissement 
+            var admin = await _context.Administrer.Where(a => a.Id_Utilisateur == idAdmin).ToListAsync();
+            if (!admin.Any())
+            {
+                return NotFound("l'Administrateur n'exite pas");
+            }
+
+            var etablissementIds = admin.Select(a => a.Id_Etablissement).Distinct().ToList();
+
+            if (!etablissementIds.Any())
+            {
+                return NotFound("L'Etablissement n'existe pas");
+            }
+
+            //Recuperer les etudiants appartenant aux etablissements de l'administrateur
+            var classes = await _context.GroupeClasse.Where(gc => etablissementIds.Contains(gc.Id_Etablissement)).ToListAsync();
+            if (!classes.Any())
+            {
+                return NotFound("Aucune classe trouv�e pour cet administrateur");
+            }
+
+            var etud = await (from e in _context.Etudier
+                              join c in _context.GroupeClasse
+                              on new { e.Id_Etablissement, e.Id_Classe }
+                              equals new { c.Id_Etablissement, c.Id_Classe }
+                              where etablissementIds.Contains(c.Id_Etablissement)
+                              select e
+                               ).ToListAsync();
+
+
+            if (!etud.Any())
+            {
+                return NotFound();
+            }
+            var etudiantIds = etud.Select(e => e.Id_Utilisateur).Distinct().ToList(); // extract students ids
+
+
+
+            //Recuperer les PFMP des etudiants trouves 
+            var pfmps = await _context.Pfmp.Where(pf => etudiantIds.Contains(pf.Id_Utilisateur_1)).Select(
+            p => new PfmpDto
+            {
+                DateDebut = p.DateDebut,
+                DateFin = p.DateFin,
+                IdAdministrateur = p.Id_Utilisateur,
+                Id_Planning = p.Id_Planning,
+                SIRET = p.SIRET,
+                IdEtudiant = p.Id_Utilisateur_1,
+                IdPfmp = p.Id_PFMP,
+            }).ToListAsync();
+
+            if (!pfmps.Any())
+            {
+                return NotFound("Aucune PFMP trouv�e pour cet administrateur");
+            }
+
+            var adminRowDto = new List<AdminStageRowDto>();
+            adminRowDto = Helpers.adminListHelper.CreateList(_context, pfmps, adminRowDto);
+
+
+
+            if (!string.IsNullOrWhiteSpace(nomRecherche))
+            {
+                var search = nomRecherche.Trim().ToLower();
+
+                adminRowDto = adminRowDto.Where(r => r.Nom.ToLower().Contains(search) || r.Prenom.ToLower().Contains(search)).ToList();
+            }
+
+            if (!string.IsNullOrWhiteSpace(entrepriseRecherche))
+            {
+                var search = entrepriseRecherche.Trim().ToLower();
+
+                adminRowDto = adminRowDto.Where(r => r.Entreprise.ToLower().Contains(search)).ToList();
+            }
+
+
+            var adminRowDto = new List<AdminStageRowDto>();
+            adminRowDto = Helpers.adminListHelper.CreateList(_context, pfmps, adminRowDto);
+
+            var stat = new List<AdminStageStatsDto>();
+            stat = Helpers.adminListHelper.Calculation(adminRowDto);
+
+
+
             return Ok(new { adminRowDto, stat });
         }
     }

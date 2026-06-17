@@ -69,17 +69,16 @@ namespace PFMPManager.Api.Controllers
                 return NotFound();
             }
 
-            var result = new List<PfmpDto>();
 
+            var result = new List<PfmpDetailDto>();
             foreach (var p in pfmps)
             {
 
                 var organisation = await _context.Organisation.FirstOrDefaultAsync(o => o.SIRET == p.SIRET);
-                var dto = new PfmpDto
+                var dto = new PfmpDetailDto
                 {
                     DateDebut = p.DateDebut,
                     DateFin = p.DateFin,
-                    IdAdministrateur = p.Id_Utilisateur,
                     Id_Planning = p.Id_Planning,
                     SIRET = p.SIRET,
                     IdEtudiant = p.Id_Utilisateur_1,
@@ -91,20 +90,56 @@ namespace PFMPManager.Api.Controllers
                 {
                     var semaine = p.DateFin.Value.Date - p.DateDebut.Value.Date;
                     var total = semaine.TotalDays / 7;
-                    dto.semaine = (int)total;
+                    dto.Semaine = (int)total;
                 }
-                
+
+
+                var search = await _context.Travailler.FirstOrDefaultAsync(t => t.SIRET == p.SIRET);
+                if (search != null)
+                {
+                    var maitreDeStage = await _context.Utilisateur.FirstOrDefaultAsync(u => u.Id_Utilisateur == search.Id_Utilisateur);
+                    if (maitreDeStage != null)
+                    {
+
+                        dto.PrenomMaitreStage = maitreDeStage.Prenom;
+                        dto.NomMaitreStage = maitreDeStage.Nom;
+
+
+
+                        var prof = await _context.Professionnel.FirstOrDefaultAsync(r => r.Id_Utilisateur == search.Id_Utilisateur);
+                        if (prof != null)
+                        {
+                            dto.FonctionMaitreStage = prof.Fonction;
+                            dto.TelephoneMaitreStage = prof.NumTelephone;
+                            dto.EmailMaitreStage = prof.AdresseMail;
+                        }
+
+
+                    }
+                }
+                dto.PlanningJours = await _context.PlanningJours
+                    .Where(j => j.Id_Planning == p.Id_Planning)
+                    .Select(j => new CreatePlanningJoursDto
+                    {
+                        Jour = j.Jour,
+                        MatinDebut = j.MatinDebut,
+                        MatinFin = j.MatinFin,
+                        ApresMidiDebut = j.ApresMidiDebut,
+                        ApresMidiFin = j.ApresMidiFin,
+                        TotalHeures = j.TotalHeures
+                    })
+                    .ToListAsync();
+
                 result.Add(dto);
 
+
             }
-
-
             return Ok(result);
         }
 
 
 
-     
+
 
 
         [HttpPost("complete")]
@@ -126,6 +161,8 @@ namespace PFMPManager.Api.Controllers
             var DateDebut = request.DateDebut;
             var DateFin = request.DateFin;
             var IdEtudiant = request.IdEtudiant;
+
+            // in here is the problem i have to solve it the admin id 
             var IdAdministrateur = request.IdAdministrateur;
 
             //maître de stage fields
@@ -189,7 +226,7 @@ namespace PFMPManager.Api.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            //search the user wiht his login 
+            //search the user with his login 
             var userExist = await _context.Utilisateur.FirstOrDefaultAsync(p => p.Login == EmailMaitreStage);
 
             var user = new Utilisateur();

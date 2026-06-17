@@ -3,7 +3,6 @@ using PFMPManager.Api.DTOs;
 using PFMPManager.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt; // create/writes JWT
-using System.Security.Claims; // creates  claims 
 using Microsoft.IdentityModel.Tokens; // signing key and credentials
 using System.Text; //converts secret key text to bytes
 using PFMPManager.Api.Helpers;

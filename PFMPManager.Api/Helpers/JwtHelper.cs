@@ -1,4 +1,4 @@
-sing System.Security.Claims; // creates  claims 
+using System.Security.Claims; // creates  claims 
 using System.IdentityModel.Tokens.Jwt; // create/writes JWT
 using System.Text; //converts secret key text to bytes
 using Microsoft.IdentityModel.Tokens;
