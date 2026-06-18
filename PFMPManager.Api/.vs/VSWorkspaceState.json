@@ -5,8 +5,9 @@
     "\\Data",
     "\\DTOs",
     "\\Helpers",
+    "\\Models",
     "\\Services"
   ],
-  "SelectedNode": "\\.gitignore",
+  "SelectedNode": "\\Controllers\\AdministrateurControllers.cs",
   "PreviewInSolutionExplorer": false
 }

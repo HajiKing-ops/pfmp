@@ -208,6 +208,15 @@ namespace PFMPManager.Api.Controllers
                 }
 
             }
+            //search 
+            var dejaEnStage = await _context.Pfmp.AnyAsync(pf=> pf.Id_Utilisateur_1 == IdEtudiant &&
+                                                    pf.DateDebut.HasValue && pf.DateFin.HasValue &&
+                                                    pf.DateFin.Value.Date >= DateDebut.Value.Date && pf.DateDebut.Value.Date <= DateFin.Value.Date );
+            if (dejaEnStage)
+            {
+                return BadRequest("Vous êtes deja en stage sur cette periode ");
+            }
+
 
             //search the organisation with the SIRET
             var checkOrg = await _context.Organisation.FirstOrDefaultAsync(p => p.SIRET == SIRET);

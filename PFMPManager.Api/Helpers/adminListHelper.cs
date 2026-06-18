@@ -32,7 +32,9 @@ namespace PFMPManager.Api.Helpers
                 string telephone = "Non renseign�";
                 string nomEntreprise = "Non renseign�";
                 var siret = pfmp.SIRET;
-
+                int IdEtablissement = 0;
+                int IdClasse = 0;
+                string LibelleClasse = "";
 
 
 
@@ -58,10 +60,11 @@ namespace PFMPManager.Api.Helpers
                     {
                         continue;
 
-
                     }
                     // Recuperer les informations d'affichage : eleve, filier, entreprise, maitre de stage
-
+                    IdEtablissement = search.Id_Etablissement;
+                    IdClasse = search.Id_Classe;
+                    LibelleClasse = search.LibelleClasse;
                     var fil = await _context.Filiere.FirstOrDefaultAsync(fi => fi.Id_Filiere == search.Id_Filiere);
 
 
@@ -189,7 +192,7 @@ namespace PFMPManager.Api.Helpers
                 // Construire le DTO retourne auy frontend
                 var dto = new AdminStageRowDto
                 {
-                    Nom = nomEtudiant,
+                    Nom  = nomEtudiant,
                     Prenom = prenomEtudiant,
                     LibelleFiliere = libelleFiliere,
                     Entreprise = nomEntreprise,
@@ -203,6 +206,9 @@ namespace PFMPManager.Api.Helpers
                     Absence = Absences,
                     Status = status,
                     Restants = Restants,
+                    IdEtablissement = IdEtablissement,
+                    IdClasse = IdClasse,
+                    LibelleClasse = LibelleClasse,
 
                 };
                 adminRowDto.Add(dto);

@@ -102,9 +102,7 @@ namespace PFMPManager.Api.Controllers
 
 
 
-
-
-       
+        //
         [Authorize(Roles = "Administrateur")]
 
         [HttpGet("recherche")]
@@ -116,6 +114,7 @@ namespace PFMPManager.Api.Controllers
             {
                 return Unauthorized("Token invalide : identifiant utilisateur manquant.");
             }
+
             //Verifie que l'administrateur gere au moins un etablissement 
             var admin = await _context.Administrer.Where(a => a.Id_Utilisateur == idAdmin).ToListAsync();
             if (!admin.Any())
@@ -234,16 +233,115 @@ namespace PFMPManager.Api.Controllers
 
             var stat = AdminListHelper.Calculation(adminRowDto);
 
-
-
             return Ok(new { adminRowDto, stat });
         }
 
         [HttpGet("classes")]
-        public async Task<IActionResult> GetClasses()
+        public async Task<IActionResult> Classes()
         {
+            var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdTest, out int idAdmin))
+            {
+                return Unauthorized("Token invalide : identifiant utilisateur manquant.");
+            }
+            var admin = await _context.Administrer.Where(a => a.Id_Utilisateur == idAdmin).ToListAsync();
+            if (!admin.Any())
+            {
+                return NotFound("l'Administrateur n'exite pas");
+            }
+
+            var etablissementIds = admin.Select(a => a.Id_Etablissement).Distinct().ToList();
+
+            if (!etablissementIds.Any())
+            {
+                return NotFound("L'Etablissement n'existe pas");
+            }
+
+            //Recuperer les etudiants appartenant aux etablissements de l'administrateur
+            var classes = await _context.GroupeClasse.Where(gc => etablissementIds.Contains(gc.Id_Etablissement)).ToListAsync();
+            if (!classes.Any())
+            {
+                return NotFound("Aucune classe trouvee pour cet administrateur");
+            }
+
+            var etud = await (from e in _context.Etudier
+                              join c in _context.GroupeClasse
+                              on new { e.Id_Etablissement, e.Id_Classe }
+                              equals new { c.Id_Etablissement, c.Id_Classe }
+                              where etablissementIds.Contains(c.Id_Etablissement)
+                              select e
+                               ).ToListAsync();
+
+
+            if (!etud.Any())
+            {
+                return NotFound();
+            }
             
 
+            var etudiantIds = etud.Select(e => e.Id_Utilisateur).Distinct().ToList(); // extract students ids
+
+
+
+            //Recuperer les PFMP des etudiants trouves 
+            var pfmps = await _context.Pfmp.Where(pf => etudiantIds.Contains(pf.Id_Utilisateur_1)).Select(
+            p => new PfmpDto
+            {
+                DateDebut = p.DateDebut,
+                DateFin = p.DateFin,
+                IdAdministrateur = p.Id_Utilisateur,
+                Id_Planning = p.Id_Planning,
+                SIRET = p.SIRET,
+                IdEtudiant = p.Id_Utilisateur_1,
+                IdPfmp = p.Id_PFMP,
+            }).ToListAsync();
+
+            if (!pfmps.Any())
+            {
+                return NotFound("Aucune PFMP trouvee pour cet administrateur");
+            }
+
+            var adminRowDto = await AdminListHelper.CreateList(_context, pfmps, etablissementIds);
+            var stat = AdminListHelper.Calculation(adminRowDto);
+            var groupByClass = adminRowDto.GroupBy(gc => new { 
+                gc.IdEtablissement,
+                gc.IdClasse,
+                gc.LibelleFiliere
+
+            });
+
+            var classStats = new List<AdminClassStatsDto>();
+
+
+            foreach (var g in groupByClass)
+            {
+                var Presences = g.Sum(r => r.Presence);
+                var Absences = g.Sum(ab => ab.Absence);
+                var total = Presences + Absences;
+                var TauxPresence = total == 0 ? 0 : Math.Round((double)Presences / total * 100);
+
+                var dto = new AdminClassStatsDto
+                {
+                    IdEtablissement = g.Key.IdEtablissement,
+                    IdClasse = g.Key.IdClasse,
+                    LibelleFiliere = g.Key.LibelleFiliere,
+
+                    NombreEleves = g.Count(),
+
+                    EnCours = g.Count(r =>
+                    r.DateDebut.HasValue &&
+                    r.DateFin.HasValue &&
+                    r.DateDebut.Value.Date <= DateTime.Today.Date &&
+                    r.DateFin.Value.Date >= DateTime.Today.Date),
+
+                    Presence = Presences,
+                    Absence = Absences,
+                    TauxPresence = (int)TauxPresence,
+                };
+                classStats.Add(dto);
+            }
+
+            return Ok(classStats);
 
         }
 
