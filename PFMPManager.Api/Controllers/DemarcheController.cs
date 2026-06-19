@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims; // creates  claims 
 using PFMPManager.Api.Models;
+using System.Security.AccessControl;
 
 
 
@@ -23,120 +25,169 @@ namespace PFMPManager.Api.Controllers
             _context = context;
         }
 
-        [HttpPost]
+        [HttpPost("{siret}")]
+        [Authorize(Roles = "Etudiant")]
 
-        public async Task<IActionResult> Create(CreateDemarchesDto request)
+        public async Task<IActionResult> Create(CreateContacterDto request, string siret)
         {
-            var idEtudiant = request.Id_Utilisateur;
-            var nomEntreprise = request.Entreprise;
-            var dateRefus = request.DateRefus;
-            var contact = request.Contact;
-            var Adresse = request.Adresse;
-            var SIRET = request.SIRET;
+            var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdTest, out int idEtudiant))
+            {
+                return Unauthorized("Token invalide : identifiant utilisateur manquant.");
+            }
 
-            if (idEtudiant <= 0)
+            var DateDemande = request.DateDemande;
+            var SIRET = siret;
+            var TypeContact = request.TypeContact;
+            var statutDemande = request.StatutDemande.Trim().ToLower();
+            var enAttente = "En attente";
+            var refuse = "Refuse";
+            var accepte = "Accepte";
+     
+
+
+            if (string.IsNullOrWhiteSpace(SIRET) || string.IsNullOrWhiteSpace(TypeContact) || string.IsNullOrWhiteSpace(statutDemande))
             {
                 return BadRequest();
             }
-            if (string.IsNullOrWhiteSpace(nomEntreprise) || string.IsNullOrWhiteSpace(contact) || string.IsNullOrWhiteSpace(Adresse) || string.IsNullOrWhiteSpace(SIRET))
+            if (!DateDemande.HasValue)
             {
                 return BadRequest();
             }
-            if (!dateRefus.HasValue)
+
+            if (statutDemande != enAttente.Trim().ToLower() && statutDemande != refuse.Trim().ToLower() && statutDemande != accepte.Trim().ToLower())
             {
-                return BadRequest();
+                return BadRequest("il faut entre en attend, refuse ou accepte");
             }
-            var check = await _context.Demarches.FirstOrDefaultAsync(d => d.Id_Utilisateur == idEtudiant && d.SIRET == SIRET);
-            if (check != null)
+            if (statutDemande == enAttente.Trim().ToLower())
+            {
+                statutDemande = enAttente;
+            }
+            else if (statutDemande == refuse.Trim().ToLower())
+            {
+                statutDemande = refuse;
+            }
+            else if (statutDemande == accepte.Trim().ToLower())
+            {
+                statutDemande = accepte;
+            }
+
+            var searchOrg = await _context.Organisation.AnyAsync(o => o.SIRET == SIRET);
+            if (!searchOrg)
+            {
+                return NotFound("l'organisation n'existe pas");
+            }
+
+            var check = await _context.Contacter.AnyAsync(d => d.Id_Utilisateur == idEtudiant && d.SIRET == SIRET);
+            if (check)
             {
                 return Conflict();
             }
-            var organisation = await _context.Organisation.FirstOrDefaultAsync(d =>  d.SIRET == SIRET);
-            var query = new Demarches
+            var query = new Contacter
             {
 
                 Id_Utilisateur = idEtudiant,
                 SIRET = SIRET,
-                dateRefus = dateRefus,
-                entreprise = nomEntreprise,
-                contact = contact,
-                Adresse = Adresse,
+                TypeContact = TypeContact,
+                DateDemande = DateDemande,
+                StatutDemande = statutDemande,
             };
-            _context.Demarches.Add(query);
+            _context.Contacter.Add(query);
             await _context.SaveChangesAsync();
 
-            var result = new DemarchesDto
+            var result = new ContacterDto
             {
                 Id_Utilisateur = query.Id_Utilisateur,
                 SIRET = query.SIRET,
-                DateRefus = query.dateRefus,
-                Entreprise = query.entreprise,
-                Contact = query.contact,
-                Adresse = query.Adresse,
+                TypeContact = query.TypeContact,
+                DateDemande = query.DateDemande,
+                StatutDemande = query.StatutDemande,
             };
             return Ok(result);
         }
 
 
+        [Authorize(Roles = "Etudiant")]
+        [HttpPut("modify/{siret}")]
 
-        [HttpPut("{idEtudiant}/{siret}")]
-
-        public async Task<IActionResult> Update(CreateDemarchesDto request, int idEtudiant, string siret)
+        public async Task<IActionResult> Update(CreateContacterDto request, string siret)
         {
-            if (idEtudiant <= 0)
+
+            var DateDemande = request.DateDemande;
+         
+            var TypeContact = request.TypeContact;
+            var statutDemande = request.StatutDemande.Trim().ToLower();
+            var enAttente = "En attente";
+            var refuse = "Refuse";
+            var accepte = "Accepte";
+
+
+            var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdTest, out int idEtudiant)) 
+            {
+                return Unauthorized("Token invalide : identifiant utilisateur manquant.");
+            }
+
+           
+
+            if (string.IsNullOrWhiteSpace(siret) || string.IsNullOrWhiteSpace(TypeContact) || string.IsNullOrWhiteSpace(statutDemande))
             {
                 return BadRequest();
             }
-            if(string.IsNullOrWhiteSpace(siret))
+            if (!DateDemande.HasValue)
             {
                 return BadRequest();
             }
 
-            var check = await _context.Demarches.FirstOrDefaultAsync(d => d.Id_Utilisateur == idEtudiant && d.SIRET == siret);
-            if (check == null)
+            if (statutDemande != enAttente.Trim().ToLower() && statutDemande != refuse.Trim().ToLower() && statutDemande != accepte.Trim().ToLower())
             {
-                return NotFound();
+                return BadRequest("il faut entre en attend, refuse ou accepte");
+            }
+            if (statutDemande == enAttente.Trim().ToLower())
+            {
+                statutDemande = enAttente;
+            }
+            else if (statutDemande == refuse.Trim().ToLower())
+            {
+                statutDemande = refuse;
+            }
+            else if (statutDemande == accepte.Trim().ToLower())
+            {
+                statutDemande = accepte;
             }
 
-            check.dateRefus = request.DateRefus;
-            check.entreprise = request.Entreprise;
-            check.contact = request.Contact;
-            check.Adresse = request.Adresse;
+
+            var searchOrg = await _context.Organisation.AnyAsync(o => o.SIRET == siret);
+            if (!searchOrg)
+            {
+                return NotFound("l'organisation n'existe pas");
+            }
+
+            var update = await _context.Contacter.FirstOrDefaultAsync(d => d.Id_Utilisateur == idEtudiant && d.SIRET == siret);
+            if (update == null)
+            {
+                return NotFound("contacter c'existe pas");
+            }
+
+            update.TypeContact = request.TypeContact;
+            update.DateDemande = request.DateDemande;
+            update.StatutDemande = statutDemande;
+
 
             await _context.SaveChangesAsync();
-            var update = new DemarchesDto
+
+            var dto = new ContacterDto
             {
-                Id_Utilisateur = check.Id_Utilisateur,
-                SIRET = check.SIRET,
-                DateRefus = check.dateRefus,  
-                Entreprise = check.entreprise,
-                Contact = check.contact,
-                Adresse = check.Adresse,
+                Id_Utilisateur = update.Id_Utilisateur,
+                SIRET = update.SIRET,
+                TypeContact = update.TypeContact,
+                DateDemande = update.DateDemande,
+                StatutDemande = update.StatutDemande
             };
-            return Ok(update);
+            return Ok(dto);
 
         }
 
-
-
-        
-        [HttpDelete("{idEtudiant}/{siret}")]
-
-        public async Task<IActionResult> Delete(int idEtudiant, string siret)
-        { 
-            var del = await _context.Demarches.FirstOrDefaultAsync(d => d.Id_Utilisateur == idEtudiant && d.SIRET == siret);
-
-            if (del == null)
-            {
-                return NotFound();
-            }
-            _context.Demarches.Remove(del);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        
 
     }
 }

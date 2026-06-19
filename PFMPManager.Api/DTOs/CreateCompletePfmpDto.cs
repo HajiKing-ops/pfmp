@@ -21,7 +21,7 @@ namespace PFMPManager.Api.DTOs
         public DateTime? DateDebut { get; set; }
         public DateTime? DateFin { get; set; }
         public int IdEtudiant { get; set; }
-        public int IdAdministrateur { get; set;}
+        public int IdAdministrateur { get; set;} 
         
         //maître de stage fields
         public string? PrenomMaitreStage {get; set;}

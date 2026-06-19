@@ -21,7 +21,7 @@ namespace PFMPManager.Api.Data
         public DbSet<Organisation> Organisation { get; set; }
         public DbSet<Remplir> Remplir { get; set; }
         public DbSet<Planning> Planning { get; set; }
-        public DbSet<Demarches> Demarches { get; set; }
+        public DbSet<Contacter> Contacter { get; set; }
         public DbSet<RapportJournalier> RapportJournalier { get; set; }
         public DbSet<PlanningJours> PlanningJours { get; set; }
         public DbSet<Professionnel> Professionnel { get; set; }
@@ -33,14 +33,15 @@ namespace PFMPManager.Api.Data
         public DbSet<Administrer> Administrer { get; set; }
         public DbSet<Etablissement> Etablissement { get; set; }
         public DbSet<RefreshToken> RefreshToken { get; set; }
-
         
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder) // table rule/configuration
         {
             modelBuilder.Entity<Remplir>()
                 .HasKey(r => new {r.Id_Utilisateur, r.Id_RapportJournalier});
 
-            modelBuilder.Entity<Demarches>()
+            modelBuilder.Entity<Contacter>()
                .HasKey(r => new { r.Id_Utilisateur, r.SIRET });
 
             modelBuilder.Entity<Travailler>()

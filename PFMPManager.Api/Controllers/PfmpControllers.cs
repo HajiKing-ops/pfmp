@@ -163,7 +163,7 @@ namespace PFMPManager.Api.Controllers
             var IdEtudiant = request.IdEtudiant;
 
             // in here is the problem i have to solve it the admin id 
-            var IdAdministrateur = request.IdAdministrateur;
+            var IdAdministrateur = 10;
 
             //maître de stage fields
             var PrenomMaitreStage = request.PrenomMaitreStage;
@@ -194,19 +194,45 @@ namespace PFMPManager.Api.Controllers
 
             foreach (var pj in request.PlanningJours)
             {
-                if (pj.TotalHeures <= 0 || !pj.ApresMidiDebut.HasValue || !pj.ApresMidiFin.HasValue || !pj.MatinDebut.HasValue
-                    || !pj.MatinFin.HasValue || string.IsNullOrWhiteSpace(pj.Jour) || pj.MatinFin.Value <= pj.MatinDebut.Value
-                    || pj.ApresMidiFin.Value <= pj.ApresMidiDebut.Value || pj.ApresMidiDebut.Value <= pj.MatinFin.Value)
+                if (pj.TotalHeures <= 0 || string.IsNullOrWhiteSpace(pj.Jour))
                     {
                     return BadRequest();
                     }
-                
-               var totalFromDay = request.PlanningJours.Sum(p => p.TotalHeures);
+                bool matinVide = pj.MatinDebut == null && pj.MatinFin == null;
+                bool matinComplete = pj.MatinDebut != null && pj.MatinFin != null;
+
+                bool midiVide = pj.ApresMidiDebut == null && pj.ApresMidiFin == null;
+                bool midiComplete = pj.ApresMidiDebut != null && pj.ApresMidiFin != null;
+
+                if (!matinVide && !matinComplete)
+                {
+                    return BadRequest($"le matin du jour {pj.Jour} est incomplet");
+                }
+               
+                if (matinComplete && pj.MatinDebut >= pj.MatinFin)
+                {
+                    return BadRequest($"pour {pj.Jour} l'heure de debut du matin doit etre avant l'heure de fin ");
+                }
+                if (midiComplete && pj.ApresMidiDebut >= pj.ApresMidiFin)
+                {
+                    return BadRequest($"pour {pj.Jour} l'heure de debut de l'apres-midi doit etre avant l'heure de fin ");
+                }
+                if (matinComplete && midiComplete && pj.MatinFin >= pj.ApresMidiDebut)
+                {
+                    return BadRequest($"Pour {pj.Jour}, le matin ne peut pas finir apres le debut de l'apres-midi");
+                }
+
+                var totalFromDay = request.PlanningJours.Sum(p => p.TotalHeures);
                 if (totalFromDay != request.TotalHebdo)
                 {
                     return BadRequest();
                 }
 
+            }
+            var searchContacter = await _context.Contacter.AnyAsync(c => c.SIRET == SIRET && c.Id_Utilisateur == IdEtudiant && c.StatutDemande.Trim().ToLower() == "accepte");
+            if (!searchContacter)
+            {
+                return BadRequest("Vous devez d'abord contacter l'organisation");
             }
             //search 
             var dejaEnStage = await _context.Pfmp.AnyAsync(pf=> pf.Id_Utilisateur_1 == IdEtudiant &&

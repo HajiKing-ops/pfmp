@@ -26,7 +26,7 @@ namespace PFMPManager.Api.Models
         public int Retard { get; set; }
 
         [Column("Justification")]
-        public int Justification { get; set; }
+        public bool Justification { get; set; }
 
         [Column("Id_Utilisateur")]
         public int Id_Utilisateur { get; set; }

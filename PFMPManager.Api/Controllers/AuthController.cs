@@ -119,7 +119,7 @@ public class AuthController : ControllerBase
         }
         if (search.RevokedAt != null)
         {
-            return Unauthorized("Ce jeton a d�j� �t� utilis� ou vous �tes d�connect�");
+            return Unauthorized("Ce jeton a deja ete utilise ou vous etes deconnecte");
         }
         if (!search.ExpiresAt.HasValue || search.ExpiresAt.Value <= DateTime.UtcNow)
         {
@@ -138,7 +138,7 @@ public class AuthController : ControllerBase
 
         if (string.IsNullOrWhiteSpace(role))
         {
-            return Unauthorized("R�le introuvable.");
+            return Unauthorized("Role introuvable.");
         }
 
         var (newRefreshTokenHash, accessToken, newRefreshToken) = JwtHelper.CreateTokens( _configuration, utilisateur.Id_Utilisateur, role, utilisateur.Login);
@@ -193,13 +193,13 @@ public class AuthController : ControllerBase
         }
         if (search.RevokedAt != null)
         {
-            return Unauthorized("Ce jeton a d�j� �t� utilis� ou vous �tes d�connect�");
+            return Unauthorized("Ce jeton a deja ete utilise ou vous etes deconnecte");
         }
 
         search.RevokedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
-        return Ok("Vous �tes d�connect�");
+        return Ok("Vous etes deconnecte");
 
     }
 

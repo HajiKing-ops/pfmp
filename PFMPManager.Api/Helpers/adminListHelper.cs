@@ -59,14 +59,12 @@ namespace PFMPManager.Api.Helpers
                     if (search == null || !etablissementIds.Contains(search.Id_Etablissement))
                     {
                         continue;
-
                     }
                     // Recuperer les informations d'affichage : eleve, filier, entreprise, maitre de stage
                     IdEtablissement = search.Id_Etablissement;
                     IdClasse = search.Id_Classe;
                     LibelleClasse = search.LibelleClasse;
                     var fil = await _context.Filiere.FirstOrDefaultAsync(fi => fi.Id_Filiere == search.Id_Filiere);
-
 
                     if (fil != null)
                     {

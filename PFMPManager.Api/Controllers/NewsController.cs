@@ -20,24 +20,23 @@ namespace  PFMPManager.Api.Controllers
         public async Task<IActionResult> GetNews()
         {
             try {
-            var rssUrl =   "https://www.cert.ssi.gouv.fr/feed/";
+                var rssUrl =   "https://www.cert.ssi.gouv.fr/feed/";
 
-            using var httpClient = new HttpClient();
+                using var httpClient = new HttpClient();
 
-            var xml = await httpClient.GetStringAsync(rssUrl);
+                var xml = await httpClient.GetStringAsync(rssUrl);
 
-           var document = XDocument.Parse(xml);
+                var document = XDocument.Parse(xml);
 
-            var rssItems = document.Descendants("item")
-            .Select(i => new NewsDto
-            {
-               Title = i.Element("title") ?.Value ?? string.Empty,
-               Link = i.Element("link")?.Value ?? string.Empty,
-               Description = i.Element("description")?.Value ?? string.Empty,
-               PublishedDate = i.Element("pubDate")?.Value ?? string.Empty,
+                var rssItems = document.Descendants("item")
+                .Select(i => new NewsDto
+                {
+                   Title = i.Element("title") ?.Value ?? string.Empty,
+                   Link = i.Element("link")?.Value ?? string.Empty,
+                   Description = i.Element("description")?.Value ?? string.Empty,
+                   PublishedDate = i.Element("pubDate")?.Value ?? string.Empty,
 
-
-            }).ToList();
+                }).ToList();
 
 
             return Ok(rssItems);

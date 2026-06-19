@@ -3,9 +3,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
-    [Table("demarches")]
+    [Table("contacter")]
 
-    public class Contacter 
+    public class Contacter
     {
 
         [Column("Id_Utilisateur")]
@@ -16,7 +16,7 @@ namespace PFMPManager.Api.Models
         public string? SIRET { get; set; }
 
         [Column("TypeContact")]
-        [MaxLength(10)]
+        [MaxLength(50)]
         public string? TypeContact { get; set; }
 
         [Column("DateDemande")]
