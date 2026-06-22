@@ -5,7 +5,6 @@ using PFMPManager.Api.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims; // creates  claims 
 using PFMPManager.Api.Models;
-using System.Security.AccessControl;
 
 
 
@@ -16,7 +15,7 @@ namespace PFMPManager.Api.Controllers
     [Route("api/demarches")]
     [Authorize]
 
-    public class DemarcheController : ControllerBase 
+    public class DemarcheController : ControllerBase
     {
         private readonly AppDbContext _context;
 

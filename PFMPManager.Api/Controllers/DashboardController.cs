@@ -4,7 +4,7 @@ using PFMPManager.Api.Data;
 using Microsoft.AspNetCore.Authorization;
 using PFMPManager.Api.DTOs;
 
-namespace PFMPManager.Api.Controllers 
+namespace PFMPManager.Api.Controllers
 {
     [ApiController]
 
@@ -25,8 +25,8 @@ namespace PFMPManager.Api.Controllers
 
         public async Task<IActionResult> GetById(int idEtudiant)
         {
-            var search = await _context.Pfmp.FirstOrDefaultAsync(p => p.DateDebut.HasValue && p.DateDebut.Value.Date <= DateTime.Today 
-            && p.DateFin.HasValue && p.DateFin.Value.Date >= DateTime.Today 
+            var search = await _context.Pfmp.FirstOrDefaultAsync(p => p.DateDebut.HasValue && p.DateDebut.Value.Date <= DateTime.Today
+            && p.DateFin.HasValue && p.DateFin.Value.Date >= DateTime.Today
             && p.Id_Utilisateur_1 == idEtudiant);
             if (search == null)
             {

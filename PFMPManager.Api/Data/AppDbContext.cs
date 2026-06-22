@@ -33,7 +33,8 @@ namespace PFMPManager.Api.Data
         public DbSet<Administrer> Administrer { get; set; }
         public DbSet<Etablissement> Etablissement { get; set; }
         public DbSet<RefreshToken> RefreshToken { get; set; }
-        
+        public DbSet<Message> Message { get; set; }
+
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) // table rule/configuration

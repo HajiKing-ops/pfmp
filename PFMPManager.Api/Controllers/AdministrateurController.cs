@@ -1,12 +1,10 @@
+using System.Security.Claims; // creates  claims 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
 using PFMPManager.Api.Helpers;
-using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims; // creates  claims 
-using Microsoft.VisualBasic;
-using System.Net;
 
 
 
@@ -85,7 +83,7 @@ namespace PFMPManager.Api.Controllers
 
             if (!pfmps.Any())
             {
-                return NotFound("Aucune PFMP trouv�e pour cet administrateur");
+                return NotFound("Aucune PFMP trouvee pour cet administrateur");
             }
 
 
@@ -133,7 +131,7 @@ namespace PFMPManager.Api.Controllers
             var classes = await _context.GroupeClasse.Where(gc => etablissementIds.Contains(gc.Id_Etablissement)).ToListAsync();
             if (!classes.Any())
             {
-                return NotFound("Aucune classe trouv�e pour cet administrateur");
+                return NotFound("Aucune classe trouvee pour cet administrateur");
             }
 
             var etud = await (from e in _context.Etudier
@@ -162,7 +160,7 @@ namespace PFMPManager.Api.Controllers
                 etud = etud.Where(e=> e.Id_Etablissement == idEtablissement.Value && e.Id_Classe == idClasse.Value).ToList();
                 if(!etud.Any())
                 {
-                    return NotFound("Aucun étudiant trouvé pour cette classe "); 
+                    return NotFound("Aucun étudiant trouvé pour cette classe ");
                 }
             }
 
@@ -222,14 +220,12 @@ namespace PFMPManager.Api.Controllers
                     adminRowDto = adminRowDto.Where(r => r.Restants > 0).ToList();
                 }else if(statutRecherche == "tous")
                 {
-                    
                 }
                 else
                 {
                     return BadRequest("Statut invalide. Valeurs acceptées : tous, encours, valide, incomplet.");
                 }
             }
-         
 
             var stat = AdminListHelper.Calculation(adminRowDto);
 
@@ -277,7 +273,7 @@ namespace PFMPManager.Api.Controllers
             {
                 return NotFound();
             }
-            
+
 
             var etudiantIds = etud.Select(e => e.Id_Utilisateur).Distinct().ToList(); // extract students ids
 
@@ -347,5 +343,4 @@ namespace PFMPManager.Api.Controllers
 
 
     }
-    
 }
