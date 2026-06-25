@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
-    [Table("contacter")]
+    [Table("Contacter")]
 
     public class Contacter
     {
@@ -25,6 +25,7 @@ namespace PFMPManager.Api.Models
         [Column("StatutDemande")]
         [MaxLength(12)]
         public string? StatutDemande { get; set; }
+
 
     }
 }

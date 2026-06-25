@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
-    [Table("filiere")]
+    [Table("Filiere")]
     public class Filiere
     {
         [Key]

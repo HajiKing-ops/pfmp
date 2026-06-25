@@ -3,19 +3,19 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
-    [Table("etudiant")]
+    [Table("Etudiant")]
     public class Etudiant
     {
         [Key]
         [Column("Id_Utilisateur_1")]
         public int Id_Utilisateur_1 { get; set; }  // ? -> can be null 
-        // { get; set; } — EF Core reads this to save to DB, writes this when fetching from DB
-        // = string.Empty  — default value is "" instead of null (avoids null warnings)
+        // { get; set; } ï¿½ EF Core reads this to save to DB, writes this when fetching from DB
+        // = string.Empty  ï¿½ default value is "" instead of null (avoids null warnings)
 
 
         [Column("Date_Naissance")]
         public DateTime? Date_Naissance { get; set; }
-        // string? — the ? means this column is nullable (optional, can be null)
+        // string? ï¿½ the ? means this column is nullable (optional, can be null)
 
 
         [Column("Adresse")]

@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
+    [Table("Travailler")]
     public class Travailler
     {
         [Column("Id_Utilisateur")]

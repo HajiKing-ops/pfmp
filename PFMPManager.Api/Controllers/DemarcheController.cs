@@ -5,6 +5,7 @@ using PFMPManager.Api.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims; // creates  claims 
 using PFMPManager.Api.Models;
+using Microsoft.VisualBasic;
 
 
 
@@ -23,6 +24,47 @@ namespace PFMPManager.Api.Controllers
         {
             _context = context;
         }
+        [HttpGet]
+        [Authorize(Roles = "Etudiant")]
+
+        public async Task<IActionResult> Get()
+        {
+            var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdTest, out int idEtudiant))
+            {
+                return Unauthorized("Token invalide : identifiant utilisateur manquant.");
+            }
+            var getAllDemarches = await _context.Contacter.Where(c => c.Id_Utilisateur == idEtudiant).ToListAsync();
+            if (!getAllDemarches.Any())
+            {
+                return NotFound("Aucune Demarche");
+            }
+            
+            var dtos = new List<ContacterDto>();
+
+            foreach (var d in getAllDemarches)
+            {
+                var checkOrg = await _context.Organisation.Where(o => o.SIRET == d.SIRET).Select(o => o.RaisonSociale).FirstOrDefaultAsync();
+
+                if (checkOrg == null)
+                {
+                    return NotFound("L'Organisation untrovable");
+                }
+                var dto = new ContacterDto
+                {
+                    Id_Utilisateur = d.Id_Utilisateur,
+                    SIRET = d.SIRET,
+                    TypeContact = d.TypeContact,
+                    DateDemande = d.DateDemande,
+                    StatutDemande = d.StatutDemande,
+                    RaisonSociale = checkOrg,
+                };
+                dtos.Add(dto);
+            }
+
+            return Ok(dtos);
+        }
+
 
         [HttpPost("{siret}")]
         [Authorize(Roles = "Etudiant")]
@@ -71,8 +113,8 @@ namespace PFMPManager.Api.Controllers
                 statutDemande = accepte;
             }
 
-            var searchOrg = await _context.Organisation.AnyAsync(o => o.SIRET == SIRET);
-            if (!searchOrg)
+            var searchOrg = await _context.Organisation.Where(o => o.SIRET == SIRET).Select(o=> o.RaisonSociale).FirstOrDefaultAsync();
+            if (searchOrg == null)
             {
                 return NotFound("l'organisation n'existe pas");
             }
@@ -101,6 +143,7 @@ namespace PFMPManager.Api.Controllers
                 TypeContact = query.TypeContact,
                 DateDemande = query.DateDemande,
                 StatutDemande = query.StatutDemande,
+                RaisonSociale = searchOrg,
             };
             return Ok(result);
         }
@@ -156,8 +199,8 @@ namespace PFMPManager.Api.Controllers
             }
 
 
-            var searchOrg = await _context.Organisation.AnyAsync(o => o.SIRET == siret);
-            if (!searchOrg)
+            var searchOrg = await _context.Organisation.Where(o => o.SIRET == siret).Select(o=> o.RaisonSociale).FirstOrDefaultAsync();
+            if (searchOrg == null)
             {
                 return NotFound("l'organisation n'existe pas");
             }
@@ -181,7 +224,8 @@ namespace PFMPManager.Api.Controllers
                 SIRET = update.SIRET,
                 TypeContact = update.TypeContact,
                 DateDemande = update.DateDemande,
-                StatutDemande = update.StatutDemande
+                StatutDemande = update.StatutDemande,
+                RaisonSociale = searchOrg,
             };
             return Ok(dto);
 

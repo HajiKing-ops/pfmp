@@ -7,6 +7,7 @@ namespace PFMPManager.Api.DTOs
         public string TypeContact { get; set; } = string.Empty;
         public DateTime? DateDemande { get; set; }
         public string StatutDemande { get; set; } = string.Empty;
+        public string RaisonSociale { get; set; } = string.Empty;
 
     }
 }

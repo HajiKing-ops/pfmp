@@ -8,6 +8,7 @@ namespace PFMPManager.Api.DTOs
         public string SIRET { get; set; } = string.Empty;
         public string? Adresse {get; set;}
         public string? NumTelephone {get; set;}
+        public string? SiteWeb { get; set; }
 
         //Planning 
 

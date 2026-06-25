@@ -35,8 +35,8 @@ namespace PFMPManager.Api.Controllers
                 Ville = o.Ville ?? string.Empty,
                 AdresseMail = o.AdresseMail ?? string.Empty,
                 NumTelephone = o.NumTelephone ?? string.Empty,
-            }
-                ).ToListAsync(); //Query all rows
+                SiteWeb = o.SiteWeb ?? string.Empty,
+            }).ToListAsync(); //Query all rows
             return Ok(result); // 200 ok with json array 
         }
 
@@ -54,13 +54,13 @@ namespace PFMPManager.Api.Controllers
 
             }
              if (!string.IsNullOrWhiteSpace(codePostal))
-            {
+             {
                 query = query.Where(o => o.CodePostal == codePostal);
-            }
+             }
              if (!string.IsNullOrWhiteSpace(secteur))
-            {
+             {
                 query = query.Where(o => o.SecteurActivite.Contains(secteur));
-            }
+             }
           
             var result = await query.Select(o => new OrganisationDto
             {
@@ -73,6 +73,7 @@ namespace PFMPManager.Api.Controllers
                 Ville = o.Ville ?? string.Empty,
                 AdresseMail = o.AdresseMail ?? string.Empty,
                 NumTelephone = o.NumTelephone ?? string.Empty,
+                SiteWeb = o.SiteWeb ?? string.Empty,
             }).ToListAsync();
 
             if (!result.Any())

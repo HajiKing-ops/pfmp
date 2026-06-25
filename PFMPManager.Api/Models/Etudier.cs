@@ -1,9 +1,8 @@
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
-    [Table("etudier")]
+    [Table("Etudier")]
     public class Etudier
     {
 

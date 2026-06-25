@@ -11,6 +11,7 @@ namespace PFMPManager.Api.DTOs
         public string Ville { get; set; } = string.Empty;
         public string AdresseMail { get; set; } = string.Empty;
         public string NumTelephone { get; set; } = string.Empty;
+        public string SiteWeb { get; set; } = string.Empty;
 
 
     }

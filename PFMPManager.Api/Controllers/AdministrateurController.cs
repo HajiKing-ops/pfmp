@@ -24,13 +24,18 @@ namespace PFMPManager.Api.Controllers
             _context = context;
         }
 
-       // [Authorize(Roles = "Administrateur")]
+       [Authorize(Roles = "Administrateur")]
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetAll(int id)
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
         {
             //Verifie que l'administrateur gere au moins un etablissement 
-            var admin = await _context.Administrer.Where(a => a.Id_Utilisateur == id).ToListAsync();
+             var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdTest, out int idAdmin))
+            {
+                return Unauthorized("Token invalide : identifiant utilisateur manquant.");
+            }
+            var admin = await _context.Administrer.Where(a => a.Id_Utilisateur == idAdmin).ToListAsync();
             if (!admin.Any())
             {
                 return NotFound("l'Administrateur n'exite pas");

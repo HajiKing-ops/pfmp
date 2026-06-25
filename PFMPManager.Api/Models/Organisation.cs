@@ -48,8 +48,10 @@ namespace PFMPManager.Api.Models
         [MaxLength(10)]
         public string? NumTelephone { get; set; }
 
-
-
+        [Column("SiteWeb")]
+        [MaxLength(100)]
+        public string? SiteWeb { get; set; }
+        
 
     }
 }

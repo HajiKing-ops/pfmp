@@ -37,7 +37,7 @@ namespace PFMPManager.Api.Controllers
             return Ok(pfmps); // 200 ok with json array
         }
 
-
+        [Authorize]
         [HttpGet("recherche/{idEtudiant}/{idPfmp?}")] //address of the method
         public async Task<IActionResult> GetPfmpById(int idEtudiant, int? idPfmp)
         {
@@ -122,6 +122,8 @@ namespace PFMPManager.Api.Controllers
             var siret = request.SIRET;
             var adresse = request.Adresse;
             var numTelephone = request.NumTelephone;
+            var siteWeb = request.SiteWeb;
+
             //planning
             var totalHebdo = request.TotalHebdo;
 
@@ -152,7 +154,7 @@ namespace PFMPManager.Api.Controllers
             {
                 return Unauthorized("Token invalide : identifiant utilisateur manquant.");
             }
-            if (string.IsNullOrWhiteSpace(raisonSociale) || string.IsNullOrWhiteSpace(secteurActivite) || string.IsNullOrWhiteSpace(siret)
+            if (string.IsNullOrWhiteSpace(raisonSociale) || string.IsNullOrWhiteSpace(secteurActivite) || string.IsNullOrWhiteSpace(siret) || string.IsNullOrWhiteSpace(siteWeb)
                  || string.IsNullOrWhiteSpace(adresse) || string.IsNullOrWhiteSpace(numTelephone)
                  || string.IsNullOrWhiteSpace(prenomMaitreStage)
                  || string.IsNullOrWhiteSpace(nomMaitreStage) || string.IsNullOrWhiteSpace(fonctionMaitreStage) || string.IsNullOrWhiteSpace(telephoneMaitreStage)
@@ -282,17 +284,13 @@ namespace PFMPManager.Api.Controllers
             {
                 if (checkOrg == null)
                 {
-                    checkOrg = new Organisation
-                    {
-                        RaisonSociale = request.RaisonSociale,
-                        SecteurActivite = request.SecteurActivite,
-                        Adresse = request.Adresse,
-                        NumTelephone = request.NumTelephone,
-                        SIRET = request.SIRET,
-                    };
-                    _context.Organisation.Add(checkOrg);
-                    await _context.SaveChangesAsync();
+                    return NotFound("L'Organisation untrovable");
                 }
+
+                checkOrg.SiteWeb = siteWeb;
+            
+                await _context.SaveChangesAsync();
+
                 //search the user with his login
                 var userExist = await _context.Utilisateur.FirstOrDefaultAsync(p => p.Login == emailMaitreStage);
                 var user = new Utilisateur();
