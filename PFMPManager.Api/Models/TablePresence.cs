@@ -9,13 +9,13 @@ namespace PFMPManager.Api.Models
         [Key]
         [Column("Id_TablePresence")]
         public int Id_TablePresence { get; set; }
-        // { get; set; } � EF Core reads this to save to DB, writes this when fetching from DB
-        // = string.Empty  � default value is "" instead of null (avoids null warnings)
+        // { get; set; }  EF Core reads this to save to DB, writes this when fetching from DB
+        // = string.Empty  default value is "" instead of null (avoids null warnings)
 
 
         [Column("DateJour")]
         public DateTime? DateJour { get; set; }
-        // string? � the ? means this column is nullable (optional, can be null)
+        // string?  the ? means this column is nullable (optional, can be null)
 
 
         [Column("Etat")]

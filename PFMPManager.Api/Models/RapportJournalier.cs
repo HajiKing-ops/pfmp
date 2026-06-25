@@ -9,10 +9,7 @@ namespace PFMPManager.Api.Models
 		[Key]
 		[Column("Id_RapportJournalier")]
 		public int Id_RapportJournalier { get; set; }
-		// { get; set; } � EF Core reads this to save to DB, writes this when fetching from DB
-		// = string.Empty  � default value is "" instead of null (avoids null warnings)
-		// = string.Empty  � default value is "" instead of null (avoids null warnings)[]
-
+		
 		[Column("DateRapport")]
 		public DateTime? DateRapport { get; set; }
 

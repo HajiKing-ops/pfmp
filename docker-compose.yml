@@ -1,0 +1,32 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: pfmp_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "${MYSQL_PORT}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  api:
+    build:
+      context: ./PFMPManager.Api
+      dockerfile: Dockerfile
+    container_name: pfmp_api
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "server=mysql;port=3306;database=${MYSQL_DATABASE};user=root;password=${MYSQL_ROOT_PASSWORD};"
+    ports:
+      - "${API_PORT}:8080"
+
+volumes:
+  mysql_data:
+    external: true
+    name: docker-test_mysql_data

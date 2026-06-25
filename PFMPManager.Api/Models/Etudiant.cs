@@ -9,15 +9,11 @@ namespace PFMPManager.Api.Models
         [Key]
         [Column("Id_Utilisateur_1")]
         public int Id_Utilisateur_1 { get; set; }  // ? -> can be null 
-        // { get; set; } � EF Core reads this to save to DB, writes this when fetching from DB
-        // = string.Empty  � default value is "" instead of null (avoids null warnings)
-
+  
 
         [Column("Date_Naissance")]
         public DateTime? Date_Naissance { get; set; }
-        // string? � the ? means this column is nullable (optional, can be null)
-
-
+     
         [Column("Adresse")]
         [MaxLength(100)]
         public string? Adresse { get; set; }

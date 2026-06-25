@@ -9,15 +9,12 @@ namespace PFMPManager.Api.Models
         [Key]
         [Column("Id_planningJour")]
         public int Id_planningJour { get; set; }
-        // { get; set; } � EF Core reads this to save to DB, writes this when fetching from DB
-        // = string.Empty  � default value is "" instead of null (avoids null warnings)
-
+    
 
         [Column("Jour")]
         [MaxLength(20)]
         public string? Jour { get; set; }
-        // string? � the ? means this column is nullable (optional, can be null)
-
+      
 
         [Column("MatinDebut")]
         public TimeSpan? MatinDebut { get; set; }

@@ -16,9 +16,7 @@ namespace PFMPManager.Api.Models
         [Column("Fonction")]
         [MaxLength(50)]
         public string? Fonction { get; set; }
-        // string? � the ? means this column is nullable (optional, can be null)
-
-
+      
         [Column("Adresse")]
         [MaxLength(100)]
         public string? Adresse { get; set; }
