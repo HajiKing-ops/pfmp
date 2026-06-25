@@ -10,7 +10,12 @@ services:
       - "${MYSQL_PORT}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
   api:
     build:
       context: ./PFMPManager.Api
@@ -18,7 +23,9 @@ services:
     container_name: pfmp_api
     restart: unless-stopped
     depends_on:
-      - mysql
+      mysql:
+       condition: service_healthy
+
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
