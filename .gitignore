@@ -2,9 +2,9 @@
 .vscode/
 .vs/
 
-.backup_db.bat/
+.backup_db.bat
 
-.env/
+.env
 *.sql
 
 # System files
