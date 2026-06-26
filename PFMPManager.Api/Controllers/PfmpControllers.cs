@@ -222,10 +222,11 @@ namespace PFMPManager.Api.Controllers
               
 
             }
-            if (totalHebdoBackend != totalHebdo || totalHebdoBackend <= 0 || totalHebdoBackend > 2100)
+            if (IsWeeklyTotalInvalid(totalHebdoBackend, totalHebdo))
             {
                 return BadRequest();
             }
+
             if (!validePlanning.Any())
             {
                 return BadRequest();
@@ -446,8 +447,11 @@ namespace PFMPManager.Api.Controllers
                 ApresMidiFin = planningDay.ApresMidiFin,
                 TotalHeures = planningDay.TotalHeures
             };
+        }
 
-
+        private bool IsWeeklyTotalInvalid(int totalHebdoBackend, int? totalHebdoRequest)
+        {
+            return totalHebdoBackend != totalHebdoRequest || totalHebdoBackend <= 0 || totalHebdoBackend > 210;
         }
 
 
