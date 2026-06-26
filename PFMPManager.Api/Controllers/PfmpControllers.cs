@@ -19,7 +19,7 @@ namespace PFMPManager.Api.Controllers
             _context = context;
         }
 
-        //[Authorize(Roles = Admini)]
+        
         [Authorize]
         [HttpGet] // GEt /api/Pfmp returns all PFMPs
         public async Task<IActionResult> GetAll()
@@ -148,12 +148,13 @@ namespace PFMPManager.Api.Controllers
             var telephoneMaitreStage = request.TelephoneMaitreStage;
             var emailMaitreStage = request.EmailMaitreStage;
 
-            //recived id from JWT toekn
-            var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdTest, out int idEtudiant))
+            //Get current student id
+            if (!TryGetCurrentUserId(out int currentStudentId))
             {
-                return Unauthorized("Token invalide : identifiant utilisateur manquant.");
+                return Unauthorized("Token invalide : identifiant utilisateur manquant");
             }
+
+            //Validate basic request fileds
             if (string.IsNullOrWhiteSpace(raisonSociale) || string.IsNullOrWhiteSpace(secteurActivite) || string.IsNullOrWhiteSpace(siret) || string.IsNullOrWhiteSpace(siteWeb)
                  || string.IsNullOrWhiteSpace(adresse) || string.IsNullOrWhiteSpace(numTelephone)
                  || string.IsNullOrWhiteSpace(prenomMaitreStage)
@@ -166,6 +167,8 @@ namespace PFMPManager.Api.Controllers
             {
                 return BadRequest();
             }
+
+            //Validate planning days
             foreach (var pj in request.PlanningJours)
             {
                 int dayMinutes = 0;
@@ -249,13 +252,15 @@ namespace PFMPManager.Api.Controllers
             {
                 return BadRequest();
             }
+
+            //Find administrateur
             var idAdministrateur = await (from e in _context.Etudier
                                           join gc in _context.GroupeClasse
                                           on new { e.Id_Etablissement, e.Id_Classe }
                                           equals new { gc.Id_Etablissement, gc.Id_Classe }
                                           join admin in _context.Administrer
                                           on gc.Id_Etablissement equals admin.Id_Etablissement
-                                          where e.Id_Utilisateur == idEtudiant && e.AnneeRentree <= today
+                                          where e.Id_Utilisateur == currentStudentId && e.AnneeRentree <= today
                                           && e.AnneeSortie >= today
                                           select admin.Id_Utilisateur).FirstOrDefaultAsync();
 
@@ -263,13 +268,15 @@ namespace PFMPManager.Api.Controllers
             {
                 return NotFound("Adminstrateur n'existe pas");
             }
-            var searchContacter = await _context.Contacter.AnyAsync(c => c.SIRET == siret && c.Id_Utilisateur == idEtudiant && c.StatutDemande.Trim().ToLower() == "accepte");
+            
+            //check business rules
+            var searchContacter = await _context.Contacter.AnyAsync(c => c.SIRET == siret && c.Id_Utilisateur == currentStudentId && c.StatutDemande.Trim().ToLower() == "accepte");
             if (!searchContacter)
             {
                 return BadRequest("Vous devez d'abord contacter l'organisation");
             }
             //search
-            var dejaEnStage = await _context.Pfmp.AnyAsync(pf => pf.Id_Utilisateur_1 == idEtudiant &&
+            var dejaEnStage = await _context.Pfmp.AnyAsync(pf => pf.Id_Utilisateur_1 == currentStudentId &&
                                                     pf.DateDebut.HasValue && pf.DateFin.HasValue &&
                                                     pf.DateFin.Value.Date >= dateDebut.Value.Date && pf.DateDebut.Value.Date <= dateFin.Value.Date);
             if (dejaEnStage)
@@ -277,15 +284,17 @@ namespace PFMPManager.Api.Controllers
                 return BadRequest("Vous êtes deja en stage sur cette periode ");
             }
 
-            //search the organisation with the siret
+            
             var checkOrg = await _context.Organisation.FirstOrDefaultAsync(p => p.SIRET == siret);
+            if (checkOrg == null)
+            {
+                return NotFound("L'Organisation untrovable");
+            }
+            //Create/Update database entities inside transaction 
             await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                if (checkOrg == null)
-                {
-                    return NotFound("L'Organisation untrovable");
-                }
+                
 
                 checkOrg.SiteWeb = siteWeb;
             
@@ -363,7 +372,7 @@ namespace PFMPManager.Api.Controllers
                     DateFin = request.DateFin,
                     Id_Planning = idPlanning,
                     SIRET = request.SIRET,
-                    Id_Utilisateur_1 = idEtudiant,
+                    Id_Utilisateur_1 = currentStudentId,
                     Id_Utilisateur = idAdministrateur,
                 };
                 _context.Pfmp.Add(createPfmp);
@@ -373,7 +382,7 @@ namespace PFMPManager.Api.Controllers
                 completePfmpdto.DateFin = createPfmp.DateFin;
                 completePfmpdto.Id_Planning = createPfmp.Id_Planning;
                 completePfmpdto.SIRET = createPfmp.SIRET;
-                completePfmpdto.IdEtudiant = idEtudiant;
+                completePfmpdto.IdEtudiant = currentStudentId;
                 completePfmpdto.IdAdministrateur = idAdministrateur;
                 completePfmpdto.IdPfmp = createPfmp.Id_PFMP;
 
@@ -388,6 +397,12 @@ namespace PFMPManager.Api.Controllers
 
             return Ok(completePfmpdto);
 
+        }
+        private bool TryGetCurrentUserId(out int currentStudentId)
+        {
+
+            var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return int.TryParse(id, out currentStudentId);
         }
     }
 }
