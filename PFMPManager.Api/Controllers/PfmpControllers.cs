@@ -117,11 +117,7 @@ namespace PFMPManager.Api.Controllers
         public async Task<IActionResult> CompletePfmp(CreateCompletePfmpDto request)
         {
             //entreprise
-            var raisonSociale = request.RaisonSociale;
-            var secteurActivite = request.SecteurActivite;
             var siret = request.SIRET;
-            var adresse = request.Adresse;
-            var numTelephone = request.NumTelephone;
             var siteWeb = request.SiteWeb;
 
             //planning
@@ -142,8 +138,7 @@ namespace PFMPManager.Api.Controllers
             var completePfmpdto = new PfmpDto();
 
             //maître de stage fields
-            var prenomMaitreStage = request.PrenomMaitreStage;
-            var nomMaitreStage = request.NomMaitreStage;
+            
             var fonctionMaitreStage = request.FonctionMaitreStage;
             var telephoneMaitreStage = request.TelephoneMaitreStage;
             var emailMaitreStage = request.EmailMaitreStage;
@@ -154,7 +149,7 @@ namespace PFMPManager.Api.Controllers
                 return Unauthorized("Token invalide : identifiant utilisateur manquant");
             }
 
-            //Validate basic request fileds
+            //Validate basic request fields
             if (IsBasicCompletePfmpRequestInvalid(request))
             {
                 return BadRequest();
@@ -174,10 +169,11 @@ namespace PFMPManager.Api.Controllers
                     return BadRequest();
                 }
 
-                bool matinVide = pj.MatinDebut == null && pj.MatinFin == null;
-                bool matinComplete = pj.MatinDebut != null && pj.MatinFin != null;
-                bool midiVide = pj.ApresMidiDebut == null && pj.ApresMidiFin == null;
-                bool midiComplete = pj.ApresMidiDebut != null && pj.ApresMidiFin != null;
+                bool matinVide = IsTimeSlotEmpty(pj.MatinDebut, pj.MatinFin);
+                bool matinComplete = IsTimeSlotComplete(pj.MatinDebut, pj.MatinFin);
+                bool midiVide = IsTimeSlotEmpty(pj.ApresMidiDebut, pj.ApresMidiFin);
+                bool midiComplete = IsTimeSlotComplete(pj.ApresMidiDebut, pj.ApresMidiFin);
+
                 if (matinVide && midiVide)
                 {
                     continue;
@@ -206,18 +202,11 @@ namespace PFMPManager.Api.Controllers
 
                 if (matinComplete)
                 {
-                    var duration = pj.MatinFin - pj.MatinDebut;
-                    var matinMinutesDouble = duration.Value.TotalMinutes;
-                    int matinMinutes = (int)matinMinutesDouble;
-                    dayMinutes += matinMinutes;
-
+                    dayMinutes += CalculateTimeSlotMinutes(pj.MatinDebut, pj.MatinFin);
                 }
                 if (midiComplete)
                 {
-                    var duration = pj.ApresMidiFin - pj.ApresMidiDebut;
-                    var midiMinutesDouble = duration.Value.TotalMinutes;
-                    int midiMinutes = (int)midiMinutesDouble;
-                    dayMinutes += midiMinutes;
+                    dayMinutes += CalculateTimeSlotMinutes(pj.ApresMidiDebut, pj.ApresMidiFin);
                 }
 
 
@@ -250,7 +239,7 @@ namespace PFMPManager.Api.Controllers
                 return BadRequest();
             }
 
-            //Find administrateur
+            //Find administrator
             var idAdministrateur = await (from e in _context.Etudier
                                           join gc in _context.GroupeClasse
                                           on new { e.Id_Etablissement, e.Id_Classe }
@@ -411,6 +400,26 @@ namespace PFMPManager.Api.Controllers
                  || string.IsNullOrWhiteSpace(request.NomMaitreStage)    || string.IsNullOrWhiteSpace(request.FonctionMaitreStage) 
                  || string.IsNullOrWhiteSpace(request.EmailMaitreStage)  || !request.DateDebut.HasValue || !request.DateFin.HasValue 
                  || request.DateFin.Value.Date < request.DateDebut.Value.Date;
+        }
+
+        private bool IsTimeSlotComplete(TimeSpan? start, TimeSpan? end)
+        {
+            return start != null && end != null;
+        }
+        private bool IsTimeSlotEmpty(TimeSpan? start, TimeSpan? end)
+        { 
+            return start == null && end == null;
+        }
+
+        private int CalculateTimeSlotMinutes(TimeSpan? start, TimeSpan? end)
+        {
+            if (!start.HasValue || !end.HasValue)
+            {
+                return 0;
+            }
+            var duration = end.Value - start.Value;
+            return (int)duration.TotalMinutes;
+
         }
     }
 }
