@@ -155,14 +155,11 @@ namespace PFMPManager.Api.Controllers
             }
 
             //Validate basic request fileds
-            if (string.IsNullOrWhiteSpace(raisonSociale) || string.IsNullOrWhiteSpace(secteurActivite) || string.IsNullOrWhiteSpace(siret) || string.IsNullOrWhiteSpace(siteWeb)
-                 || string.IsNullOrWhiteSpace(adresse) || string.IsNullOrWhiteSpace(numTelephone)
-                 || string.IsNullOrWhiteSpace(prenomMaitreStage)
-                 || string.IsNullOrWhiteSpace(nomMaitreStage) || string.IsNullOrWhiteSpace(fonctionMaitreStage) || string.IsNullOrWhiteSpace(telephoneMaitreStage)
-                 || string.IsNullOrWhiteSpace(emailMaitreStage) || !dateDebut.HasValue || !dateFin.HasValue || dateFin.Value.Date < dateDebut.Value.Date)
+            if (IsBasicCompletePfmpRequestInvalid(request))
             {
                 return BadRequest();
             }
+
             if (request.PlanningJours == null || !request.PlanningJours.Any())
             {
                 return BadRequest();
@@ -403,6 +400,17 @@ namespace PFMPManager.Api.Controllers
 
             var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
             return int.TryParse(id, out currentStudentId);
+        }
+
+        private bool IsBasicCompletePfmpRequestInvalid(CreateCompletePfmpDto request)
+        {
+            
+            return string.IsNullOrWhiteSpace(request.RaisonSociale) || string.IsNullOrWhiteSpace(request.SecteurActivite) || string.IsNullOrWhiteSpace(request.SIRET) 
+                 || string.IsNullOrWhiteSpace(request.Adresse)      || string.IsNullOrWhiteSpace(request.NumTelephone)    || string.IsNullOrWhiteSpace(request.SiteWeb)
+                 || string.IsNullOrWhiteSpace(request.PrenomMaitreStage) || string.IsNullOrWhiteSpace(request.TelephoneMaitreStage)
+                 || string.IsNullOrWhiteSpace(request.NomMaitreStage)    || string.IsNullOrWhiteSpace(request.FonctionMaitreStage) 
+                 || string.IsNullOrWhiteSpace(request.EmailMaitreStage)  || !request.DateDebut.HasValue || !request.DateFin.HasValue 
+                 || request.DateFin.Value.Date < request.DateDebut.Value.Date;
         }
     }
 }
