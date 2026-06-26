@@ -169,15 +169,14 @@ namespace PFMPManager.Api.Controllers
                     return BadRequest();
                 }
 
-                bool matinVide = IsTimeSlotEmpty(pj.MatinDebut, pj.MatinFin);
-                bool midiVide = IsTimeSlotEmpty(pj.ApresMidiDebut, pj.ApresMidiFin);
                 bool matinIncomplete = IsTimeSlotIncomplete(pj.MatinDebut, pj.MatinFin);
                 bool midiIncomplete = IsTimeSlotIncomplete(pj.ApresMidiDebut, pj.ApresMidiFin);
 
-                if (matinVide && midiVide)
+                if (IsPlanningDayEmpty(pj))
                 {
                     continue;
                 }
+
                 if (matinIncomplete)
                 {
                     return BadRequest($"le matin du jour {pj.Jour} est incomplet");
@@ -450,7 +449,10 @@ namespace PFMPManager.Api.Controllers
             return totalHebdoBackend != totalHebdoRequest || totalHebdoBackend <= 0 || totalHebdoBackend > 2100;
         }
 
-
+        private bool IsPlanningDayEmpty(CreatePlanningJoursDto planningJours) {
+            return IsTimeSlotEmpty(planningJours.MatinDebut, planningJours.MatinFin) && IsTimeSlotEmpty(planningJours.ApresMidiDebut, planningJours.ApresMidiFin);
+            
+        }
     }
 }
 
