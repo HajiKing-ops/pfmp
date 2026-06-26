@@ -5,7 +5,7 @@ using PFMPManager.Api.DTOs;
 using PFMPManager.Api.Helpers;
 using PFMPManager.Api.Models;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims; // creates  claims 
+using System.Security.Claims;
 namespace PFMPManager.Api.Controllers
 {
     [ApiController] // Enables model validation and smart binding 
@@ -121,18 +121,18 @@ namespace PFMPManager.Api.Controllers
             var siteWeb = request.SiteWeb;
 
             //planning
-            var totalHebdo = request.TotalHebdo;
+            var requestedWeeklyTotal = request.TotalHebdo;
 
             //date for today and time
             var today = DateTime.Today.Year;
-            int totalHebdoBackend = 0;
+            
             //PFMP
 
             var dateDebut = request.DateDebut;
             var dateFin = request.DateFin;
 
             //empty list for valid days
-            var validePlanning = new List<CreatePlanningJoursDto>();
+            
 
             //List to return every information that is created
             var completePfmpdto = new PfmpDto();
@@ -155,51 +155,16 @@ namespace PFMPManager.Api.Controllers
                 return BadRequest();
             }
 
-            if (request.PlanningJours == null || !request.PlanningJours.Any())
+             var planningValidation = ValidatePlanningDays(request.PlanningJours, requestedWeeklyTotal);
+            if (planningValidation.ErrorMessage != null)
             {
-                return BadRequest();
+               return BadRequest(planningValidation.ErrorMessage);
             }
-
-            //Validate planning days
-            foreach (var pj in request.PlanningJours)
-            {
-                var planningDayError = GetPlanningDayValidationError(pj);
-
-                if (planningDayError != null)
-                {
-                    return BadRequest(planningDayError);
-                }
-
-                if (IsPlanningDayEmpty(pj))
-                {
-                    continue;
-                }
-
-                int dayMinutes = CalculatePlanningDayMinutes(pj);
-
-
-                if (dayMinutes != pj.TotalHeures)
-                {
-                    return BadRequest();
-                }
-                
-                totalHebdoBackend += dayMinutes;
-                validePlanning.Add(CreateValidatedPlanningDay(pj));
-              
-
-            }
-            if (IsWeeklyTotalInvalid(totalHebdoBackend, totalHebdo))
-            {
-                return BadRequest();
-            }
-
-            if (!validePlanning.Any())
-            {
-                return BadRequest();
-            }
+            var calculatedWeeklyTotal = planningValidation.CalculatedWeeklyTotal;
+            var validPlanningDays = planningValidation.ValidPlanningDays;
 
             //Find administrator
-            var idAdministrateur = await (from e in _context.Etudier
+            var administratorId = await (from e in _context.Etudier
                                           join gc in _context.GroupeClasse
                                           on new { e.Id_Etablissement, e.Id_Classe }
                                           equals new { gc.Id_Etablissement, gc.Id_Classe }
@@ -209,7 +174,7 @@ namespace PFMPManager.Api.Controllers
                                           && e.AnneeSortie >= today
                                           select admin.Id_Utilisateur).FirstOrDefaultAsync();
 
-            if (idAdministrateur <= 0)
+            if (administratorId <= 0)
             {
                 return NotFound("Adminstrateur n'existe pas");
             }
@@ -221,10 +186,10 @@ namespace PFMPManager.Api.Controllers
                 return BadRequest("Vous devez d'abord contacter l'organisation");
             }
             //search
-            var dejaEnStage = await _context.Pfmp.AnyAsync(pf => pf.Id_Utilisateur_1 == currentStudentId &&
+            var alreadyInInternship = await _context.Pfmp.AnyAsync(pf => pf.Id_Utilisateur_1 == currentStudentId &&
                                                     pf.DateDebut.HasValue && pf.DateFin.HasValue &&
                                                     pf.DateFin.Value.Date >= dateDebut.Value.Date && pf.DateDebut.Value.Date <= dateFin.Value.Date);
-            if (dejaEnStage)
+            if (alreadyInInternship)
             {
                 return BadRequest("Vous êtes deja en stage sur cette periode ");
             }
@@ -289,14 +254,14 @@ namespace PFMPManager.Api.Controllers
                 }
                 var plan = new Planning
                 {
-                    TotalHebdo = totalHebdoBackend,
+                    TotalHebdo = calculatedWeeklyTotal,
                 };
                 _context.Planning.Add(plan);
                 await _context.SaveChangesAsync();
 
                 var idPlanning = plan.Id_Planning;
 
-                foreach (var pj in validePlanning)
+                foreach (var pj in validPlanningDays)
                 {
                     var planjour = new PlanningJours
                     {
@@ -318,7 +283,7 @@ namespace PFMPManager.Api.Controllers
                     Id_Planning = idPlanning,
                     SIRET = request.SIRET,
                     Id_Utilisateur_1 = currentStudentId,
-                    Id_Utilisateur = idAdministrateur,
+                    Id_Utilisateur = administratorId,
                 };
                 _context.Pfmp.Add(createPfmp);
                 await _context.SaveChangesAsync();
@@ -328,7 +293,7 @@ namespace PFMPManager.Api.Controllers
                 completePfmpdto.Id_Planning = createPfmp.Id_Planning;
                 completePfmpdto.SIRET = createPfmp.SIRET;
                 completePfmpdto.IdEtudiant = currentStudentId;
-                completePfmpdto.IdAdministrateur = idAdministrateur;
+                completePfmpdto.IdAdministrateur = administratorId;
                 completePfmpdto.IdPfmp = createPfmp.Id_PFMP;
 
 
@@ -420,13 +385,13 @@ namespace PFMPManager.Api.Controllers
             };
         }
 
-        private bool IsWeeklyTotalInvalid(int totalHebdoBackend, int? totalHebdoRequest)
+        private bool IsWeeklyTotalInvalid(int calculatedWeeklyTotal, int? requestedWeeklyTotal)
         {
-            return totalHebdoBackend != totalHebdoRequest || totalHebdoBackend <= 0 || totalHebdoBackend > 2100;
+            return calculatedWeeklyTotal != requestedWeeklyTotal || calculatedWeeklyTotal <= 0 || calculatedWeeklyTotal > 2100;
         }
 
-        private bool IsPlanningDayEmpty(CreatePlanningJoursDto planningJour) {
-            return IsTimeSlotEmpty(planningJour.MatinDebut, planningJour.MatinFin) && IsTimeSlotEmpty(planningJour.ApresMidiDebut, planningJour.ApresMidiFin);
+        private bool IsPlanningDayEmpty(CreatePlanningJoursDto planningDay) {
+            return IsTimeSlotEmpty(planningDay.MatinDebut, planningDay.MatinFin) && IsTimeSlotEmpty(planningDay.ApresMidiDebut, planningDay.ApresMidiFin);
             
         }
 
@@ -467,6 +432,55 @@ namespace PFMPManager.Api.Controllers
                 return  $"Pour {planningDay.Jour}, le matin ne peut pas finir apres le debut de l'apres-midi";
             }
             return null;
+        }
+        private PlanningValidationResult ValidatePlanningDays(List<CreatePlanningJoursDto>? planningDays, int? requestedWeeklyTotal)
+        {
+            var result = new PlanningValidationResult();
+            if (planningDays == null || !planningDays.Any())
+            {
+                result.ErrorMessage = "Le planning est obligatoire";
+                return result;
+            }
+            foreach (var planningDay in planningDays)
+            {
+                
+                var planningDayError = GetPlanningDayValidationError(planningDay);
+                if (planningDayError != null)
+                {
+                    result.ErrorMessage = planningDayError;
+                    return result;
+                }
+                if (IsPlanningDayEmpty(planningDay))
+                {
+                    continue;
+                }
+                int dayMinutes = CalculatePlanningDayMinutes(planningDay);
+                if (dayMinutes != planningDay.TotalHeures)
+                {
+                    result.ErrorMessage = "Le total des heures du jour ne correspond pas au planning";
+                    return result;
+                }
+                result.CalculatedWeeklyTotal += dayMinutes;
+                result.ValidPlanningDays.Add(CreateValidatedPlanningDay(planningDay));
+            }
+
+            if (IsWeeklyTotalInvalid(result.CalculatedWeeklyTotal, requestedWeeklyTotal))
+            {
+                result.ErrorMessage = "Le total hebdomadaire du planning est invalide";
+                return result;
+            }
+            if (!result.ValidPlanningDays.Any())
+            {
+                result.ErrorMessage = "Le planning doit contenir au moins un jour valide";
+                return result;
+            }
+            return result;
+        }
+        private class PlanningValidationResult
+        { 
+            public string? ErrorMessage { get; set; }
+            public int CalculatedWeeklyTotal { get; set; }
+            public List<CreatePlanningJoursDto> ValidPlanningDays { get; set; } = new();
         }
     }
 }
