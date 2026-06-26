@@ -173,29 +173,31 @@ namespace PFMPManager.Api.Controllers
                 bool matinComplete = IsTimeSlotComplete(pj.MatinDebut, pj.MatinFin);
                 bool midiVide = IsTimeSlotEmpty(pj.ApresMidiDebut, pj.ApresMidiFin);
                 bool midiComplete = IsTimeSlotComplete(pj.ApresMidiDebut, pj.ApresMidiFin);
+                bool matinIncomplete = IsTimeSlotIncomplete(pj.MatinDebut, pj.MatinFin);
+                bool midiIncomplete = IsTimeSlotIncomplete(pj.ApresMidiDebut, pj.ApresMidiFin);
 
                 if (matinVide && midiVide)
                 {
                     continue;
                 }
-                if (!matinVide && !matinComplete)
+                if (matinIncomplete)
                 {
                     return BadRequest($"le matin du jour {pj.Jour} est incomplet");
                 }
-                if (!midiVide && !midiComplete)
+                if (midiIncomplete)
                 {
                     return BadRequest($"le apres-midi du jour {pj.Jour} est incomplet");
                 }
 
-                if (matinComplete && pj.MatinDebut >= pj.MatinFin)
+                if (IsTimeSlotOrderInvalid(pj.MatinDebut,pj.MatinFin))
                 {
                     return BadRequest($"pour {pj.Jour} l'heure de debut du matin doit etre avant l'heure de fin ");
                 }
-                if (midiComplete && pj.ApresMidiDebut >= pj.ApresMidiFin)
+                if (IsTimeSlotOrderInvalid(pj.ApresMidiDebut, pj.ApresMidiFin))
                 {
                     return BadRequest($"pour {pj.Jour} l'heure de debut de l'apres-midi doit etre avant l'heure de fin ");
                 }
-                if (matinComplete && midiComplete && pj.MatinFin >= pj.ApresMidiDebut)
+                if (IsMorningOverlappingAfternoon(pj.MatinFin, pj.ApresMidiDebut))
                 {
                     return BadRequest($"Pour {pj.Jour}, le matin ne peut pas finir apres le debut de l'apres-midi");
                 }
@@ -410,6 +412,10 @@ namespace PFMPManager.Api.Controllers
         { 
             return start == null && end == null;
         }
+        private bool IsTimeSlotIncomplete(TimeSpan? start, TimeSpan? end)
+        {
+            return !IsTimeSlotEmpty(start, end) && !IsTimeSlotComplete(start, end);
+        }
 
         private int CalculateTimeSlotMinutes(TimeSpan? start, TimeSpan? end)
         {
@@ -419,8 +425,25 @@ namespace PFMPManager.Api.Controllers
             }
             var duration = end.Value - start.Value;
             return (int)duration.TotalMinutes;
-
         }
+
+        private bool IsTimeSlotOrderInvalid(TimeSpan? start, TimeSpan? end)
+        {
+            if (!IsTimeSlotComplete(start, end))
+            {
+                return false;
+            }
+            return  start.Value >= end.Value;
+        }
+        private bool IsMorningOverlappingAfternoon(TimeSpan? morningEnd, TimeSpan? afternoonStart)
+        {
+            if (!morningEnd.HasValue || !afternoonStart.HasValue)
+            {
+                return false;
+            }
+            return morningEnd.Value >= afternoonStart.Value;
+        }
+
     }
 }
 
