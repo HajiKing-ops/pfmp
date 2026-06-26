@@ -163,16 +163,14 @@ namespace PFMPManager.Api.Controllers
             //Validate planning days
             foreach (var pj in request.PlanningJours)
             {
-                int dayMinutes = 0;
+                
                 if (string.IsNullOrWhiteSpace(pj.Jour))
                 {
                     return BadRequest();
                 }
 
                 bool matinVide = IsTimeSlotEmpty(pj.MatinDebut, pj.MatinFin);
-                bool matinComplete = IsTimeSlotComplete(pj.MatinDebut, pj.MatinFin);
                 bool midiVide = IsTimeSlotEmpty(pj.ApresMidiDebut, pj.ApresMidiFin);
-                bool midiComplete = IsTimeSlotComplete(pj.ApresMidiDebut, pj.ApresMidiFin);
                 bool matinIncomplete = IsTimeSlotIncomplete(pj.MatinDebut, pj.MatinFin);
                 bool midiIncomplete = IsTimeSlotIncomplete(pj.ApresMidiDebut, pj.ApresMidiFin);
 
@@ -202,14 +200,7 @@ namespace PFMPManager.Api.Controllers
                     return BadRequest($"Pour {pj.Jour}, le matin ne peut pas finir apres le debut de l'apres-midi");
                 }
 
-                if (matinComplete)
-                {
-                    dayMinutes += CalculateTimeSlotMinutes(pj.MatinDebut, pj.MatinFin);
-                }
-                if (midiComplete)
-                {
-                    dayMinutes += CalculateTimeSlotMinutes(pj.ApresMidiDebut, pj.ApresMidiFin);
-                }
+                int dayMinutes = CalculatePlanningDayMinutes(pj);
 
 
                 if (dayMinutes != pj.TotalHeures)
@@ -426,6 +417,11 @@ namespace PFMPManager.Api.Controllers
             }
             return  start.Value >= end.Value;
         }
+        private int CalculatePlanningDayMinutes(CreatePlanningJoursDto planningDay)
+        { 
+            return CalculateTimeSlotMinutes(planningDay.MatinDebut, planningDay.MatinFin) + CalculateTimeSlotMinutes(planningDay.ApresMidiDebut, planningDay.ApresMidiFin);
+        }
+
         private bool IsMorningOverlappingAfternoon(TimeSpan? morningEnd, TimeSpan? afternoonStart)
         {
             if (!morningEnd.HasValue || !afternoonStart.HasValue)
@@ -451,7 +447,7 @@ namespace PFMPManager.Api.Controllers
 
         private bool IsWeeklyTotalInvalid(int totalHebdoBackend, int? totalHebdoRequest)
         {
-            return totalHebdoBackend != totalHebdoRequest || totalHebdoBackend <= 0 || totalHebdoBackend > 210;
+            return totalHebdoBackend != totalHebdoRequest || totalHebdoBackend <= 0 || totalHebdoBackend > 2100;
         }
 
 
