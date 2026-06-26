@@ -163,40 +163,16 @@ namespace PFMPManager.Api.Controllers
             //Validate planning days
             foreach (var pj in request.PlanningJours)
             {
-                
-                if (string.IsNullOrWhiteSpace(pj.Jour))
-                {
-                    return BadRequest();
-                }
+                var planningDayError = GetPlanningDayValidationError(pj);
 
-                bool matinIncomplete = IsTimeSlotIncomplete(pj.MatinDebut, pj.MatinFin);
-                bool midiIncomplete = IsTimeSlotIncomplete(pj.ApresMidiDebut, pj.ApresMidiFin);
+                if (planningDayError != null)
+                {
+                    return BadRequest(planningDayError);
+                }
 
                 if (IsPlanningDayEmpty(pj))
                 {
                     continue;
-                }
-
-                if (matinIncomplete)
-                {
-                    return BadRequest($"le matin du jour {pj.Jour} est incomplet");
-                }
-                if (midiIncomplete)
-                {
-                    return BadRequest($"le apres-midi du jour {pj.Jour} est incomplet");
-                }
-
-                if (IsTimeSlotOrderInvalid(pj.MatinDebut,pj.MatinFin))
-                {
-                    return BadRequest($"pour {pj.Jour} l'heure de debut du matin doit etre avant l'heure de fin ");
-                }
-                if (IsTimeSlotOrderInvalid(pj.ApresMidiDebut, pj.ApresMidiFin))
-                {
-                    return BadRequest($"pour {pj.Jour} l'heure de debut de l'apres-midi doit etre avant l'heure de fin ");
-                }
-                if (IsMorningOverlappingAfternoon(pj.MatinFin, pj.ApresMidiDebut))
-                {
-                    return BadRequest($"Pour {pj.Jour}, le matin ne peut pas finir apres le debut de l'apres-midi");
                 }
 
                 int dayMinutes = CalculatePlanningDayMinutes(pj);
@@ -449,9 +425,48 @@ namespace PFMPManager.Api.Controllers
             return totalHebdoBackend != totalHebdoRequest || totalHebdoBackend <= 0 || totalHebdoBackend > 2100;
         }
 
-        private bool IsPlanningDayEmpty(CreatePlanningJoursDto planningJours) {
-            return IsTimeSlotEmpty(planningJours.MatinDebut, planningJours.MatinFin) && IsTimeSlotEmpty(planningJours.ApresMidiDebut, planningJours.ApresMidiFin);
+        private bool IsPlanningDayEmpty(CreatePlanningJoursDto planningJour) {
+            return IsTimeSlotEmpty(planningJour.MatinDebut, planningJour.MatinFin) && IsTimeSlotEmpty(planningJour.ApresMidiDebut, planningJour.ApresMidiFin);
             
+        }
+
+        private string? GetPlanningDayValidationError(CreatePlanningJoursDto planningDay)
+        {
+            if (string.IsNullOrWhiteSpace(planningDay.Jour))
+            {
+                return "Le jour est obligatoire.";
+            }
+
+            bool matinIncomplete = IsTimeSlotIncomplete(planningDay.MatinDebut, planningDay.MatinFin);
+            bool midiIncomplete = IsTimeSlotIncomplete(planningDay.ApresMidiDebut, planningDay.ApresMidiFin);
+
+            if (IsPlanningDayEmpty(planningDay))
+            {
+                return null; 
+            }
+
+            if (matinIncomplete)
+            {
+                return  $"le matin du jour {planningDay.Jour} est incomplet";
+            }
+            if (midiIncomplete)
+            {
+                return  $"le apres-midi du jour {planningDay.Jour} est incomplet";
+            }
+
+            if (IsTimeSlotOrderInvalid(planningDay.MatinDebut, planningDay.MatinFin))
+            {
+                return $"pour {planningDay.Jour} l'heure de debut du matin doit etre avant l'heure de fin ";
+            }
+            if (IsTimeSlotOrderInvalid(planningDay.ApresMidiDebut, planningDay.ApresMidiFin))
+            {
+                return  $"pour {planningDay.Jour} l'heure de debut de l'apres-midi doit etre avant l'heure de fin ";
+            }
+            if (IsMorningOverlappingAfternoon(planningDay.MatinFin, planningDay.ApresMidiDebut))
+            {
+                return  $"Pour {planningDay.Jour}, le matin ne peut pas finir apres le debut de l'apres-midi";
+            }
+            return null;
         }
     }
 }
