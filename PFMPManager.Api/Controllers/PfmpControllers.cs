@@ -141,7 +141,9 @@ namespace PFMPManager.Api.Controllers
             
             var fonctionMaitreStage = request.FonctionMaitreStage;
             var telephoneMaitreStage = request.TelephoneMaitreStage;
-            var emailMaitreStage = request.EmailMaitreStage;
+            var supervisorEmail = request.EmailMaitreStage;
+            var supervisorLastName = request.NomMaitreStage;
+            var supervisorFirstName = request.PrenomMaitreStage;
 
             //Get current student id
             if (!TryGetCurrentUserId(out int currentStudentId))
@@ -210,39 +212,11 @@ namespace PFMPManager.Api.Controllers
             
                 await _context.SaveChangesAsync();
 
-                //search the user with his login
-                var userExist = await _context.Utilisateur.FirstOrDefaultAsync(p => p.Login == emailMaitreStage);
-                var user = new Utilisateur();
-                if (userExist == null)
-                {
-                    var pwd = "test1234";
-                    string savedPasswordHash = PasswordHelper.HashPassword(pwd);
-                    user.Nom = request.NomMaitreStage;
-                    user.Prenom = request.PrenomMaitreStage;
-                    user.Login = emailMaitreStage;
-                    user.Pwd = savedPasswordHash;
-                    _context.Utilisateur.Add(user);
-                    await _context.SaveChangesAsync();
-                }
-                else
-                {
-                    user = userExist;
-                }
-                var prf = new Professionnel();
-                var userprf = await _context.Professionnel.FirstOrDefaultAsync(p => p.Id_Utilisateur == user.Id_Utilisateur);
-                if (userprf == null)
-                {
-                    prf.Id_Utilisateur = user.Id_Utilisateur;
-                    prf.Fonction = fonctionMaitreStage;
-                    prf.AdresseMail = user.Login;
-                    prf.NumTelephone = telephoneMaitreStage;
-                    _context.Professionnel.Add(prf);
-                    await _context.SaveChangesAsync();
-                }
-                else
-                {
-                    prf = userprf;
-                }
+                
+                var user = await GetOrCreateSupervisorUserAsync(supervisorLastName, supervisorFirstName, supervisorEmail);
+
+                var prf = await GetOrCreateProfessionalProfileAsync(user.Id_Utilisateur, fonctionMaitreStage, supervisorEmail, telephoneMaitreStage);
+                
                 var checkTravail = await _context.Travailler.FirstOrDefaultAsync(o => o.Id_Utilisateur == prf.Id_Utilisateur && o.SIRET == siret);
                 var travail = new Travailler();
                 if (checkTravail == null)
@@ -481,6 +455,48 @@ namespace PFMPManager.Api.Controllers
             public string? ErrorMessage { get; set; }
             public int CalculatedWeeklyTotal { get; set; }
             public List<CreatePlanningJoursDto> ValidPlanningDays { get; set; } = new();
+        }
+        private async Task<Utilisateur> GetOrCreateSupervisorUserAsync(string supervisorLastName, string supervisorFirstName, string supervisorEmail)
+        {
+            var userExist = await _context.Utilisateur.FirstOrDefaultAsync(p => p.Login == supervisorEmail);
+            var user = new Utilisateur();
+            if (userExist == null)
+            {
+                var pwd = "test1234";
+                string savedPasswordHash = PasswordHelper.HashPassword(pwd);
+                user.Nom = supervisorLastName;
+                user.Prenom = supervisorFirstName;
+                user.Login = supervisorEmail;
+                user.Pwd = savedPasswordHash;
+                _context.Utilisateur.Add(user);
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                user = userExist;
+            }
+            return user;
+        }
+
+        private async Task<Professionnel> GetOrCreateProfessionalProfileAsync(int supervisorUserId, string fonctionMaitreStage, string supervisorEmail,  string telephoneMaitreStage)
+        {
+            var prf = new Professionnel();
+            var userprf = await _context.Professionnel.FirstOrDefaultAsync(p => p.Id_Utilisateur == supervisorUserId);
+            if (userprf == null)
+            {
+                prf.Id_Utilisateur = supervisorUserId;
+                prf.Fonction = fonctionMaitreStage;
+                prf.AdresseMail = supervisorEmail;
+                prf.NumTelephone = telephoneMaitreStage;
+                _context.Professionnel.Add(prf);
+                await _context.SaveChangesAsync();
+                return prf;
+            }
+            else
+            {
+                prf = userprf;
+            }
+            return prf;
         }
     }
 }
