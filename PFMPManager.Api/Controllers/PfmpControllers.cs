@@ -217,39 +217,15 @@ namespace PFMPManager.Api.Controllers
 
                 var prf = await GetOrCreateProfessionalProfileAsync(user.Id_Utilisateur, fonctionMaitreStage, supervisorEmail, telephoneMaitreStage);
                 
-                var checkTravail = await _context.Travailler.FirstOrDefaultAsync(o => o.Id_Utilisateur == prf.Id_Utilisateur && o.SIRET == siret);
-                var travail = new Travailler();
-                if (checkTravail == null)
-                {
-                    travail.Id_Utilisateur = prf.Id_Utilisateur;
-                    travail.SIRET = request.SIRET;
-                    _context.Travailler.Add(travail);
-                    await _context.SaveChangesAsync();
-                }
-                var plan = new Planning
-                {
-                    TotalHebdo = calculatedWeeklyTotal,
-                };
-                _context.Planning.Add(plan);
-                await _context.SaveChangesAsync();
 
-                var idPlanning = plan.Id_Planning;
+                await EnsureWorkRelationExistsAsync(prf.Id_Utilisateur, siret);
+                
+                
 
-                foreach (var pj in validPlanningDays)
-                {
-                    var planjour = new PlanningJours
-                    {
-                        Jour = pj.Jour,
-                        MatinDebut = pj.MatinDebut,
-                        MatinFin = pj.MatinFin,
-                        ApresMidiDebut = pj.ApresMidiDebut,
-                        ApresMidiFin = pj.ApresMidiFin,
-                        TotalHeures = pj.TotalHeures,
-                        Id_Planning = idPlanning,
-                    };
-                    _context.PlanningJours.Add(planjour);
-                }
-                await _context.SaveChangesAsync();
+                var idPlanning = await CreatePlanningWithDaysAsync(calculatedWeeklyTotal, validPlanningDays);
+
+                
+                
                 var createPfmp = new Pfmp
                 {
                     DateDebut = request.DateDebut,
@@ -497,6 +473,47 @@ namespace PFMPManager.Api.Controllers
                 prf = userprf;
             }
             return prf;
+        }
+
+        private async Task EnsureWorkRelationExistsAsync(int supervisorUserId, string siret)
+        {
+             var checkTravail = await _context.Travailler.FirstOrDefaultAsync(o => o.Id_Utilisateur == supervisorUserId && o.SIRET == siret);
+                var travail = new Travailler();
+                if (checkTravail == null)
+                {
+                    travail.Id_Utilisateur = supervisorUserId;
+                    travail.SIRET = siret;
+                    _context.Travailler.Add(travail);
+                    await _context.SaveChangesAsync();
+                }
+        }
+        private async Task<int> CreatePlanningWithDaysAsync(int calculatedWeeklyTotal, List<CreatePlanningJoursDto> ValidPlanningDays)
+        {
+             var plan = new Planning
+                {
+                    TotalHebdo = calculatedWeeklyTotal,
+                };
+                _context.Planning.Add(plan);
+                await _context.SaveChangesAsync();
+
+                var idPlanning = plan.Id_Planning;
+
+                foreach (var pj in ValidPlanningDays)
+                {
+                    var planjour = new PlanningJours
+                    {
+                        Jour = pj.Jour,
+                        MatinDebut = pj.MatinDebut,
+                        MatinFin = pj.MatinFin,
+                        ApresMidiDebut = pj.ApresMidiDebut,
+                        ApresMidiFin = pj.ApresMidiFin,
+                        TotalHeures = pj.TotalHeures,
+                        Id_Planning = idPlanning,
+                    };
+                    _context.PlanningJours.Add(planjour);
+                }
+                await _context.SaveChangesAsync();
+                return idPlanning;
         }
     }
 }
