@@ -6,6 +6,7 @@ using PFMPManager.Api.Helpers;
 using PFMPManager.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Microsoft.VisualBasic;
 namespace PFMPManager.Api.Controllers
 {
     [ApiController] // Enables model validation and smart binding 
@@ -224,19 +225,9 @@ namespace PFMPManager.Api.Controllers
 
                 var idPlanning = await CreatePlanningWithDaysAsync(calculatedWeeklyTotal, validPlanningDays);
 
+
                 
-                
-                var createPfmp = new Pfmp
-                {
-                    DateDebut = request.DateDebut,
-                    DateFin = request.DateFin,
-                    Id_Planning = idPlanning,
-                    SIRET = request.SIRET,
-                    Id_Utilisateur_1 = currentStudentId,
-                    Id_Utilisateur = administratorId,
-                };
-                _context.Pfmp.Add(createPfmp);
-                await _context.SaveChangesAsync();
+                var createPfmp = await CreatedPfmpAsync(request, idPlanning, currentStudentId, administratorId);
 
                 completePfmpdto.DateDebut = createPfmp.DateDebut;
                 completePfmpdto.DateFin = createPfmp.DateFin;
@@ -487,33 +478,49 @@ namespace PFMPManager.Api.Controllers
                     await _context.SaveChangesAsync();
                 }
         }
-        private async Task<int> CreatePlanningWithDaysAsync(int calculatedWeeklyTotal, List<CreatePlanningJoursDto> ValidPlanningDays)
+        private async Task<int> CreatePlanningWithDaysAsync(int calculatedWeeklyTotal, List<CreatePlanningJoursDto> validPlanningDays)
         {
-             var plan = new Planning
+            var plan = new Planning
+            {
+                TotalHebdo = calculatedWeeklyTotal,
+            };
+            _context.Planning.Add(plan);
+            await _context.SaveChangesAsync();
+
+            var idPlanning = plan.Id_Planning;
+
+            foreach (var pj in validPlanningDays)
+            {
+                var planjour = new PlanningJours
                 {
-                    TotalHebdo = calculatedWeeklyTotal,
+                    Jour = pj.Jour,
+                    MatinDebut = pj.MatinDebut,
+                    MatinFin = pj.MatinFin,
+                    ApresMidiDebut = pj.ApresMidiDebut,
+                    ApresMidiFin = pj.ApresMidiFin,
+                    TotalHeures = pj.TotalHeures,
+                    Id_Planning = idPlanning,
                 };
-                _context.Planning.Add(plan);
-                await _context.SaveChangesAsync();
+                _context.PlanningJours.Add(planjour);
+            }
+            await _context.SaveChangesAsync();
+            return idPlanning;
+        }
 
-                var idPlanning = plan.Id_Planning;
-
-                foreach (var pj in ValidPlanningDays)
-                {
-                    var planjour = new PlanningJours
-                    {
-                        Jour = pj.Jour,
-                        MatinDebut = pj.MatinDebut,
-                        MatinFin = pj.MatinFin,
-                        ApresMidiDebut = pj.ApresMidiDebut,
-                        ApresMidiFin = pj.ApresMidiFin,
-                        TotalHeures = pj.TotalHeures,
-                        Id_Planning = idPlanning,
-                    };
-                    _context.PlanningJours.Add(planjour);
-                }
-                await _context.SaveChangesAsync();
-                return idPlanning;
+        private async Task<Pfmp>  CreatedPfmpAsync(CreateCompletePfmpDto request, int idPlanning, int currentStudentId, int administratorId)
+        {
+            var createPfmp = new Pfmp
+            {
+                DateDebut = request.DateDebut,
+                DateFin = request.DateFin,
+                Id_Planning = idPlanning,
+                SIRET = request.SIRET,
+                Id_Utilisateur_1 = currentStudentId,
+                Id_Utilisateur = administratorId,
+            };
+            _context.Pfmp.Add(createPfmp);
+            await _context.SaveChangesAsync();
+            return createPfmp;
         }
     }
 }
