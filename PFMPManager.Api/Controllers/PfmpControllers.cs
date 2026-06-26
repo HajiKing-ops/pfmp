@@ -6,7 +6,6 @@ using PFMPManager.Api.Helpers;
 using PFMPManager.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using Microsoft.VisualBasic;
 namespace PFMPManager.Api.Controllers
 {
     [ApiController] // Enables model validation and smart binding 
@@ -136,7 +135,7 @@ namespace PFMPManager.Api.Controllers
             
 
             //List to return every information that is created
-            var completePfmpdto = new PfmpDto();
+            var responseDto = new PfmpDto();
 
             //maître de stage fields
             
@@ -227,16 +226,9 @@ namespace PFMPManager.Api.Controllers
 
 
                 
-                var createPfmp = await CreatedPfmpAsync(request, idPlanning, currentStudentId, administratorId);
+                var createdPfmp = await CreatedPfmpAsync(request, idPlanning, currentStudentId, administratorId);
 
-                completePfmpdto.DateDebut = createPfmp.DateDebut;
-                completePfmpdto.DateFin = createPfmp.DateFin;
-                completePfmpdto.Id_Planning = createPfmp.Id_Planning;
-                completePfmpdto.SIRET = createPfmp.SIRET;
-                completePfmpdto.IdEtudiant = currentStudentId;
-                completePfmpdto.IdAdministrateur = administratorId;
-                completePfmpdto.IdPfmp = createPfmp.Id_PFMP;
-
+                responseDto = BuildCompletePfmpResponse(createdPfmp,currentStudentId,administratorId);
 
                 await transaction.CommitAsync();
             }
@@ -246,7 +238,7 @@ namespace PFMPManager.Api.Controllers
                 throw;
             }
 
-            return Ok(completePfmpdto);
+            return Ok(responseDto);
 
         }
         private bool TryGetCurrentUserId(out int currentStudentId)
@@ -509,7 +501,7 @@ namespace PFMPManager.Api.Controllers
 
         private async Task<Pfmp>  CreatedPfmpAsync(CreateCompletePfmpDto request, int idPlanning, int currentStudentId, int administratorId)
         {
-            var createPfmp = new Pfmp
+            var createdPfmp = new Pfmp
             {
                 DateDebut = request.DateDebut,
                 DateFin = request.DateFin,
@@ -518,9 +510,23 @@ namespace PFMPManager.Api.Controllers
                 Id_Utilisateur_1 = currentStudentId,
                 Id_Utilisateur = administratorId,
             };
-            _context.Pfmp.Add(createPfmp);
+            _context.Pfmp.Add(createdPfmp);
             await _context.SaveChangesAsync();
-            return createPfmp;
+            return createdPfmp;
+        }
+        private PfmpDto BuildCompletePfmpResponse(Pfmp createdPfmp, int currentStudentId, int administratorId)
+        {
+           return  new PfmpDto
+           {
+                DateDebut = createdPfmp.DateDebut,
+                DateFin = createdPfmp.DateFin,
+                Id_Planning = createdPfmp.Id_Planning,
+                SIRET = createdPfmp.SIRET,
+                IdEtudiant = currentStudentId,
+                IdAdministrateur = administratorId,
+                IdPfmp = createdPfmp.Id_PFMP,
+           };
+            
         }
     }
 }
