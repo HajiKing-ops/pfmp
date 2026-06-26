@@ -156,7 +156,6 @@ namespace PFMPManager.Api.Controllers
         {
 
             var DateDemande = request.DateDemande;
-         
             var TypeContact = request.TypeContact;
             var statutDemande = request.StatutDemande.Trim().ToLower();
             var enAttente = "En attente";

@@ -216,20 +216,10 @@ namespace PFMPManager.Api.Controllers
                 {
                     return BadRequest();
                 }
-                else
-                {
-                    totalHebdoBackend += dayMinutes;
-                    var planning = new CreatePlanningJoursDto
-                    {
-                        Jour = pj.Jour,
-                        MatinDebut = pj.MatinDebut,
-                        MatinFin = pj.MatinFin,
-                        ApresMidiDebut = pj.ApresMidiDebut,
-                        ApresMidiFin = pj.ApresMidiFin,
-                        TotalHeures = pj.TotalHeures
-                    };
-                    validePlanning.Add(planning);
-                }
+                
+                totalHebdoBackend += dayMinutes;
+                validePlanning.Add(CreateValidatedPlanningDay(pj));
+              
 
             }
             if (totalHebdoBackend != totalHebdo || totalHebdoBackend <= 0 || totalHebdoBackend > 2100)
@@ -443,6 +433,23 @@ namespace PFMPManager.Api.Controllers
             }
             return morningEnd.Value >= afternoonStart.Value;
         }
+
+        private CreatePlanningJoursDto CreateValidatedPlanningDay(CreatePlanningJoursDto planningDay)
+        {
+
+            return new CreatePlanningJoursDto
+             {
+                Jour = planningDay.Jour,
+                MatinDebut = planningDay.MatinDebut,
+                MatinFin = planningDay.MatinFin,
+                ApresMidiDebut = planningDay.ApresMidiDebut,
+                ApresMidiFin = planningDay.ApresMidiFin,
+                TotalHeures = planningDay.TotalHeures
+            };
+
+
+        }
+
 
     }
 }
