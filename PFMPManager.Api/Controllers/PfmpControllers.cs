@@ -19,24 +19,6 @@ namespace PFMPManager.Api.Controllers
             _context = context;
         }
 
-        
-        [Authorize]
-        [HttpGet] // GEt /api/Pfmp returns all PFMPs
-        public async Task<IActionResult> GetAll()
-        {
-            var pfmps = await _context.Pfmp.Select(p => new PfmpDto
-            {
-                DateDebut = p.DateDebut,
-                DateFin = p.DateFin,
-                IdAdministrateur = p.Id_Utilisateur,
-                Id_Planning = p.Id_Planning,
-                SIRET = p.SIRET,
-                IdEtudiant = p.Id_Utilisateur_1,
-                IdPfmp = p.Id_PFMP,
-            }).ToListAsync(); //Query all rows
-            return Ok(pfmps); // 200 ok with json array
-        }
-
 
 
         [Authorize(Roles = "Etudiant, Enseignant")]
