@@ -150,7 +150,7 @@ namespace PFMPManager.Api.Controllers
                 return BadRequest();
             }
 
-             var planningValidation = ValidatePlanningDays(request.PlanningJours, requestedWeeklyTotal);
+            var planningValidation = ValidatePlanningDays(request.PlanningJours, requestedWeeklyTotal);
             if (planningValidation.ErrorMessage != null)
             {
                return BadRequest(planningValidation.ErrorMessage);
@@ -174,16 +174,18 @@ namespace PFMPManager.Api.Controllers
                 return BadRequest("Vous devez d'abord contacter l'organisation");
             }
             //search
+            var startDate = request.DateDebut.Value.Date;
+            var endDate = request.DateFin.Value.Date;
 
-            var alreadyInInternship = await HasOverlappingPfmpAsync(currentStudentId, request.DateDebut.Value.Date, request.DateFin.Value.Date);
+            var alreadyInInternship = await HasOverlappingPfmpAsync(currentStudentId, startDate, endDate);
             if (alreadyInInternship)
             {
                 return BadRequest("Vous êtes deja en stage sur cette periode");
             }
 
             
-            var checkOrg = await FindOrganisationBySiretAsync(siret);
-            if (checkOrg == null)
+            var organisation = await FindOrganisationBySiretAsync(siret);
+            if (organisation == null)
             {
                 return NotFound("L'Organisation untrovable");
             }
@@ -194,14 +196,12 @@ namespace PFMPManager.Api.Controllers
             {
                 
 
-                checkOrg.SiteWeb = siteWeb;
-            
-                await _context.SaveChangesAsync();
+                await UpdateOrganisationWebsiteAsync(organisation,siteWeb!);
 
                 
-                var user = await GetOrCreateSupervisorUserAsync(supervisorLastName, supervisorFirstName, supervisorEmail);
+                var user = await GetOrCreateSupervisorUserAsync(supervisorLastName!, supervisorFirstName!, supervisorEmail!);
 
-                var prf = await GetOrCreateProfessionalProfileAsync(user.Id_Utilisateur, fonctionMaitreStage, supervisorEmail, telephoneMaitreStage);
+                var prf = await GetOrCreateProfessionalProfileAsync(user.Id_Utilisateur, fonctionMaitreStage!, supervisorEmail!, telephoneMaitreStage!);
                 
 
                 await EnsureWorkRelationExistsAsync(prf.Id_Utilisateur, siret);
@@ -534,15 +534,21 @@ namespace PFMPManager.Api.Controllers
         {
             return await _context.Contacter.AnyAsync(c => c.SIRET == siret && c.Id_Utilisateur == currentStudentId && c.StatutDemande.Trim().ToLower() == "accepte");
         }
-        private async Task<bool> HasOverlappingPfmpAsync(int currentStudentId, DateTime? dateDebut, DateTime? dateFin)
+        private async Task<bool> HasOverlappingPfmpAsync(int currentStudentId, DateTime startDate , DateTime endDate )
         {
              return await _context.Pfmp.AnyAsync(pf => pf.Id_Utilisateur_1 == currentStudentId &&
                                                     pf.DateDebut.HasValue && pf.DateFin.HasValue &&
-                                                    pf.DateFin.Value.Date >= dateDebut && pf.DateDebut.Value.Date <= dateFin);
+                                                    pf.DateFin.Value.Date >= startDate && pf.DateDebut.Value.Date <= endDate);
         }
         private async Task<Organisation?> FindOrganisationBySiretAsync(string siret)
         {
             return await _context.Organisation.FirstOrDefaultAsync(o=> o.SIRET == siret);
+        }
+
+        private async Task UpdateOrganisationWebsiteAsync(Organisation organisation,string siteWeb)
+        {
+                organisation.SiteWeb = siteWeb;
+                await _context.SaveChangesAsync();
         }
     }
 }
