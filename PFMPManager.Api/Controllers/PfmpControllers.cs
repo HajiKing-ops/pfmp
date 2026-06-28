@@ -40,43 +40,13 @@ namespace PFMPManager.Api.Controllers
                 return StatusCode(403, pfmpAccessError);    
             }
             
-            
-
             var query = _context.Pfmp.AsQueryable();
+            query = query.Where(o => o.Id_Utilisateur_1 == idEtudiant);    
             if (idPfmp != null)
             {
-                if (role == "Etudiant")
-                {
-                    query = query.Where(o => o.Id_Utilisateur_1 == idEtudiant && o.Id_PFMP == idPfmp);
-                }
-                else if(role == "Enseignant")
-                {
-                    query = from etudiant in _context.Etudiant
-                            join pfmp in _context.Pfmp
-                            on etudiant.Id_Utilisateur_1 equals pfmp.Id_Utilisateur_1
-                            where etudiant.Id_Utilisateur == currentUserId
-                            && pfmp.Id_Utilisateur_1 == idEtudiant
-                            && pfmp.Id_PFMP == idPfmp
-                            select pfmp;
-                }
-                
+                query = query.Where(o => o.Id_PFMP == idPfmp);
             }
-            else
-            {
-                if (role == "Etudiant")
-                {
-                    query = query.Where(o => o.Id_Utilisateur_1 == idEtudiant);    
-                }
-                else if (role == "Enseignant")
-                {
-                    query = from etudiant in _context.Etudiant
-                            join pfmp in _context.Pfmp
-                            on etudiant.Id_Utilisateur_1 equals pfmp.Id_Utilisateur_1
-                            where etudiant.Id_Utilisateur == currentUserId
-                            && pfmp.Id_Utilisateur_1 == idEtudiant
-                            select pfmp;
-                }
-            }
+
             var pfmps = await query.ToListAsync();
             if (!pfmps.Any())
             {
