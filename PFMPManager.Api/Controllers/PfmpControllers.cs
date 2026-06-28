@@ -134,9 +134,6 @@ namespace PFMPManager.Api.Controllers
             //empty list for valid days
             
 
-            //List to return every information that is created
-            var responseDto = new PfmpDto();
-
             //maître de stage fields
             
             var fonctionMaitreStage = request.FonctionMaitreStage;
@@ -174,7 +171,8 @@ namespace PFMPManager.Api.Controllers
             }
             
             //check business rules
-            var searchContacter = await _context.Contacter.AnyAsync(c => c.SIRET == siret && c.Id_Utilisateur == currentStudentId && c.StatutDemande.Trim().ToLower() == "accepte");
+            var searchContacter = await HasAcceptedContactRequestAsync(currentStudentId, siret);
+
             if (!searchContacter)
             {
                 return BadRequest("Vous devez d'abord contacter l'organisation");
@@ -218,11 +216,13 @@ namespace PFMPManager.Api.Controllers
 
 
                 
-                var createdPfmp = await CreatedPfmpAsync(request, idPlanning, currentStudentId, administratorId);
+                var createdPfmp = await CreatePfmpAsync(request, idPlanning, currentStudentId, administratorId);
 
-                responseDto = BuildCompletePfmpResponse(createdPfmp,currentStudentId,administratorId);
+                var responseDto = BuildCompletePfmpResponse(createdPfmp,currentStudentId,administratorId);
 
                 await transaction.CommitAsync();
+                
+                return Ok(responseDto);
             }
             catch
             {
@@ -230,7 +230,7 @@ namespace PFMPManager.Api.Controllers
                 throw;
             }
 
-            return Ok(responseDto);
+           
 
         }
         private bool TryGetCurrentUserId(out int currentStudentId)
@@ -491,7 +491,7 @@ namespace PFMPManager.Api.Controllers
             return idPlanning;
         }
 
-        private async Task<Pfmp>  CreatedPfmpAsync(CreateCompletePfmpDto request, int idPlanning, int currentStudentId, int administratorId)
+        private async Task<Pfmp>  CreatePfmpAsync(CreateCompletePfmpDto request, int idPlanning, int currentStudentId, int administratorId)
         {
             var createdPfmp = new Pfmp
             {
@@ -532,6 +532,11 @@ namespace PFMPManager.Api.Controllers
                                           where e.Id_Utilisateur == currentStudentId && e.AnneeRentree <= today
                                           && e.AnneeSortie >= today
                                           select admin.Id_Utilisateur).FirstOrDefaultAsync();
+        }
+
+        private async Task<bool> HasAcceptedContactRequestAsync(int currentStudentId, string siret)
+        {
+            return await _context.Contacter.AnyAsync(c => c.SIRET == siret && c.Id_Utilisateur == currentStudentId && c.StatutDemande.Trim().ToLower() == "accepte");
         }
     }
 }
