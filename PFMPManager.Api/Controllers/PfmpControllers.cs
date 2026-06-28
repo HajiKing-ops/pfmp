@@ -21,7 +21,7 @@ namespace PFMPManager.Api.Controllers
 
 
 
-        [Authorize(Roles = "Etudiant, Enseignant")]
+        [Authorize(Roles = "Etudiant,Enseignant")]
         [HttpGet("recherche/{idEtudiant}/{idPfmp?}")] //address of the method
         public async Task<IActionResult> GetPfmpById(int idEtudiant, int? idPfmp)
         {
@@ -34,11 +34,14 @@ namespace PFMPManager.Api.Controllers
             {
                 return Unauthorized("Token invalide : role utilisateur manquant");
             }
-            
-            if (role == "Etudiant" && currentUserId != idEtudiant)
+            var pfmpAccessError = await ValidatePfmpAccessAsync(currentUserId, idEtudiant, role);
+            if (pfmpAccessError != null)
             {
-                return StatusCode(403, "Vous n’avez pas le droit d’accéder à cette PFMP.");
+                return StatusCode(403, pfmpAccessError);    
             }
+            
+            
+
             var query = _context.Pfmp.AsQueryable();
             if (idPfmp != null)
             {
@@ -252,6 +255,24 @@ namespace PFMPManager.Api.Controllers
         {
 
             return User.FindFirstValue(ClaimTypes.Role);
+            
+        }
+
+        private async Task<string?> ValidatePfmpAccessAsync(int currentUserId, int idEtudiant, string role)
+        {
+            if (role == "Etudiant" && currentUserId == idEtudiant)
+            {
+                return null;
+            }
+            else if(role == "Enseignant")
+            {
+                var hasStudentAccess = await _context.Etudiant.AnyAsync(o=> o.Id_Utilisateur == currentUserId && o.Id_Utilisateur_1 == idEtudiant);
+                if(hasStudentAccess)
+                {
+                    return null;
+                }
+            }
+            return "Vous n’avez pas le droit d’accéder à cette PFMP.";
             
         }
         
