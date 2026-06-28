@@ -166,15 +166,7 @@ namespace PFMPManager.Api.Controllers
             var validPlanningDays = planningValidation.ValidPlanningDays;
 
             //Find administrator
-            var administratorId = await (from e in _context.Etudier
-                                          join gc in _context.GroupeClasse
-                                          on new { e.Id_Etablissement, e.Id_Classe }
-                                          equals new { gc.Id_Etablissement, gc.Id_Classe }
-                                          join admin in _context.Administrer
-                                          on gc.Id_Etablissement equals admin.Id_Etablissement
-                                          where e.Id_Utilisateur == currentStudentId && e.AnneeRentree <= today
-                                          && e.AnneeSortie >= today
-                                          select admin.Id_Utilisateur).FirstOrDefaultAsync();
+            var administratorId = await FindAdministratorIdForStudentAsync(currentStudentId, today);
 
             if (administratorId <= 0)
             {
@@ -527,6 +519,19 @@ namespace PFMPManager.Api.Controllers
                 IdPfmp = createdPfmp.Id_PFMP,
            };
             
+        }
+
+        private async Task<int> FindAdministratorIdForStudentAsync(int currentStudentId, int today)
+        {
+            return await (from e in _context.Etudier
+                                          join gc in _context.GroupeClasse
+                                          on new { e.Id_Etablissement, e.Id_Classe }
+                                          equals new { gc.Id_Etablissement, gc.Id_Classe }
+                                          join admin in _context.Administrer
+                                          on gc.Id_Etablissement equals admin.Id_Etablissement
+                                          where e.Id_Utilisateur == currentStudentId && e.AnneeRentree <= today
+                                          && e.AnneeSortie >= today
+                                          select admin.Id_Utilisateur).FirstOrDefaultAsync();
         }
     }
 }

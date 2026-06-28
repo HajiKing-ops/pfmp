@@ -30,7 +30,8 @@ namespace PFMPManager.Api.Controllers
         public async Task<IActionResult> GetAll()
         {
             //Verifie que l'administrateur gere au moins un etablissement 
-             var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdTest, out int idAdmin))
             {
                 return Unauthorized("Token invalide : identifiant utilisateur manquant.");
@@ -188,7 +189,7 @@ namespace PFMPManager.Api.Controllers
 
             if (!pfmps.Any())
             {
-                return NotFound("Aucune PFMP trouv�e pour cet administrateur");
+                return NotFound("Aucune PFMP trouvee pour cet administrateur");
             }
 
             var adminRowDto = await AdminListHelper.CreateList(_context, pfmps, etablissementIds);
