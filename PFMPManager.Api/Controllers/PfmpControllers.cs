@@ -112,31 +112,19 @@ namespace PFMPManager.Api.Controllers
 
 
 
+
+
         [Authorize(Roles = "Etudiant")]
         [HttpPost("complete")]
         public async Task<IActionResult> CompletePfmp(CreateCompletePfmpDto request)
         {
             //entreprise
             var siret = request.SIRET;
-            var siteWeb = request.SiteWeb;
-
             //planning
             var requestedWeeklyTotal = request.TotalHebdo;
 
-            //date for today and time
-            var today = DateTime.Today.Year;
+            var currentYear = DateTime.Today.Year;
             
-       
-
-            
-
-   
-            
-            var fonctionMaitreStage = request.FonctionMaitreStage;
-            var telephoneMaitreStage = request.TelephoneMaitreStage;
-            var supervisorEmail = request.EmailMaitreStage;
-            var supervisorLastName = request.NomMaitreStage;
-            var supervisorFirstName = request.PrenomMaitreStage;
 
             //Get current student id
             if (!TryGetCurrentUserId(out int currentStudentId))
@@ -159,7 +147,7 @@ namespace PFMPManager.Api.Controllers
             var validPlanningDays = planningValidation.ValidPlanningDays;
 
             //Find administrator
-            var administratorId = await FindAdministratorIdForStudentAsync(currentStudentId, today);
+            var administratorId = await FindAdministratorIdForStudentAsync(currentStudentId, currentYear);
 
             if (administratorId <= 0)
             {
@@ -167,9 +155,9 @@ namespace PFMPManager.Api.Controllers
             }
             
             //check business rules
-            var searchContacter = await HasAcceptedContactRequestAsync(currentStudentId, siret);
+            var hasAcceptedContactRequest = await HasAcceptedContactRequestAsync(currentStudentId, siret);
 
-            if (!searchContacter)
+            if (!hasAcceptedContactRequest)
             {
                 return BadRequest("Vous devez d'abord contacter l'organisation");
             }
@@ -187,7 +175,7 @@ namespace PFMPManager.Api.Controllers
             var organisation = await FindOrganisationBySiretAsync(siret);
             if (organisation == null)
             {
-                return NotFound("L'Organisation untrovable");
+                return NotFound("L’organisation est introuvable");
             }
             
             //Create/Update database entities inside transaction 
@@ -196,12 +184,12 @@ namespace PFMPManager.Api.Controllers
             {
                 
 
-                await UpdateOrganisationWebsiteAsync(organisation,siteWeb!);
+                await UpdateOrganisationWebsiteAsync(organisation,request.SiteWeb!);
 
                 
-                var user = await GetOrCreateSupervisorUserAsync(supervisorLastName!, supervisorFirstName!, supervisorEmail!);
+                var user = await GetOrCreateSupervisorUserAsync(request.NomMaitreStage!, request.PrenomMaitreStage!, request.EmailMaitreStage!);
 
-                var prf = await GetOrCreateProfessionalProfileAsync(user.Id_Utilisateur, fonctionMaitreStage!, supervisorEmail!, telephoneMaitreStage!);
+                var prf = await GetOrCreateProfessionalProfileAsync(user.Id_Utilisateur, request.FonctionMaitreStage!, request.EmailMaitreStage!, request.TelephoneMaitreStage!);
                 
 
                 await EnsureWorkRelationExistsAsync(prf.Id_Utilisateur, siret);
@@ -448,15 +436,15 @@ namespace PFMPManager.Api.Controllers
 
         private async Task EnsureWorkRelationExistsAsync(int supervisorUserId, string siret)
         {
-             var checkTravail = await _context.Travailler.FirstOrDefaultAsync(o => o.Id_Utilisateur == supervisorUserId && o.SIRET == siret);
-                var travail = new Travailler();
-                if (checkTravail == null)
-                {
-                    travail.Id_Utilisateur = supervisorUserId;
-                    travail.SIRET = siret;
-                    _context.Travailler.Add(travail);
-                    await _context.SaveChangesAsync();
-                }
+            var checkTravail = await _context.Travailler.FirstOrDefaultAsync(o => o.Id_Utilisateur == supervisorUserId && o.SIRET == siret);
+            var travail = new Travailler();
+            if (checkTravail == null)
+            {
+                travail.Id_Utilisateur = supervisorUserId;
+                travail.SIRET = siret;
+                _context.Travailler.Add(travail);
+                await _context.SaveChangesAsync();
+            }
         }
         private async Task<int> CreatePlanningWithDaysAsync(int calculatedWeeklyTotal, List<CreatePlanningJoursDto> validPlanningDays)
         {
@@ -517,7 +505,7 @@ namespace PFMPManager.Api.Controllers
             
         }
 
-        private async Task<int> FindAdministratorIdForStudentAsync(int currentStudentId, int today)
+        private async Task<int> FindAdministratorIdForStudentAsync(int currentStudentId, int currentYear)
         {
             return await (from e in _context.Etudier
                                           join gc in _context.GroupeClasse
@@ -525,8 +513,8 @@ namespace PFMPManager.Api.Controllers
                                           equals new { gc.Id_Etablissement, gc.Id_Classe }
                                           join admin in _context.Administrer
                                           on gc.Id_Etablissement equals admin.Id_Etablissement
-                                          where e.Id_Utilisateur == currentStudentId && e.AnneeRentree <= today
-                                          && e.AnneeSortie >= today
+                                          where e.Id_Utilisateur == currentStudentId && e.AnneeRentree <= currentYear
+                                          && e.AnneeSortie >= currentYear
                                           select admin.Id_Utilisateur).FirstOrDefaultAsync();
         }
 
