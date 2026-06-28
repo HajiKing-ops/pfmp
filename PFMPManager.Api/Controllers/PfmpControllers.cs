@@ -126,15 +126,11 @@ namespace PFMPManager.Api.Controllers
             //date for today and time
             var today = DateTime.Today.Year;
             
-            //PFMP
+       
 
-            var dateDebut = request.DateDebut;
-            var dateFin = request.DateFin;
-
-            //empty list for valid days
             
 
-            //maître de stage fields
+   
             
             var fonctionMaitreStage = request.FonctionMaitreStage;
             var telephoneMaitreStage = request.TelephoneMaitreStage;
@@ -178,12 +174,11 @@ namespace PFMPManager.Api.Controllers
                 return BadRequest("Vous devez d'abord contacter l'organisation");
             }
             //search
-            var alreadyInInternship = await _context.Pfmp.AnyAsync(pf => pf.Id_Utilisateur_1 == currentStudentId &&
-                                                    pf.DateDebut.HasValue && pf.DateFin.HasValue &&
-                                                    pf.DateFin.Value.Date >= dateDebut.Value.Date && pf.DateDebut.Value.Date <= dateFin.Value.Date);
+
+            var alreadyInInternship = await HasOverlappingPfmpAsync(currentStudentId, request.DateDebut.Value.Date, request.DateFin.Value.Date);
             if (alreadyInInternship)
             {
-                return BadRequest("Vous êtes deja en stage sur cette periode ");
+                return BadRequest("Vous êtes deja en stage sur cette periode");
             }
 
             
@@ -192,6 +187,7 @@ namespace PFMPManager.Api.Controllers
             {
                 return NotFound("L'Organisation untrovable");
             }
+            
             //Create/Update database entities inside transaction 
             await using var transaction = await _context.Database.BeginTransactionAsync();
             try
@@ -537,6 +533,12 @@ namespace PFMPManager.Api.Controllers
         private async Task<bool> HasAcceptedContactRequestAsync(int currentStudentId, string siret)
         {
             return await _context.Contacter.AnyAsync(c => c.SIRET == siret && c.Id_Utilisateur == currentStudentId && c.StatutDemande.Trim().ToLower() == "accepte");
+        }
+        private async Task<bool> HasOverlappingPfmpAsync(int currentStudentId, DateTime? dateDebut, DateTime? dateFin)
+        {
+             return await _context.Pfmp.AnyAsync(pf => pf.Id_Utilisateur_1 == currentStudentId &&
+                                                    pf.DateDebut.HasValue && pf.DateFin.HasValue &&
+                                                    pf.DateFin.Value.Date >= dateDebut && pf.DateDebut.Value.Date <= dateFin);
         }
     }
 }
