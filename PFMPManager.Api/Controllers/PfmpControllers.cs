@@ -182,7 +182,7 @@ namespace PFMPManager.Api.Controllers
             }
 
             
-            var checkOrg = await _context.Organisation.FirstOrDefaultAsync(p => p.SIRET == siret);
+            var checkOrg = await FindOrganisationBySiretAsync(siret);
             if (checkOrg == null)
             {
                 return NotFound("L'Organisation untrovable");
@@ -539,6 +539,10 @@ namespace PFMPManager.Api.Controllers
              return await _context.Pfmp.AnyAsync(pf => pf.Id_Utilisateur_1 == currentStudentId &&
                                                     pf.DateDebut.HasValue && pf.DateFin.HasValue &&
                                                     pf.DateFin.Value.Date >= dateDebut && pf.DateDebut.Value.Date <= dateFin);
+        }
+        private async Task<Organisation?> FindOrganisationBySiretAsync(string siret)
+        {
+            return await _context.Organisation.FirstOrDefaultAsync(o=> o.SIRET == siret);
         }
     }
 }
