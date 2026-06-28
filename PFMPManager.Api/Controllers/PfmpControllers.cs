@@ -37,18 +37,60 @@ namespace PFMPManager.Api.Controllers
             return Ok(pfmps); // 200 ok with json array
         }
 
-        [Authorize]
+
+
+        [Authorize(Roles = "Etudiant, Enseignant")]
         [HttpGet("recherche/{idEtudiant}/{idPfmp?}")] //address of the method
         public async Task<IActionResult> GetPfmpById(int idEtudiant, int? idPfmp)
         {
+            if (!TryGetCurrentUserId(out int currentUserId))
+            {
+                return Unauthorized("Token invalide : identifiant utilisateur manquant");
+            }
+            var role = TryGetCurrentUserRole();
+            if (role == null || string.IsNullOrWhiteSpace(role))
+            {
+                return Unauthorized("Token invalide : role utilisateur manquant");
+            }
+            
+            if (role == "Etudiant" && currentUserId != idEtudiant)
+            {
+                return StatusCode(403, "Vous n’avez pas le droit d’accéder à cette PFMP.");
+            }
             var query = _context.Pfmp.AsQueryable();
             if (idPfmp != null)
             {
-                query = query.Where(o => o.Id_Utilisateur_1 == idEtudiant && o.Id_PFMP == idPfmp);
+                if (role == "Etudiant")
+                {
+                    query = query.Where(o => o.Id_Utilisateur_1 == idEtudiant && o.Id_PFMP == idPfmp);
+                }
+                else if(role == "Enseignant")
+                {
+                    query = from etudiant in _context.Etudiant
+                            join pfmp in _context.Pfmp
+                            on etudiant.Id_Utilisateur_1 equals pfmp.Id_Utilisateur_1
+                            where etudiant.Id_Utilisateur == currentUserId
+                            && pfmp.Id_Utilisateur_1 == idEtudiant
+                            && pfmp.Id_PFMP == idPfmp
+                            select pfmp;
+                }
+                
             }
             else
             {
-                query = query.Where(o => o.Id_Utilisateur_1 == idEtudiant);
+                if (role == "Etudiant")
+                {
+                    query = query.Where(o => o.Id_Utilisateur_1 == idEtudiant);    
+                }
+                else if (role == "Enseignant")
+                {
+                    query = from etudiant in _context.Etudiant
+                            join pfmp in _context.Pfmp
+                            on etudiant.Id_Utilisateur_1 equals pfmp.Id_Utilisateur_1
+                            where etudiant.Id_Utilisateur == currentUserId
+                            && pfmp.Id_Utilisateur_1 == idEtudiant
+                            select pfmp;
+                }
             }
             var pfmps = await query.ToListAsync();
             if (!pfmps.Any())
@@ -224,6 +266,13 @@ namespace PFMPManager.Api.Controllers
             return int.TryParse(id, out currentStudentId);
         }
 
+        private string? TryGetCurrentUserRole()
+        {
+
+            return User.FindFirstValue(ClaimTypes.Role);
+            
+        }
+        
         private bool IsBasicCompletePfmpRequestInvalid(CreateCompletePfmpDto request)
         {
             

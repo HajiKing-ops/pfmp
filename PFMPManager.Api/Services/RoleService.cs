@@ -8,7 +8,7 @@ public class RoleService : IRoleService
     public RoleService(AppDbContext context)
     {
         _context = context;
-    }
+    } 
 
     public async Task<string?> GetUserRoleAsync(int idUtilisateur)
     {
