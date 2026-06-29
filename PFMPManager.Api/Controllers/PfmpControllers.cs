@@ -22,8 +22,8 @@ namespace PFMPManager.Api.Controllers
 
 
         [Authorize(Roles = "Etudiant,Enseignant")]
-        [HttpGet("recherche/{idEtudiant}/{idPfmp?}")] //address of the method
-        public async Task<IActionResult> GetPfmpById(int idEtudiant, int? idPfmp)
+        [HttpGet("recherche/{studentId}/{idPfmp?}")] //address of the method
+        public async Task<IActionResult> GetPfmpById(int studentId, int? idPfmp)
         {
             if (!TryGetCurrentUserId(out int currentUserId))
             {
@@ -34,20 +34,15 @@ namespace PFMPManager.Api.Controllers
             {
                 return Unauthorized("Token invalide : role utilisateur manquant");
             }
-            var pfmpAccessError = await ValidatePfmpAccessAsync(currentUserId, idEtudiant, role);
+            var pfmpAccessError = await ValidatePfmpAccessAsync(currentUserId, studentId, role);
             if (pfmpAccessError != null)
             {
                 return StatusCode(403, pfmpAccessError);
             }
 
-            var query = _context.Pfmp.AsNoTracking();
-            query = query.Where(o => o.Id_Utilisateur_1 == idEtudiant);
-            if (idPfmp != null)
-            {
-                query = query.Where(o => o.Id_PFMP == idPfmp);
-            }
 
-            var pfmps = await query.ToListAsync();
+
+            var pfmps = await GetStudentPfmpsAsync(studentId, idPfmp);
             if (!pfmps.Any())
             {
                 return NotFound();
@@ -695,6 +690,20 @@ namespace PFMPManager.Api.Controllers
             SupervisorDetailsBySiret = supervisorDetailsBySiret
           };
         }
+
+        private async Task<List<Pfmp>> GetStudentPfmpsAsync(int studentId, int? pfmpId)
+        {
+            var query = _context.Pfmp.AsNoTracking();
+            query = query.Where(pfmp => pfmp.Id_Utilisateur_1 == studentId);
+            if (pfmpId != null)
+            {
+                query = query.Where(pfmp => pfmp.Id_PFMP == pfmpId);
+            }
+
+            return await query.ToListAsync();
+           
+        }
+
 
 
     }
