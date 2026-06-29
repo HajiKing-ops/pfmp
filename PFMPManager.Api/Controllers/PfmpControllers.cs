@@ -40,7 +40,7 @@ namespace PFMPManager.Api.Controllers
                 return StatusCode(403, pfmpAccessError);
             }
 
-            var query = _context.Pfmp.AsQueryable();
+            var query = _context.Pfmp.AsNoTracking();
             query = query.Where(o => o.Id_Utilisateur_1 == idEtudiant);
             if (idPfmp != null)
             {
@@ -52,10 +52,14 @@ namespace PFMPManager.Api.Controllers
             {
                 return NotFound();
             }
+            var planningIds = pfmps.Select(pfmp => pfmp.Id_Planning).Distinct().ToList();
+
+            var planningDaysByPlanningId = await GetPlanningDaysByPlanningIdsAsync(planningIds);
+
             var result = new List<PfmpDetailDto>();
             foreach (var pfmp in pfmps)
             {
-                var dto = await BuildPfmpDetailDtoAsync(pfmp);
+                var dto = await BuildPfmpDetailDtoAsync(pfmp, planningDaysByPlanningId);
                 result.Add(dto);
             }
             return Ok(result);
@@ -509,6 +513,11 @@ namespace PFMPManager.Api.Controllers
             return await _context.Organisation.FirstOrDefaultAsync(o => o.SIRET == siret);
         }
 
+        private async Task<string?> GetOrganisationRaisonSocialeBySiretAsync(string siret)
+        {
+            return await _context.Organisation.AsNoTracking().Where(o=> o.SIRET == siret).Select(o=> o.RaisonSociale).FirstOrDefaultAsync();
+        }
+
         private async Task UpdateOrganisationWebsiteAsync(Organisation organisation, string siteWeb)
         {
             organisation.SiteWeb = siteWeb;
@@ -516,9 +525,9 @@ namespace PFMPManager.Api.Controllers
         }
 
 
-        private async Task<PfmpDetailDto> BuildPfmpDetailDtoAsync(Pfmp pfmp)
+        private async Task<PfmpDetailDto> BuildPfmpDetailDtoAsync(Pfmp pfmp, Dictionary<int, List<CreatePlanningJoursDto>> planningDaysByPlanningId)
         {
-            var organisation = await FindOrganisationBySiretAsync(pfmp.SIRET);
+            var raisonSociale = await GetOrganisationRaisonSocialeBySiretAsync(pfmp.SIRET);
             var dto = new PfmpDetailDto
             {
                 DateDebut = pfmp.DateDebut,
@@ -527,7 +536,7 @@ namespace PFMPManager.Api.Controllers
                 SIRET = pfmp.SIRET,
                 IdEtudiant = pfmp.Id_Utilisateur_1,
                 IdPfmp = pfmp.Id_PFMP,
-                RaisonSociale = organisation?.RaisonSociale ?? string.Empty
+                RaisonSociale = raisonSociale ?? string.Empty
             };
 
             dto.JourRestants = CalculateRemainingDays(pfmp.DateFin);
@@ -535,9 +544,16 @@ namespace PFMPManager.Api.Controllers
 
             await AddSupervisorDetailsAsync(dto, pfmp.SIRET);
 
-            dto.PlanningJours = await GetPlanningDaysAsync(pfmp.Id_Planning);
+            if (planningDaysByPlanningId.TryGetValue(pfmp.Id_Planning, out var planningDays))
+            {
+                dto.PlanningJours = planningDays;
+            }
+            else 
+            {
+                dto.PlanningJours = new List<CreatePlanningJoursDto>();
+            }
 
-            return dto;
+                return dto;
         }
 
         private int CalculateRemainingDays(DateTime? end)
@@ -556,26 +572,26 @@ namespace PFMPManager.Api.Controllers
             {
                 return 0;
             }
-            var semaine = end.Value.Date - start.Value.Date;
-            var total = semaine.TotalDays / 7;
+            var duration = end.Value.Date - start.Value.Date;
+            var total = duration.TotalDays / 7;
             return (int)total;
         }
 
         private async Task AddSupervisorDetailsAsync(PfmpDetailDto dto, string siret)
         {
-            var workRelation = await _context.Travailler.FirstOrDefaultAsync(t => t.SIRET == siret);
+            var workRelation = await _context.Travailler.AsNoTracking().FirstOrDefaultAsync(t => t.SIRET == siret);
             if (workRelation == null)
             {
                 return;
             }
-            var supervisorUser = await _context.Utilisateur.FirstOrDefaultAsync(u => u.Id_Utilisateur == workRelation.Id_Utilisateur);
+            var supervisorUser = await _context.Utilisateur.AsNoTracking().FirstOrDefaultAsync(u => u.Id_Utilisateur == workRelation.Id_Utilisateur);
             if (supervisorUser == null)
             {
                 return;
             }
             dto.PrenomMaitreStage = supervisorUser.Prenom;
             dto.NomMaitreStage = supervisorUser.Nom;
-            var professionalProfile = await _context.Professionnel.FirstOrDefaultAsync(r => r.Id_Utilisateur == workRelation.Id_Utilisateur);
+            var professionalProfile = await _context.Professionnel.AsNoTracking().FirstOrDefaultAsync(r => r.Id_Utilisateur == workRelation.Id_Utilisateur);
             if (professionalProfile == null)
             {
                 return;
@@ -585,21 +601,34 @@ namespace PFMPManager.Api.Controllers
             dto.EmailMaitreStage = professionalProfile.AdresseMail;
 
         }
-        private async Task<List<CreatePlanningJoursDto>> GetPlanningDaysAsync(int idPlanning)
-        {
-            return await _context.PlanningJours
-                .Where(j => j.Id_Planning == idPlanning)
-                .Select(j => new CreatePlanningJoursDto
+
+        private async Task<Dictionary<int, List<CreatePlanningJoursDto>>> GetPlanningDaysByPlanningIdsAsync(List<int> planningIds)
+        { 
+            var rawPlanningDays = await _context.PlanningJours
+                .AsNoTracking()
+                .Where(j => planningIds.Contains(j.Id_Planning))
+                .Select(j => new
                 {
-                    Jour = j.Jour,
-                    MatinDebut = j.MatinDebut,
-                    MatinFin = j.MatinFin,
-                    ApresMidiDebut = j.ApresMidiDebut,
-                    ApresMidiFin = j.ApresMidiFin,
-                    TotalHeures = j.TotalHeures
+                    j.Id_Planning,
+                    Day = new CreatePlanningJoursDto
+                    {
+                        Jour = j.Jour,
+                        MatinDebut = j.MatinDebut,
+                        MatinFin = j.MatinFin,
+                        ApresMidiDebut = j.ApresMidiDebut,
+                        ApresMidiFin = j.ApresMidiFin,
+                        TotalHeures = j.TotalHeures
+                    }
                 })
                 .ToListAsync();
+
+            var planningDaysByPlanningId = rawPlanningDays
+                .GroupBy(x => x.Id_Planning)
+                .ToDictionary(group => group.Key,
+                              group=> group.Select(x => x.Day).ToList());
+            return planningDaysByPlanningId;
         }
+
     }
 }
 
