@@ -209,7 +209,7 @@ namespace PFMPManager.Api.Controllers
 
                 adminRowDto = adminRowDto.Where(r => r.Entreprise.ToLower().Contains(search)).ToList();
             }
-
+            
             if (!string.IsNullOrWhiteSpace(status))
             {
                 var statutRecherche = status.Trim().ToLower();

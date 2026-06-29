@@ -25,15 +25,7 @@ namespace PFMPManager.Api.Controllers
         [HttpGet("recherche/{studentId}/{pfmpId?}")] //address of the method
         public async Task<IActionResult> GetStudentPfmps(int studentId, int? pfmpId)
         {
-            /*if (!TryGetCurrentUserId(out int currentUserId))
-            {
-                return Unauthorized("Token invalide : identifiant utilisateur manquant");
-            }
-            var role = TryGetCurrentUserRole();
-            if (role == null || string.IsNullOrWhiteSpace(role))
-            {
-                return Unauthorized("Token invalide : role utilisateur manquant");
-            }*/
+           
             var currentUserResult = TryGetCurrentUserContext();
             if (!currentUserResult.Success)
             {
@@ -80,10 +72,14 @@ namespace PFMPManager.Api.Controllers
 
 
             //Get current student id
-            if (!TryGetCurrentUserId(out int currentStudentId))
+            var currentUserResult = TryGetCurrentUserContext();
+            if (!currentUserResult.Success)
             {
-                return Unauthorized("Token invalide : identifiant utilisateur manquant");
+                return Unauthorized(currentUserResult.ErrorMessage);
             }
+            var currentStudentId= currentUserResult.User!.UserId;
+           
+           
 
             //Validate basic request fields
             if (IsBasicCompletePfmpRequestInvalid(request))
@@ -115,8 +111,8 @@ namespace PFMPManager.Api.Controllers
                 return BadRequest("Vous devez d'abord contacter l'organisation");
             }
             //search
-            var startDate = request.DateDebut.Value.Date;
-            var endDate = request.DateFin.Value.Date;
+            var startDate = request.DateDebut!.Value.Date;
+            var endDate = request.DateFin!.Value.Date;
 
             var alreadyInInternship = await HasOverlappingPfmpAsync(currentStudentId, startDate, endDate);
             if (alreadyInInternship)
@@ -242,7 +238,7 @@ namespace PFMPManager.Api.Controllers
             {
                 return false;
             }
-            return start.Value >= end.Value;
+            return start!.Value >= end!.Value;
         }
         private int CalculatePlanningDayMinutes(CreatePlanningJoursDto planningDay)
         {
@@ -498,7 +494,7 @@ namespace PFMPManager.Api.Controllers
 
         private async Task<bool> HasAcceptedContactRequestAsync(int currentStudentId, string siret)
         {
-            return await _context.Contacter.AnyAsync(c => c.SIRET == siret && c.Id_Utilisateur == currentStudentId && c.StatutDemande.Trim().ToLower() == "accepte");
+            return await _context.Contacter.AnyAsync(c => c.SIRET == siret && c.Id_Utilisateur == currentStudentId && c.StatutDemande!.Trim().ToLower() == "accepte");
         }
         private async Task<bool> HasOverlappingPfmpAsync(int currentStudentId, DateTime startDate, DateTime endDate)
         {
@@ -517,7 +513,7 @@ namespace PFMPManager.Api.Controllers
                 .AsNoTracking()
                 .Where(o => sirets.Contains(o.SIRET))
                 .ToDictionaryAsync(o => o.SIRET,
-                o => o.RaisonSociale);
+                o => o.RaisonSociale ?? string.Empty);
         }
 
         private async Task UpdateOrganisationWebsiteAsync(Organisation organisation, string siteWeb)
@@ -599,7 +595,7 @@ namespace PFMPManager.Api.Controllers
             var workRelations = await _context.Travailler
                 .AsNoTracking()
                 .Where(w=> sirets
-                .Contains(w.SIRET))
+                .Contains(w.SIRET!))
                 .ToListAsync();
 
             
@@ -632,15 +628,15 @@ namespace PFMPManager.Api.Controllers
                 }
                 var dto = new SupervisorDetailsDto
                 {
-                    PrenomMaitreStage = supervisorUser.Prenom,
-                    NomMaitreStage = supervisorUser.Nom,
-                    FonctionMaitreStage = professionalProfile.Fonction,
-                    TelephoneMaitreStage = professionalProfile.NumTelephone,
-                    EmailMaitreStage  = professionalProfile.AdresseMail,
+                    PrenomMaitreStage = supervisorUser.Prenom!,
+                    NomMaitreStage = supervisorUser.Nom!,
+                    FonctionMaitreStage = professionalProfile.Fonction!,
+                    TelephoneMaitreStage = professionalProfile.NumTelephone!,
+                    EmailMaitreStage  = professionalProfile.AdresseMail!,
                 };
-                if (!supervisorDetailsBySiret.ContainsKey(workRelation.SIRET))
+                if (!supervisorDetailsBySiret.ContainsKey(workRelation.SIRET!))
                 {
-                    supervisorDetailsBySiret.Add(workRelation.SIRET, dto);
+                    supervisorDetailsBySiret.Add(workRelation.SIRET!, dto);
                 }
             }
             return supervisorDetailsBySiret;
@@ -724,24 +720,33 @@ namespace PFMPManager.Api.Controllers
 
         private CurrentUserContextResult TryGetCurrentUserContext()
         {
-            var result = new CurrentUserContextResult();
-
-            if (!TryGetCurrentUserId(out int currentUserId))
+            if(!TryGetCurrentUserId(out int currentUserId))
             {
-                result.Success = false;
-                result.ErrorMessage = "Token invalide : identifiant utilisateur manquant";
-                return result;
+                return new CurrentUserContextResult
+                {
+                    Success = false,
+                    ErrorMessage = "Token invalide : identifiant utilisateur manquant"
+                };
             }
             var role = TryGetCurrentUserRole();
             if (role == null || string.IsNullOrWhiteSpace(role))
             {
-                result.Success = false;
-                result.ErrorMessage = "Token invalide : role utilisateur manquant";
-                return result;
+                return new CurrentUserContextResult
+                {
+                    Success = false,
+                    ErrorMessage = "Token invalide : role utilisateur manquant"
+                };
             }
-            result.User.UserId = currentUserId;
-            result.User.Role = role;
-            return result;
+            return new CurrentUserContextResult
+            {
+                Success = true,
+                User = new CurrentUserContext
+                {
+                    UserId = currentUserId,
+                    Role = role
+                }
+                
+            };
         }
 
     }
