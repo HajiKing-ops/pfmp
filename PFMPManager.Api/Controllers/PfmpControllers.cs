@@ -52,16 +52,22 @@ namespace PFMPManager.Api.Controllers
             {
                 return NotFound();
             }
+            
             var planningIds = pfmps.Select(pfmp => pfmp.Id_Planning).Distinct().ToList();
             var sirets = pfmps.Select(pfmp => pfmp.SIRET).Distinct().ToList();
             var organisationNamesBySiret = await GetOrganisationRaisonSocialesBySiretsAsync(sirets);
             var planningDaysByPlanningId = await GetPlanningDaysByPlanningIdsAsync(planningIds);
             var supervisorDetailsBySiret = await GetSupervisorDetailsBySiretsAsync(sirets);
-
+            var lookupData = new PfmpDetailLookupData
+            {
+                PlanningDaysByPlanningId = planningDaysByPlanningId,
+                OrganisationNamesBySiret = organisationNamesBySiret,
+                SupervisorDetailsBySiret = supervisorDetailsBySiret
+            };
             var result = new List<PfmpDetailDto>();
             foreach (var pfmp in pfmps)
             {
-                var dto =  BuildPfmpDetailDto(pfmp, planningDaysByPlanningId, organisationNamesBySiret, supervisorDetailsBySiret);
+                var dto =  BuildPfmpDetailDto(pfmp, lookupData);
                 
                 result.Add(dto);
             }
@@ -532,7 +538,7 @@ namespace PFMPManager.Api.Controllers
         }
 
 
-        private PfmpDetailDto BuildPfmpDetailDto(Pfmp pfmp, Dictionary<int, List<CreatePlanningJoursDto>> planningDaysByPlanningId, Dictionary<string, string> organisationNamesBySiret, Dictionary<string, SupervisorDetailsDto> supervisorDetailsBySiret)
+        private PfmpDetailDto BuildPfmpDetailDto(Pfmp pfmp, PfmpDetailLookupData lookupData)
         {
             var dto = new PfmpDetailDto
             {
@@ -543,7 +549,7 @@ namespace PFMPManager.Api.Controllers
                 IdEtudiant = pfmp.Id_Utilisateur_1,
                 IdPfmp = pfmp.Id_PFMP,
             };
-            if (organisationNamesBySiret.TryGetValue(pfmp.SIRET, out var raisonSociale))
+            if (lookupData.OrganisationNamesBySiret.TryGetValue(pfmp.SIRET, out var raisonSociale))
             {
                 dto.RaisonSociale = raisonSociale;
             }
@@ -551,7 +557,7 @@ namespace PFMPManager.Api.Controllers
             {
                 dto.RaisonSociale = string.Empty;
             }
-            if (supervisorDetailsBySiret.TryGetValue(pfmp.SIRET, out var supervisorDetails))
+            if (lookupData.SupervisorDetailsBySiret.TryGetValue(pfmp.SIRET, out var supervisorDetails))
             {
                 dto.PrenomMaitreStage = supervisorDetails.PrenomMaitreStage;
                 dto.NomMaitreStage = supervisorDetails.NomMaitreStage;
@@ -565,7 +571,7 @@ namespace PFMPManager.Api.Controllers
 
            
 
-            if (planningDaysByPlanningId.TryGetValue(pfmp.Id_Planning, out var planningDays))
+            if (lookupData.PlanningDaysByPlanningId.TryGetValue(pfmp.Id_Planning, out var planningDays))
             {
                 dto.PlanningJours = planningDays;
             }
@@ -676,6 +682,13 @@ namespace PFMPManager.Api.Controllers
                 .ToDictionary(group => group.Key,
                               group=> group.Select(x => x.Day).ToList());
             return planningDaysByPlanningId;
+        }
+
+        private class PfmpDetailLookupData
+        {
+            public Dictionary<int,List<CreatePlanningJoursDto>> PlanningDaysByPlanningId {get; set;} = new ();
+            public Dictionary<string, string> OrganisationNamesBySiret { get; set; } = new();
+            public Dictionary<string, SupervisorDetailsDto> SupervisorDetailsBySiret { get; set; } = new();
         }
 
     }
