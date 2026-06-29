@@ -52,25 +52,13 @@ namespace PFMPManager.Api.Controllers
             {
                 return NotFound();
             }
-            
-            var planningIds = pfmps.Select(pfmp => pfmp.Id_Planning).Distinct().ToList();
-            var sirets = pfmps.Select(pfmp => pfmp.SIRET).Distinct().ToList();
-            var organisationNamesBySiret = await GetOrganisationRaisonSocialesBySiretsAsync(sirets);
-            var planningDaysByPlanningId = await GetPlanningDaysByPlanningIdsAsync(planningIds);
-            var supervisorDetailsBySiret = await GetSupervisorDetailsBySiretsAsync(sirets);
-            var lookupData = new PfmpDetailLookupData
-            {
-                PlanningDaysByPlanningId = planningDaysByPlanningId,
-                OrganisationNamesBySiret = organisationNamesBySiret,
-                SupervisorDetailsBySiret = supervisorDetailsBySiret
-            };
-            var result = new List<PfmpDetailDto>();
-            foreach (var pfmp in pfmps)
-            {
-                var dto =  BuildPfmpDetailDto(pfmp, lookupData);
+
+            var lookupData = await BuildPfmpDetailLookupDataAsync(pfmps);
+
+            var result = pfmps
+                .Select(pfmp => BuildPfmpDetailDto(pfmp, lookupData))
+                .ToList();
                 
-                result.Add(dto);
-            }
             return Ok(result);
         }
 
@@ -690,6 +678,24 @@ namespace PFMPManager.Api.Controllers
             public Dictionary<string, string> OrganisationNamesBySiret { get; set; } = new();
             public Dictionary<string, SupervisorDetailsDto> SupervisorDetailsBySiret { get; set; } = new();
         }
+
+        private async Task<PfmpDetailLookupData> BuildPfmpDetailLookupDataAsync(List<Pfmp> pfmps)
+        {
+            var planningIds = pfmps.Select(pfmp => pfmp.Id_Planning).Distinct().ToList();
+            var sirets = pfmps.Select(pfmp => pfmp.SIRET).Distinct().ToList();
+
+            var organisationNamesBySiret = await GetOrganisationRaisonSocialesBySiretsAsync(sirets);
+            var planningDaysByPlanningId = await GetPlanningDaysByPlanningIdsAsync(planningIds);
+            var supervisorDetailsBySiret = await GetSupervisorDetailsBySiretsAsync(sirets);
+
+          return new PfmpDetailLookupData
+          {
+            PlanningDaysByPlanningId = planningDaysByPlanningId,
+            OrganisationNamesBySiret = organisationNamesBySiret,
+            SupervisorDetailsBySiret = supervisorDetailsBySiret
+          };
+        }
+
 
     }
 }
