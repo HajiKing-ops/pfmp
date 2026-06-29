@@ -48,12 +48,12 @@ namespace PFMPManager.Api.Controllers
             {
                 return NotFound("L'Etablissement n'existe pas");
             }
-                
+
             //Recuperer les etudiants appartenant aux etablissements de l'administrateur
             var classes = await _context.GroupeClasse.Where(gc => etablissementIds.Contains(gc.Id_Etablissement)).ToListAsync();
             if (!classes.Any())
             {
-                return NotFound("Aucune classe trouv�e pour cet administrateur");
+                return NotFound("Aucune classe trouvee pour cet administrateur");
             }
 
 

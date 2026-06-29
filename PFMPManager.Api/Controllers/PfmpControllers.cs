@@ -37,11 +37,11 @@ namespace PFMPManager.Api.Controllers
             var pfmpAccessError = await ValidatePfmpAccessAsync(currentUserId, idEtudiant, role);
             if (pfmpAccessError != null)
             {
-                return StatusCode(403, pfmpAccessError);    
+                return StatusCode(403, pfmpAccessError);
             }
-            
+
             var query = _context.Pfmp.AsQueryable();
-            query = query.Where(o => o.Id_Utilisateur_1 == idEtudiant);    
+            query = query.Where(o => o.Id_Utilisateur_1 == idEtudiant);
             if (idPfmp != null)
             {
                 query = query.Where(o => o.Id_PFMP == idPfmp);
@@ -53,55 +53,9 @@ namespace PFMPManager.Api.Controllers
                 return NotFound();
             }
             var result = new List<PfmpDetailDto>();
-            foreach (var p in pfmps)
+            foreach (var pfmp in pfmps)
             {
-                var organisation = await _context.Organisation.FirstOrDefaultAsync(o => o.SIRET == p.SIRET);
-                var dto = new PfmpDetailDto
-                {
-                    DateDebut = p.DateDebut,
-                    DateFin = p.DateFin,
-                    Id_Planning = p.Id_Planning,
-                    SIRET = p.SIRET,
-                    IdEtudiant = p.Id_Utilisateur_1,
-                    IdPfmp = p.Id_PFMP,
-                    JourRestants = p.DateFin.HasValue ? Math.Max(0, (p.DateFin.Value.Date - DateTime.Today).Days) : 0,
-                    RaisonSociale = organisation?.RaisonSociale ?? string.Empty
-                };
-                if (p.DateDebut != null && p.DateFin != null)
-                {
-                    var semaine = p.DateFin.Value.Date - p.DateDebut.Value.Date;
-                    var total = semaine.TotalDays / 7;
-                    dto.Semaine = (int)total;
-                }
-                var search = await _context.Travailler.FirstOrDefaultAsync(t => t.SIRET == p.SIRET);
-                if (search != null)
-                {
-                    var maitreDeStage = await _context.Utilisateur.FirstOrDefaultAsync(u => u.Id_Utilisateur == search.Id_Utilisateur);
-                    if (maitreDeStage != null)
-                    {
-                        dto.PrenomMaitreStage = maitreDeStage.Prenom;
-                        dto.NomMaitreStage = maitreDeStage.Nom;
-                        var prof = await _context.Professionnel.FirstOrDefaultAsync(r => r.Id_Utilisateur == search.Id_Utilisateur);
-                        if (prof != null)
-                        {
-                            dto.FonctionMaitreStage = prof.Fonction;
-                            dto.TelephoneMaitreStage = prof.NumTelephone;
-                            dto.EmailMaitreStage = prof.AdresseMail;
-                        }
-                    }
-                }
-                dto.PlanningJours = await _context.PlanningJours
-                    .Where(j => j.Id_Planning == p.Id_Planning)
-                    .Select(j => new CreatePlanningJoursDto
-                    {
-                        Jour = j.Jour,
-                        MatinDebut = j.MatinDebut,
-                        MatinFin = j.MatinFin,
-                        ApresMidiDebut = j.ApresMidiDebut,
-                        ApresMidiFin = j.ApresMidiFin,
-                        TotalHeures = j.TotalHeures
-                    })
-                    .ToListAsync();
+                var dto = await BuildPfmpDetailDtoAsync(pfmp);
                 result.Add(dto);
             }
             return Ok(result);
@@ -121,7 +75,7 @@ namespace PFMPManager.Api.Controllers
             var requestedWeeklyTotal = request.TotalHebdo;
 
             var currentYear = DateTime.Today.Year;
-            
+
 
             //Get current student id
             if (!TryGetCurrentUserId(out int currentStudentId))
@@ -138,7 +92,7 @@ namespace PFMPManager.Api.Controllers
             var planningValidation = ValidatePlanningDays(request.PlanningJours, requestedWeeklyTotal);
             if (planningValidation.ErrorMessage != null)
             {
-               return BadRequest(planningValidation.ErrorMessage);
+                return BadRequest(planningValidation.ErrorMessage);
             }
             var calculatedWeeklyTotal = planningValidation.CalculatedWeeklyTotal;
             var validPlanningDays = planningValidation.ValidPlanningDays;
@@ -150,7 +104,7 @@ namespace PFMPManager.Api.Controllers
             {
                 return NotFound("Adminstrateur n'existe pas");
             }
-            
+
             //check business rules
             var hasAcceptedContactRequest = await HasAcceptedContactRequestAsync(currentStudentId, siret);
 
@@ -168,41 +122,41 @@ namespace PFMPManager.Api.Controllers
                 return BadRequest("Vous êtes deja en stage sur cette periode");
             }
 
-            
+
             var organisation = await FindOrganisationBySiretAsync(siret);
             if (organisation == null)
             {
                 return NotFound("L’organisation est introuvable");
             }
-            
+
             //Create/Update database entities inside transaction 
             await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                
 
-                await UpdateOrganisationWebsiteAsync(organisation,request.SiteWeb!);
 
-                
+                await UpdateOrganisationWebsiteAsync(organisation, request.SiteWeb!);
+
+
                 var user = await GetOrCreateSupervisorUserAsync(request.NomMaitreStage!, request.PrenomMaitreStage!, request.EmailMaitreStage!);
 
                 var prf = await GetOrCreateProfessionalProfileAsync(user.Id_Utilisateur, request.FonctionMaitreStage!, request.EmailMaitreStage!, request.TelephoneMaitreStage!);
-                
+
 
                 await EnsureWorkRelationExistsAsync(prf.Id_Utilisateur, siret);
-                
-                
+
+
 
                 var idPlanning = await CreatePlanningWithDaysAsync(calculatedWeeklyTotal, validPlanningDays);
 
 
-                
+
                 var createdPfmp = await CreatePfmpAsync(request, idPlanning, currentStudentId, administratorId);
 
-                var responseDto = BuildCompletePfmpResponse(createdPfmp,currentStudentId,administratorId);
+                var responseDto = BuildCompletePfmpResponse(createdPfmp, currentStudentId, administratorId);
 
                 await transaction.CommitAsync();
-                
+
                 return Ok(responseDto);
             }
             catch
@@ -211,7 +165,7 @@ namespace PFMPManager.Api.Controllers
                 throw;
             }
 
-           
+
 
         }
         private bool TryGetCurrentUserId(out int currentStudentId)
@@ -225,7 +179,7 @@ namespace PFMPManager.Api.Controllers
         {
 
             return User.FindFirstValue(ClaimTypes.Role);
-            
+
         }
 
         private async Task<string?> ValidatePfmpAccessAsync(int currentUserId, int idEtudiant, string role)
@@ -234,26 +188,26 @@ namespace PFMPManager.Api.Controllers
             {
                 return null;
             }
-            else if(role == "Enseignant")
+            else if (role == "Enseignant")
             {
-                var hasStudentAccess = await _context.Etudiant.AnyAsync(o=> o.Id_Utilisateur == currentUserId && o.Id_Utilisateur_1 == idEtudiant);
-                if(hasStudentAccess)
+                var hasStudentAccess = await _context.Etudiant.AnyAsync(o => o.Id_Utilisateur == currentUserId && o.Id_Utilisateur_1 == idEtudiant);
+                if (hasStudentAccess)
                 {
                     return null;
                 }
             }
             return "Vous n’avez pas le droit d’accéder à cette PFMP.";
-            
+
         }
-        
+
         private bool IsBasicCompletePfmpRequestInvalid(CreateCompletePfmpDto request)
         {
-            
-            return string.IsNullOrWhiteSpace(request.RaisonSociale) || string.IsNullOrWhiteSpace(request.SecteurActivite) || string.IsNullOrWhiteSpace(request.SIRET) 
-                 || string.IsNullOrWhiteSpace(request.Adresse)      || string.IsNullOrWhiteSpace(request.NumTelephone)    || string.IsNullOrWhiteSpace(request.SiteWeb)
+
+            return string.IsNullOrWhiteSpace(request.RaisonSociale) || string.IsNullOrWhiteSpace(request.SecteurActivite) || string.IsNullOrWhiteSpace(request.SIRET)
+                 || string.IsNullOrWhiteSpace(request.Adresse) || string.IsNullOrWhiteSpace(request.NumTelephone) || string.IsNullOrWhiteSpace(request.SiteWeb)
                  || string.IsNullOrWhiteSpace(request.PrenomMaitreStage) || string.IsNullOrWhiteSpace(request.TelephoneMaitreStage)
-                 || string.IsNullOrWhiteSpace(request.NomMaitreStage)    || string.IsNullOrWhiteSpace(request.FonctionMaitreStage) 
-                 || string.IsNullOrWhiteSpace(request.EmailMaitreStage)  || !request.DateDebut.HasValue || !request.DateFin.HasValue 
+                 || string.IsNullOrWhiteSpace(request.NomMaitreStage) || string.IsNullOrWhiteSpace(request.FonctionMaitreStage)
+                 || string.IsNullOrWhiteSpace(request.EmailMaitreStage) || !request.DateDebut.HasValue || !request.DateFin.HasValue
                  || request.DateFin.Value.Date < request.DateDebut.Value.Date;
         }
 
@@ -262,7 +216,7 @@ namespace PFMPManager.Api.Controllers
             return start != null && end != null;
         }
         private bool IsTimeSlotEmpty(TimeSpan? start, TimeSpan? end)
-        { 
+        {
             return start == null && end == null;
         }
         private bool IsTimeSlotIncomplete(TimeSpan? start, TimeSpan? end)
@@ -286,10 +240,10 @@ namespace PFMPManager.Api.Controllers
             {
                 return false;
             }
-            return  start.Value >= end.Value;
+            return start.Value >= end.Value;
         }
         private int CalculatePlanningDayMinutes(CreatePlanningJoursDto planningDay)
-        { 
+        {
             return CalculateTimeSlotMinutes(planningDay.MatinDebut, planningDay.MatinFin) + CalculateTimeSlotMinutes(planningDay.ApresMidiDebut, planningDay.ApresMidiFin);
         }
 
@@ -306,7 +260,7 @@ namespace PFMPManager.Api.Controllers
         {
 
             return new CreatePlanningJoursDto
-             {
+            {
                 Jour = planningDay.Jour,
                 MatinDebut = planningDay.MatinDebut,
                 MatinFin = planningDay.MatinFin,
@@ -323,7 +277,7 @@ namespace PFMPManager.Api.Controllers
 
         private bool IsPlanningDayEmpty(CreatePlanningJoursDto planningDay) {
             return IsTimeSlotEmpty(planningDay.MatinDebut, planningDay.MatinFin) && IsTimeSlotEmpty(planningDay.ApresMidiDebut, planningDay.ApresMidiFin);
-            
+
         }
 
         private string? GetPlanningDayValidationError(CreatePlanningJoursDto planningDay)
@@ -338,16 +292,16 @@ namespace PFMPManager.Api.Controllers
 
             if (IsPlanningDayEmpty(planningDay))
             {
-                return null; 
+                return null;
             }
 
             if (matinIncomplete)
             {
-                return  $"le matin du jour {planningDay.Jour} est incomplet";
+                return $"le matin du jour {planningDay.Jour} est incomplet";
             }
             if (midiIncomplete)
             {
-                return  $"le apres-midi du jour {planningDay.Jour} est incomplet";
+                return $"le apres-midi du jour {planningDay.Jour} est incomplet";
             }
 
             if (IsTimeSlotOrderInvalid(planningDay.MatinDebut, planningDay.MatinFin))
@@ -356,11 +310,11 @@ namespace PFMPManager.Api.Controllers
             }
             if (IsTimeSlotOrderInvalid(planningDay.ApresMidiDebut, planningDay.ApresMidiFin))
             {
-                return  $"pour {planningDay.Jour} l'heure de debut de l'apres-midi doit etre avant l'heure de fin ";
+                return $"pour {planningDay.Jour} l'heure de debut de l'apres-midi doit etre avant l'heure de fin ";
             }
             if (IsMorningOverlappingAfternoon(planningDay.MatinFin, planningDay.ApresMidiDebut))
             {
-                return  $"Pour {planningDay.Jour}, le matin ne peut pas finir apres le debut de l'apres-midi";
+                return $"Pour {planningDay.Jour}, le matin ne peut pas finir apres le debut de l'apres-midi";
             }
             return null;
         }
@@ -374,7 +328,7 @@ namespace PFMPManager.Api.Controllers
             }
             foreach (var planningDay in planningDays)
             {
-                
+
                 var planningDayError = GetPlanningDayValidationError(planningDay);
                 if (planningDayError != null)
                 {
@@ -408,7 +362,7 @@ namespace PFMPManager.Api.Controllers
             return result;
         }
         private class PlanningValidationResult
-        { 
+        {
             public string? ErrorMessage { get; set; }
             public int CalculatedWeeklyTotal { get; set; }
             public List<CreatePlanningJoursDto> ValidPlanningDays { get; set; } = new();
@@ -435,7 +389,7 @@ namespace PFMPManager.Api.Controllers
             return user;
         }
 
-        private async Task<Professionnel> GetOrCreateProfessionalProfileAsync(int supervisorUserId, string fonctionMaitreStage, string supervisorEmail,  string telephoneMaitreStage)
+        private async Task<Professionnel> GetOrCreateProfessionalProfileAsync(int supervisorUserId, string fonctionMaitreStage, string supervisorEmail, string telephoneMaitreStage)
         {
             var prf = new Professionnel();
             var userprf = await _context.Professionnel.FirstOrDefaultAsync(p => p.Id_Utilisateur == supervisorUserId);
@@ -497,7 +451,7 @@ namespace PFMPManager.Api.Controllers
             return idPlanning;
         }
 
-        private async Task<Pfmp>  CreatePfmpAsync(CreateCompletePfmpDto request, int idPlanning, int currentStudentId, int administratorId)
+        private async Task<Pfmp> CreatePfmpAsync(CreateCompletePfmpDto request, int idPlanning, int currentStudentId, int administratorId)
         {
             var createdPfmp = new Pfmp
             {
@@ -514,8 +468,8 @@ namespace PFMPManager.Api.Controllers
         }
         private PfmpDto BuildCompletePfmpResponse(Pfmp createdPfmp, int currentStudentId, int administratorId)
         {
-           return  new PfmpDto
-           {
+            return new PfmpDto
+            {
                 DateDebut = createdPfmp.DateDebut,
                 DateFin = createdPfmp.DateFin,
                 Id_Planning = createdPfmp.Id_Planning,
@@ -523,42 +477,128 @@ namespace PFMPManager.Api.Controllers
                 IdEtudiant = currentStudentId,
                 IdAdministrateur = administratorId,
                 IdPfmp = createdPfmp.Id_PFMP,
-           };
-            
+            };
+
         }
 
         private async Task<int> FindAdministratorIdForStudentAsync(int currentStudentId, int currentYear)
         {
             return await (from e in _context.Etudier
-                                          join gc in _context.GroupeClasse
-                                          on new { e.Id_Etablissement, e.Id_Classe }
-                                          equals new { gc.Id_Etablissement, gc.Id_Classe }
-                                          join admin in _context.Administrer
-                                          on gc.Id_Etablissement equals admin.Id_Etablissement
-                                          where e.Id_Utilisateur == currentStudentId && e.AnneeRentree <= currentYear
-                                          && e.AnneeSortie >= currentYear
-                                          select admin.Id_Utilisateur).FirstOrDefaultAsync();
+                          join gc in _context.GroupeClasse
+                          on new { e.Id_Etablissement, e.Id_Classe }
+                          equals new { gc.Id_Etablissement, gc.Id_Classe }
+                          join admin in _context.Administrer
+                          on gc.Id_Etablissement equals admin.Id_Etablissement
+                          where e.Id_Utilisateur == currentStudentId && e.AnneeRentree <= currentYear
+                          && e.AnneeSortie >= currentYear
+                          select admin.Id_Utilisateur).FirstOrDefaultAsync();
         }
 
         private async Task<bool> HasAcceptedContactRequestAsync(int currentStudentId, string siret)
         {
             return await _context.Contacter.AnyAsync(c => c.SIRET == siret && c.Id_Utilisateur == currentStudentId && c.StatutDemande.Trim().ToLower() == "accepte");
         }
-        private async Task<bool> HasOverlappingPfmpAsync(int currentStudentId, DateTime startDate , DateTime endDate )
+        private async Task<bool> HasOverlappingPfmpAsync(int currentStudentId, DateTime startDate, DateTime endDate)
         {
-             return await _context.Pfmp.AnyAsync(pf => pf.Id_Utilisateur_1 == currentStudentId &&
-                                                    pf.DateDebut.HasValue && pf.DateFin.HasValue &&
-                                                    pf.DateFin.Value.Date >= startDate && pf.DateDebut.Value.Date <= endDate);
+            return await _context.Pfmp.AnyAsync(pf => pf.Id_Utilisateur_1 == currentStudentId &&
+                                                   pf.DateDebut.HasValue && pf.DateFin.HasValue &&
+                                                   pf.DateFin.Value.Date >= startDate && pf.DateDebut.Value.Date <= endDate);
         }
         private async Task<Organisation?> FindOrganisationBySiretAsync(string siret)
         {
-            return await _context.Organisation.FirstOrDefaultAsync(o=> o.SIRET == siret);
+            return await _context.Organisation.FirstOrDefaultAsync(o => o.SIRET == siret);
         }
 
-        private async Task UpdateOrganisationWebsiteAsync(Organisation organisation,string siteWeb)
+        private async Task UpdateOrganisationWebsiteAsync(Organisation organisation, string siteWeb)
         {
-                organisation.SiteWeb = siteWeb;
-                await _context.SaveChangesAsync();
+            organisation.SiteWeb = siteWeb;
+            await _context.SaveChangesAsync();
+        }
+
+
+        private async Task<PfmpDetailDto> BuildPfmpDetailDtoAsync(Pfmp pfmp)
+        {
+            var organisation = await FindOrganisationBySiretAsync(pfmp.SIRET);
+            var dto = new PfmpDetailDto
+            {
+                DateDebut = pfmp.DateDebut,
+                DateFin = pfmp.DateFin,
+                Id_Planning = pfmp.Id_Planning,
+                SIRET = pfmp.SIRET,
+                IdEtudiant = pfmp.Id_Utilisateur_1,
+                IdPfmp = pfmp.Id_PFMP,
+                RaisonSociale = organisation?.RaisonSociale ?? string.Empty
+            };
+
+            dto.JourRestants = CalculateRemainingDays(pfmp.DateFin);
+            dto.Semaine = CalculateWeekCount(pfmp.DateDebut, pfmp.DateFin);
+
+            await AddSupervisorDetailsAsync(dto, pfmp.SIRET);
+
+            dto.PlanningJours = await GetPlanningDaysAsync(pfmp.Id_Planning);
+
+            return dto;
+        }
+
+        private int CalculateRemainingDays(DateTime? end)
+        {
+            if (!end.HasValue)
+            {
+                return 0;
+            }
+            return Math.Max(0, (end.Value.Date - DateTime.Today).Days);
+        }
+
+        private int CalculateWeekCount(DateTime? start, DateTime? end)
+        {
+
+            if (!start.HasValue || !end.HasValue)
+            {
+                return 0;
+            }
+            var semaine = end.Value.Date - start.Value.Date;
+            var total = semaine.TotalDays / 7;
+            return (int)total;
+        }
+
+        private async Task AddSupervisorDetailsAsync(PfmpDetailDto dto, string siret)
+        {
+            var workRelation = await _context.Travailler.FirstOrDefaultAsync(t => t.SIRET == siret);
+            if (workRelation == null)
+            {
+                return;
+            }
+            var supervisorUser = await _context.Utilisateur.FirstOrDefaultAsync(u => u.Id_Utilisateur == workRelation.Id_Utilisateur);
+            if (supervisorUser == null)
+            {
+                return;
+            }
+            dto.PrenomMaitreStage = supervisorUser.Prenom;
+            dto.NomMaitreStage = supervisorUser.Nom;
+            var professionalProfile = await _context.Professionnel.FirstOrDefaultAsync(r => r.Id_Utilisateur == workRelation.Id_Utilisateur);
+            if (professionalProfile == null)
+            {
+                return;
+            }
+            dto.FonctionMaitreStage = professionalProfile.Fonction;
+            dto.TelephoneMaitreStage = professionalProfile.NumTelephone;
+            dto.EmailMaitreStage = professionalProfile.AdresseMail;
+
+        }
+        private async Task<List<CreatePlanningJoursDto>> GetPlanningDaysAsync(int idPlanning)
+        {
+            return await _context.PlanningJours
+                .Where(j => j.Id_Planning == idPlanning)
+                .Select(j => new CreatePlanningJoursDto
+                {
+                    Jour = j.Jour,
+                    MatinDebut = j.MatinDebut,
+                    MatinFin = j.MatinFin,
+                    ApresMidiDebut = j.ApresMidiDebut,
+                    ApresMidiFin = j.ApresMidiFin,
+                    TotalHeures = j.TotalHeures
+                })
+                .ToListAsync();
         }
     }
 }
