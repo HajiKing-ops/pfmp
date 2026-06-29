@@ -56,11 +56,13 @@ namespace PFMPManager.Api.Controllers
             var sirets = pfmps.Select(pfmp => pfmp.SIRET).Distinct().ToList();
             var organisationNamesBySiret = await GetOrganisationRaisonSocialesBySiretsAsync(sirets);
             var planningDaysByPlanningId = await GetPlanningDaysByPlanningIdsAsync(planningIds);
+            var supervisorDetailsBySiret = await GetSupervisorDetailsBySiretsAsync(sirets);
 
             var result = new List<PfmpDetailDto>();
             foreach (var pfmp in pfmps)
             {
-                var dto = await BuildPfmpDetailDtoAsync(pfmp, planningDaysByPlanningId, organisationNamesBySiret);
+                var dto = await BuildPfmpDetailDtoAsync(pfmp, planningDaysByPlanningId, organisationNamesBySiret, supervisorDetailsBySiret);
+                
                 result.Add(dto);
             }
             return Ok(result);
@@ -530,7 +532,7 @@ namespace PFMPManager.Api.Controllers
         }
 
 
-        private async Task<PfmpDetailDto> BuildPfmpDetailDtoAsync(Pfmp pfmp, Dictionary<int, List<CreatePlanningJoursDto>> planningDaysByPlanningId, Dictionary<string, string> organisationNamesBySiret)
+        private async Task<PfmpDetailDto> BuildPfmpDetailDtoAsync(Pfmp pfmp, Dictionary<int, List<CreatePlanningJoursDto>> planningDaysByPlanningId, Dictionary<string, string> organisationNamesBySiret, Dictionary<string, SupervisorDetailsDto> supervisorDetailsBySiret)
         {
             var dto = new PfmpDetailDto
             {
@@ -549,11 +551,19 @@ namespace PFMPManager.Api.Controllers
             {
                 dto.RaisonSociale = string.Empty;
             }
+            if (supervisorDetailsBySiret.TryGetValue(pfmp.SIRET, out var supervisorDetails))
+            {
+                dto.PrenomMaitreStage = supervisorDetails.PrenomMaitreStage;
+                dto.NomMaitreStage = supervisorDetails.NomMaitreStage;
+                dto.FonctionMaitreStage = supervisorDetails.FonctionMaitreStage;
+                dto.TelephoneMaitreStage = supervisorDetails.TelephoneMaitreStage;
+                dto.EmailMaitreStage = supervisorDetails.EmailMaitreStage;
+            }
 
             dto.JourRestants = CalculateRemainingDays(pfmp.DateFin);
             dto.Semaine = CalculateWeekCount(pfmp.DateDebut, pfmp.DateFin);
 
-            await AddSupervisorDetailsAsync(dto, pfmp.SIRET);
+           
 
             if (planningDaysByPlanningId.TryGetValue(pfmp.Id_Planning, out var planningDays))
             {
@@ -589,29 +599,56 @@ namespace PFMPManager.Api.Controllers
             return (int)total;
         }
 
-        private async Task AddSupervisorDetailsAsync(PfmpDetailDto dto, string siret)
+        private async Task<Dictionary<string,SupervisorDetailsDto>> GetSupervisorDetailsBySiretsAsync(List<string> sirets)
         {
-            var workRelation = await _context.Travailler.AsNoTracking().FirstOrDefaultAsync(t => t.SIRET == siret);
-            if (workRelation == null)
-            {
-                return;
-            }
-            var supervisorUser = await _context.Utilisateur.AsNoTracking().FirstOrDefaultAsync(u => u.Id_Utilisateur == workRelation.Id_Utilisateur);
-            if (supervisorUser == null)
-            {
-                return;
-            }
-            dto.PrenomMaitreStage = supervisorUser.Prenom;
-            dto.NomMaitreStage = supervisorUser.Nom;
-            var professionalProfile = await _context.Professionnel.AsNoTracking().FirstOrDefaultAsync(r => r.Id_Utilisateur == workRelation.Id_Utilisateur);
-            if (professionalProfile == null)
-            {
-                return;
-            }
-            dto.FonctionMaitreStage = professionalProfile.Fonction;
-            dto.TelephoneMaitreStage = professionalProfile.NumTelephone;
-            dto.EmailMaitreStage = professionalProfile.AdresseMail;
+            var workRelations = await _context.Travailler
+                .AsNoTracking()
+                .Where(w=> sirets
+                .Contains(w.SIRET))
+                .ToListAsync();
 
+            
+            var supervisorUserIds = workRelations.Select(wR => wR.Id_Utilisateur).Distinct().ToList();
+
+            var supervisorUsers = await _context.Utilisateur
+                .AsNoTracking().Where(u => supervisorUserIds.Contains(u.Id_Utilisateur))
+                .ToListAsync();
+
+            var professionalProfiles = await _context.Professionnel.AsNoTracking().Where(p => supervisorUserIds.Contains(p.Id_Utilisateur))
+                .ToListAsync();
+
+
+            var supervisorUsersById = supervisorUsers.ToDictionary(user => user.Id_Utilisateur);
+            var professionalProfilesByUserId = professionalProfiles.ToDictionary(profile => profile.Id_Utilisateur);
+
+            var supervisorDetailsBySiret = new Dictionary<string, SupervisorDetailsDto>();
+
+            foreach (var workRelation in workRelations)
+            {
+                var userId = workRelation.Id_Utilisateur;
+
+                if (!supervisorUsersById.TryGetValue(userId, out var supervisorUser))
+                {
+                    continue;
+                }
+                if (!professionalProfilesByUserId.TryGetValue(userId, out var professionalProfile))
+                {
+                    continue;
+                }
+                var dto = new SupervisorDetailsDto
+                {
+                    PrenomMaitreStage = supervisorUser.Prenom,
+                    NomMaitreStage = supervisorUser.Nom,
+                    FonctionMaitreStage = professionalProfile.Fonction,
+                    TelephoneMaitreStage = professionalProfile.NumTelephone,
+                    EmailMaitreStage  = professionalProfile.AdresseMail,
+                };
+                if (!supervisorDetailsBySiret.ContainsKey(workRelation.SIRET))
+                {
+                    supervisorDetailsBySiret.Add(workRelation.SIRET, dto);
+                }
+            }
+            return supervisorDetailsBySiret;
         }
 
         private async Task<Dictionary<int, List<CreatePlanningJoursDto>>> GetPlanningDaysByPlanningIdsAsync(List<int> planningIds)
