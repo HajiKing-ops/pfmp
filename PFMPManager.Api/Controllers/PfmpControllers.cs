@@ -61,7 +61,7 @@ namespace PFMPManager.Api.Controllers
             var result = new List<PfmpDetailDto>();
             foreach (var pfmp in pfmps)
             {
-                var dto = await BuildPfmpDetailDtoAsync(pfmp, planningDaysByPlanningId, organisationNamesBySiret, supervisorDetailsBySiret);
+                var dto =  BuildPfmpDetailDto(pfmp, planningDaysByPlanningId, organisationNamesBySiret, supervisorDetailsBySiret);
                 
                 result.Add(dto);
             }
@@ -532,7 +532,7 @@ namespace PFMPManager.Api.Controllers
         }
 
 
-        private async Task<PfmpDetailDto> BuildPfmpDetailDtoAsync(Pfmp pfmp, Dictionary<int, List<CreatePlanningJoursDto>> planningDaysByPlanningId, Dictionary<string, string> organisationNamesBySiret, Dictionary<string, SupervisorDetailsDto> supervisorDetailsBySiret)
+        private PfmpDetailDto BuildPfmpDetailDto(Pfmp pfmp, Dictionary<int, List<CreatePlanningJoursDto>> planningDaysByPlanningId, Dictionary<string, string> organisationNamesBySiret, Dictionary<string, SupervisorDetailsDto> supervisorDetailsBySiret)
         {
             var dto = new PfmpDetailDto
             {
