@@ -22,8 +22,8 @@ namespace PFMPManager.Api.Controllers
 
 
         [Authorize(Roles = "Etudiant,Enseignant")]
-        [HttpGet("recherche/{studentId}/{idPfmp?}")] //address of the method
-        public async Task<IActionResult> GetPfmpById(int studentId, int? idPfmp)
+        [HttpGet("recherche/{studentId}/{pfmpId?}")] //address of the method
+        public async Task<IActionResult> GetStudentPfmps(int studentId, int? PfmpId)
         {
             if (!TryGetCurrentUserId(out int currentUserId))
             {
@@ -42,7 +42,7 @@ namespace PFMPManager.Api.Controllers
 
 
 
-            var pfmps = await GetStudentPfmpsAsync(studentId, idPfmp);
+            var pfmps = await GetStudentPfmpsAsync(studentId, PfmpId);
             if (!pfmps.Any())
             {
                 return NotFound();
