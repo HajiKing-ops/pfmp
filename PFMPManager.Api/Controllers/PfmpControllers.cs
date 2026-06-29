@@ -53,13 +53,14 @@ namespace PFMPManager.Api.Controllers
                 return NotFound();
             }
             var planningIds = pfmps.Select(pfmp => pfmp.Id_Planning).Distinct().ToList();
-
+            var sirets = pfmps.Select(pfmp => pfmp.SIRET).Distinct().ToList();
+            var organisationNamesBySiret = await GetOrganisationRaisonSocialesBySiretsAsync(sirets);
             var planningDaysByPlanningId = await GetPlanningDaysByPlanningIdsAsync(planningIds);
 
             var result = new List<PfmpDetailDto>();
             foreach (var pfmp in pfmps)
             {
-                var dto = await BuildPfmpDetailDtoAsync(pfmp, planningDaysByPlanningId);
+                var dto = await BuildPfmpDetailDtoAsync(pfmp, planningDaysByPlanningId, organisationNamesBySiret);
                 result.Add(dto);
             }
             return Ok(result);
@@ -513,9 +514,13 @@ namespace PFMPManager.Api.Controllers
             return await _context.Organisation.FirstOrDefaultAsync(o => o.SIRET == siret);
         }
 
-        private async Task<string?> GetOrganisationRaisonSocialeBySiretAsync(string siret)
+        private async Task<Dictionary<string,string>> GetOrganisationRaisonSocialesBySiretsAsync(List<string> sirets)
         {
-            return await _context.Organisation.AsNoTracking().Where(o=> o.SIRET == siret).Select(o=> o.RaisonSociale).FirstOrDefaultAsync();
+            return await _context.Organisation
+                .AsNoTracking()
+                .Where(o => sirets.Contains(o.SIRET))
+                .ToDictionaryAsync(o => o.SIRET,
+                o => o.RaisonSociale);
         }
 
         private async Task UpdateOrganisationWebsiteAsync(Organisation organisation, string siteWeb)
@@ -525,9 +530,8 @@ namespace PFMPManager.Api.Controllers
         }
 
 
-        private async Task<PfmpDetailDto> BuildPfmpDetailDtoAsync(Pfmp pfmp, Dictionary<int, List<CreatePlanningJoursDto>> planningDaysByPlanningId)
+        private async Task<PfmpDetailDto> BuildPfmpDetailDtoAsync(Pfmp pfmp, Dictionary<int, List<CreatePlanningJoursDto>> planningDaysByPlanningId, Dictionary<string, string> organisationNamesBySiret)
         {
-            var raisonSociale = await GetOrganisationRaisonSocialeBySiretAsync(pfmp.SIRET);
             var dto = new PfmpDetailDto
             {
                 DateDebut = pfmp.DateDebut,
@@ -536,8 +540,15 @@ namespace PFMPManager.Api.Controllers
                 SIRET = pfmp.SIRET,
                 IdEtudiant = pfmp.Id_Utilisateur_1,
                 IdPfmp = pfmp.Id_PFMP,
-                RaisonSociale = raisonSociale ?? string.Empty
             };
+            if (organisationNamesBySiret.TryGetValue(pfmp.SIRET, out var raisonSociale))
+            {
+                dto.RaisonSociale = raisonSociale;
+            }
+            else
+            {
+                dto.RaisonSociale = string.Empty;
+            }
 
             dto.JourRestants = CalculateRemainingDays(pfmp.DateFin);
             dto.Semaine = CalculateWeekCount(pfmp.DateDebut, pfmp.DateFin);
@@ -552,6 +563,7 @@ namespace PFMPManager.Api.Controllers
             {
                 dto.PlanningJours = new List<CreatePlanningJoursDto>();
             }
+
 
                 return dto;
         }
