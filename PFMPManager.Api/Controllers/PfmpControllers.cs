@@ -23,9 +23,9 @@ namespace PFMPManager.Api.Controllers
 
         [Authorize(Roles = "Etudiant,Enseignant")]
         [HttpGet("recherche/{studentId}/{pfmpId?}")] //address of the method
-        public async Task<IActionResult> GetStudentPfmps(int studentId, int? PfmpId)
+        public async Task<IActionResult> GetStudentPfmps(int studentId, int? pfmpId)
         {
-            if (!TryGetCurrentUserId(out int currentUserId))
+            /*if (!TryGetCurrentUserId(out int currentUserId))
             {
                 return Unauthorized("Token invalide : identifiant utilisateur manquant");
             }
@@ -33,8 +33,14 @@ namespace PFMPManager.Api.Controllers
             if (role == null || string.IsNullOrWhiteSpace(role))
             {
                 return Unauthorized("Token invalide : role utilisateur manquant");
+            }*/
+            var currentUserResult = TryGetCurrentUserContext();
+            if (!currentUserResult.Success)
+            {
+                return Unauthorized(currentUserResult.ErrorMessage);
             }
-            var pfmpAccessError = await ValidatePfmpAccessAsync(currentUserId, studentId, role);
+            var currentUser = currentUserResult.User!;
+            var pfmpAccessError = await ValidateStudentPfmpAccessAsync(currentUser.UserId, studentId, currentUser.Role);
             if (pfmpAccessError != null)
             {
                 return StatusCode(403, pfmpAccessError);
@@ -42,7 +48,7 @@ namespace PFMPManager.Api.Controllers
 
 
 
-            var pfmps = await GetStudentPfmpsAsync(studentId, PfmpId);
+            var pfmps = await GetStudentPfmpsAsync(studentId, pfmpId);
             if (!pfmps.Any())
             {
                 return NotFound();
@@ -178,7 +184,7 @@ namespace PFMPManager.Api.Controllers
 
         }
 
-        private async Task<string?> ValidatePfmpAccessAsync(int currentUserId, int idEtudiant, string role)
+        private async Task<string?> ValidateStudentPfmpAccessAsync(int currentUserId, int idEtudiant, string role)
         {
             if (role == "Etudiant" && currentUserId == idEtudiant)
             {
@@ -704,7 +710,39 @@ namespace PFMPManager.Api.Controllers
            
         }
 
+        private class CurrentUserContext
+        {
+            public int UserId { get; set; }
+            public string Role { get; set; } = string.Empty;
+        }
+        private class CurrentUserContextResult
+        { 
+            public bool Success { get; set; }
+            public string? ErrorMessage { get; set; }
+            public CurrentUserContext? User { get; set; }
+        }
 
+        private CurrentUserContextResult TryGetCurrentUserContext()
+        {
+            var result = new CurrentUserContextResult();
+
+            if (!TryGetCurrentUserId(out int currentUserId))
+            {
+                result.Success = false;
+                result.ErrorMessage = "Token invalide : identifiant utilisateur manquant";
+                return result;
+            }
+            var role = TryGetCurrentUserRole();
+            if (role == null || string.IsNullOrWhiteSpace(role))
+            {
+                result.Success = false;
+                result.ErrorMessage = "Token invalide : role utilisateur manquant";
+                return result;
+            }
+            result.User.UserId = currentUserId;
+            result.User.Role = role;
+            return result;
+        }
 
     }
 }
