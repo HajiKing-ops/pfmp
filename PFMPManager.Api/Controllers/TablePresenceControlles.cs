@@ -5,7 +5,8 @@ using PFMPManager.Api.DTOs;
 using PFMPManager.Api.Helpers;
 using PFMPManager.Api.Models;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims; // creates  claims 
+using System.Security.Claims;
+using Microsoft.VisualBasic; // creates  claims 
 
 
 namespace PFMPManager.Api.Controllers 
@@ -21,56 +22,206 @@ namespace PFMPManager.Api.Controllers
             _context = context;
         }
 
-        [Authorize(Roles = "Enseignant,Administrateur")]
+      
+        [Authorize(Roles = "Administrateur")]
 
-        [HttpPost("{idEtudiant}")]
-        public async Task<IActionResult> Presence(TablePresenceDto request, int idEtudiant)
+        [HttpPost("initialiser")]
+
+        public async Task<IActionResult> Presence()
         {
-            var EtudiantExiste = await _context.Etudiant.AnyAsync(t => t.Id_Utilisateur_1 == idEtudiant);
-            if (!EtudiantExiste)
+            //value by default
+            var etat = "PRESENT";
+            var justification = false;
+            var todayDate = DateTime.Today;
+            var currentUserResult = TryGetCurrentUserContext();
+            if (!currentUserResult.Success)
             {
-                return NotFound("Etudiant n'existe pas");
+                return Unauthorized(currentUserResult.ErrorMessage);
             }
-            if (!request.DateJour.HasValue)
+            var todayDay = DateTime.Today.DayOfWeek switch
+            {
+                DayOfWeek.Monday => "Lundi",
+                DayOfWeek.Tuesday => "Mardi",
+                DayOfWeek.Wednesday => "Mercredi",
+                DayOfWeek.Thursday => "Jeudi",
+                DayOfWeek.Friday => "Vendredi",
+                DayOfWeek.Saturday => "Samedi",
+                DayOfWeek.Sunday => "Dimanche",
+                _ => ""
+            };
+
+            if (DateTime.Today.DayOfWeek == DayOfWeek.Saturday ||
+                DateTime.Today.DayOfWeek == DayOfWeek.Sunday)
+            { 
+                return Ok("Pas de presence a initialiser le week-end");
+            }
+            
+
+            var studentIds = await (from etud in _context.Etudiant
+                                  join pfmp in _context.Pfmp
+                                  on etud.Id_Utilisateur_1 equals pfmp.Id_Utilisateur_1
+                                  join plan in _context.PlanningJours
+                                  on pfmp.Id_Planning equals plan.Id_Planning
+                                   where pfmp.DateDebut.HasValue
+                                  && pfmp.DateFin.HasValue
+                                  && pfmp.DateDebut.Value.Date <= todayDate
+                                  && pfmp.DateFin.Value.Date >= todayDate
+                                  && plan.Jour == todayDay
+                                  && pfmp.Id_Utilisateur == currentUserResult.User!.UserId
+                                    select pfmp.Id_Utilisateur_1 
+                                  
+                                  ).Distinct().ToListAsync();
+
+
+            if (studentIds.Count == 0)
+            {
+                return Ok("aucune PFMP active aujourdhui");            
+            }
+                var existingPresences = await _context.TablePresence.Where(o => studentIds.Contains(o.Id_Utilisateur) && o.DateJour == todayDate).Select(o=>o.Id_Utilisateur).ToListAsync();
+            var existingKeys = existingPresences.ToHashSet();
+            var newPresences = studentIds.Where(s => !existingKeys.Contains(s)).Select(s => new TablePresence
+            {
+                Id_Utilisateur = s,
+                Etat = etat,
+                DateJour = todayDate,
+                Justification = justification,
+                Retard = 0
+
+            }).ToList();
+            if (newPresences.Count == 0)
+            {
+                return Ok("deja initialise");
+            }
+            
+            _context.TablePresence.AddRange(newPresences);
+            await _context.SaveChangesAsync();
+            
+            
+            return Ok();
+        }
+
+
+
+        [Authorize(Roles = "Enseignant,Administrateur")]
+        [HttpPut("update/{studentId}")]
+        public async Task<IActionResult> UpdateTablePresence(int studentId, UpdateTablePresenceDto request)
+        {
+
+            var currentUserResult = TryGetCurrentUserContext();
+            if (!currentUserResult.Success)
+            {
+                return Unauthorized(currentUserResult.ErrorMessage);
+            }
+            if (string.IsNullOrWhiteSpace(request.Etat) || request.Retard < 0 || !request.DateJour.HasValue)
             {
                 return BadRequest();
             }
-            var jour = request.DateJour.Value.Date;
-            var EtudiantPfmp = await _context.Pfmp.FirstOrDefaultAsync(pf => pf.Id_Utilisateur_1 == idEtudiant && pf.DateDebut.HasValue&& pf.DateFin.HasValue && pf.DateDebut.Value.Date <= jour && pf.DateFin.Value.Date >= jour);
-            if (EtudiantPfmp == null)
+            var etat = request.Etat.ToLower().Trim();
+            if (etat != "present"  && etat != "absent")
             {
-                return BadRequest("pfmp n'existe pas");
+                return BadRequest();
             }
- 
-            var TablePresence = await _context.TablePresence.FirstOrDefaultAsync(tp => tp.Id_Utilisateur == idEtudiant && tp.DateJour.HasValue &&tp.DateJour.Value.Date == jour);
-            if (TablePresence != null)
+            if (currentUserResult.User!.Role == "Enseignant")
             {
-                return BadRequest("c'est deja existe");
-            }
-
-            TablePresence = new TablePresence
+                var verify = await (from etud in _context.Etudiant
+                                    join pfmp in _context.Pfmp
+                                    on etud.Id_Utilisateur_1 equals pfmp.Id_Utilisateur_1
+                                    where etud.Id_Utilisateur == currentUserResult.User!.UserId
+                                    && pfmp.Id_Utilisateur_1 == studentId && pfmp.DateDebut.HasValue
+                                    && pfmp.DateFin.HasValue && pfmp.DateDebut.Value.Date <= request.DateJour.Value.Date
+                                    && pfmp.DateFin.Value.Date >= request.DateJour.Value.Date
+                                    select pfmp
+                                    ).AsNoTracking().AnyAsync();
+                if (!verify)
                 {
-                    DateJour = request.DateJour,
-                    Etat = request.Etat,
-                    Retard = request.Retard,
-                    Justification = request.Justification,
-                    Id_Utilisateur = idEtudiant,
-                };
-                _context.TablePresence.Add(TablePresence);
-                await _context.SaveChangesAsync();
-            
-            
+                    return BadRequest();
+                }
+            }
 
-            var dto = new TablePresenceDto
+            if (currentUserResult.User!.Role == "Administrateur")
             {
-                DateJour = TablePresence.DateJour,
-                Etat = TablePresence.Etat,
-                Retard = TablePresence.Retard,
-                Justification = TablePresence.Justification,
-                Id_Utilisateur = TablePresence.Id_Utilisateur,
-            };
-            return Ok(dto);
+                var verify = await _context.Pfmp.AsNoTracking().Where(pfmp => pfmp.Id_Utilisateur == currentUserResult.User!.UserId
+                                                && pfmp.Id_Utilisateur_1 == studentId && pfmp.DateDebut.HasValue
+                                                && pfmp.DateFin.HasValue && pfmp.DateDebut.Value.Date <= request.DateJour.Value.Date
+                                                && pfmp.DateFin.Value.Date >= request.DateJour.Value.Date
+                                                ).AnyAsync();
+                if (!verify)
+                {
+                    return BadRequest();
+                }
+            }
+            var present = await _context.TablePresence.Where(p => p.DateJour.HasValue && p.DateJour.Value.Date == request.DateJour.Value.Date && p.Id_Utilisateur == studentId).FirstOrDefaultAsync();
+            if (present == null)
+            {
+                return BadRequest();
+            }
+            present.Etat = "PRESENT";
+            present.Justification = request.Justification;
+            
+            if (etat == "absent")
+            {
+                present.Retard = 0;
+                present.Etat = "ABSENT";
+            }
+            else
+            {
+                present.Retard = request.Retard;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+
+        }
+        private bool TryGetCurrentUserId(out int currentStudentId)
+        {
+
+            var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return int.TryParse(id, out currentStudentId);
         }
 
+        private string? TryGetCurrentUserRole()
+        {
+
+            return User.FindFirstValue(ClaimTypes.Role);
+
+        }
+
+        private class CurrentUserContext
+        {
+            public int UserId { get; set; }
+            public string Role { get; set; } = string.Empty;
+        }
+        private class CurrentUserContextResult
+        {
+            public bool Success { get; set; }
+            public string? ErrorMessage { get; set; }
+            public CurrentUserContext? User { get; set; }
+        }
+        private CurrentUserContextResult TryGetCurrentUserContext()
+        {
+            var result = new CurrentUserContextResult();
+
+            if (!TryGetCurrentUserId(out int currentUserId))
+            {
+                result.Success = false;
+                result.ErrorMessage = "Token invalide : identifiant utilisateur manquant";
+                return result;
+            }
+            var role = TryGetCurrentUserRole();
+            if (role == null || string.IsNullOrWhiteSpace(role))
+            {
+                result.Success = false;
+                result.ErrorMessage = "Token invalide : role utilisateur manquant";
+                return result;
+            }
+            result.Success = true;
+            result.User = new CurrentUserContext
+            {
+                UserId = currentUserId,
+                Role = role
+            };
+            return result;
+        }
     }
 }
