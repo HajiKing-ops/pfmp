@@ -739,8 +739,12 @@ namespace PFMPManager.Api.Controllers
                 result.ErrorMessage = "Token invalide : role utilisateur manquant";
                 return result;
             }
-            result.User.UserId = currentUserId;
-            result.User.Role = role;
+            result.Success = true;
+            result.User = new CurrentUserContext
+            {
+                UserId = currentUserId,
+                Role = role
+            };
             return result;
         }
 
