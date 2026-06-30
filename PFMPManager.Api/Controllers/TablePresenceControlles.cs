@@ -5,7 +5,6 @@ using PFMPManager.Api.DTOs;
 using PFMPManager.Api.Services;
 using PFMPManager.Api.Models;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
 
 
 namespace PFMPManager.Api.Controllers 
@@ -15,12 +14,12 @@ namespace PFMPManager.Api.Controllers
     public class TablePreseceController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly ICurrentUserService _currentUser;
+        private readonly ICurrentUserService _currentUserService;
 
         public TablePreseceController(AppDbContext context, ICurrentUserService currentUser)
         {
             _context = context;
-            _currentUser = currentUser;
+            _currentUserService = currentUser;
         }
 
       
@@ -34,7 +33,7 @@ namespace PFMPManager.Api.Controllers
             var etat = "PRESENT";
             var justification = false;
             var todayDate = DateTime.Today;
-            var currentUserResult = _currentUser.GetCurrentUser(User);
+            var currentUserResult = _currentUserService.GetCurrentUser(User);
             if (!currentUserResult.Success)
             {
                 return Unauthorized(currentUserResult.ErrorMessage);
@@ -108,7 +107,7 @@ namespace PFMPManager.Api.Controllers
         public async Task<IActionResult> UpdateTablePresence(int studentId, UpdateTablePresenceDto request)
         {
 
-            var currentUserResult = _currentUser.GetCurrentUser(User);
+            var currentUserResult = _currentUserService.GetCurrentUser(User);
             if (!currentUserResult.Success)
             {
                 return Unauthorized(currentUserResult.ErrorMessage);

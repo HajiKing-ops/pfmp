@@ -6,7 +6,6 @@ using PFMPManager.Api.Helpers;
 using PFMPManager.Api.Models;
 using PFMPManager.Api.Services;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
 namespace PFMPManager.Api.Controllers
 {
     [ApiController] // Enables model validation and smart binding 
@@ -14,12 +13,14 @@ namespace PFMPManager.Api.Controllers
     public class PfmpController : ControllerBase
     {
         private readonly AppDbContext _context; // Database context injected via DI (Dependency Injection)
-        private readonly ICurrentUserService _currentUser;
+        private readonly ICurrentUserService _currentUserService;
+        private readonly IPfmpAccessService _pfmpAccessService;
                                                 //DI container injects AppDbContext registered om program.cs
-        public PfmpController(AppDbContext context, ICurrentUserService currentUser)
+        public PfmpController(AppDbContext context, ICurrentUserService currentUser, IPfmpAccessService accessPfmp)
         {
             _context = context;
-            _currentUser = currentUser;
+            _currentUserService = currentUser;
+            _pfmpAccessService = accessPfmp;
         }
 
 
@@ -29,12 +30,12 @@ namespace PFMPManager.Api.Controllers
         public async Task<IActionResult> GetStudentPfmps(int studentId, int? pfmpId)
         {
            
-            var currentUserResult = _currentUser.GetCurrentUser(User);
+            var currentUserResult = _currentUserService.GetCurrentUser(User);
             if (!currentUserResult.Success)
             {
                 return Unauthorized(currentUserResult.ErrorMessage);
             }
-            var pfmpAccessError = await ValidateStudentPfmpAccessAsync(currentUserResult.UserId, studentId, currentUserResult.Role);
+            var pfmpAccessError = await _pfmpAccessService.ValidateStudentPfmpAccessAsync(currentUserResult.UserId, studentId, currentUserResult.Role);
             if (pfmpAccessError != null)
             {
                 return StatusCode(403, pfmpAccessError);
@@ -74,7 +75,7 @@ namespace PFMPManager.Api.Controllers
 
 
             //Get current student id
-            var currentUserResult = _currentUser.GetCurrentUser(User);
+            var currentUserResult = _currentUserService.GetCurrentUser(User);
             if (!currentUserResult.Success)
             {
                 return Unauthorized(currentUserResult.ErrorMessage);
@@ -170,23 +171,7 @@ namespace PFMPManager.Api.Controllers
         }
       
 
-        private async Task<string?> ValidateStudentPfmpAccessAsync(int currentUserId, int idEtudiant, string role)
-        {
-            if (role == "Etudiant" && currentUserId == idEtudiant)
-            {
-                return null;
-            }
-            else if (role == "Enseignant")
-            {
-                var hasStudentAccess = await _context.Etudiant.AnyAsync(o => o.Id_Utilisateur == currentUserId && o.Id_Utilisateur_1 == idEtudiant);
-                if (hasStudentAccess)
-                {
-                    return null;
-                }
-            }
-            return "Vous n’avez pas le droit d’accéder à cette PFMP.";
-
-        }
+       
 
         private bool IsBasicCompletePfmpRequestInvalid(CreateCompletePfmpDto request)
         {
