@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Cryptography;
 using QuestPDF.Infrastructure;
+using PFMPManager.Api.Services;
 
 
 
@@ -24,6 +25,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 
 // CORS policy - allows the Flutter web client to call this API from any origin 

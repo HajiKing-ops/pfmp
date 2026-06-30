@@ -4,6 +4,7 @@ using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
 using PFMPManager.Api.Helpers;
 using PFMPManager.Api.Models;
+using PFMPManager.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 namespace PFMPManager.Api.Controllers
@@ -13,10 +14,12 @@ namespace PFMPManager.Api.Controllers
     public class PfmpController : ControllerBase
     {
         private readonly AppDbContext _context; // Database context injected via DI (Dependency Injection)
+        private readonly ICurrentUserService _currentUser;
                                                 //DI container injects AppDbContext registered om program.cs
-        public PfmpController(AppDbContext context)
+        public PfmpController(AppDbContext context, ICurrentUserService currentUser)
         {
             _context = context;
+            _currentUser = currentUser;
         }
 
 
@@ -26,13 +29,12 @@ namespace PFMPManager.Api.Controllers
         public async Task<IActionResult> GetStudentPfmps(int studentId, int? pfmpId)
         {
            
-            var currentUserResult = TryGetCurrentUserContext();
+            var currentUserResult = _currentUser.GetCurrentUser(User);
             if (!currentUserResult.Success)
             {
                 return Unauthorized(currentUserResult.ErrorMessage);
             }
-            var currentUser = currentUserResult.User!;
-            var pfmpAccessError = await ValidateStudentPfmpAccessAsync(currentUser.UserId, studentId, currentUser.Role);
+            var pfmpAccessError = await ValidateStudentPfmpAccessAsync(currentUserResult.UserId, studentId, currentUserResult.Role);
             if (pfmpAccessError != null)
             {
                 return StatusCode(403, pfmpAccessError);
@@ -72,13 +74,13 @@ namespace PFMPManager.Api.Controllers
 
 
             //Get current student id
-            var currentUserResult = TryGetCurrentUserContext();
+            var currentUserResult = _currentUser.GetCurrentUser(User);
             if (!currentUserResult.Success)
             {
                 return Unauthorized(currentUserResult.ErrorMessage);
             }
-            var currentStudentId= currentUserResult.User!.UserId;
-           
+          
+           var currentStudentId = currentUserResult.UserId;
            
 
             //Validate basic request fields
@@ -166,19 +168,7 @@ namespace PFMPManager.Api.Controllers
 
 
         }
-        private bool TryGetCurrentUserId(out int currentStudentId)
-        {
-
-            var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return int.TryParse(id, out currentStudentId);
-        }
-
-        private string? TryGetCurrentUserRole()
-        {
-
-            return User.FindFirstValue(ClaimTypes.Role);
-
-        }
+      
 
         private async Task<string?> ValidateStudentPfmpAccessAsync(int currentUserId, int idEtudiant, string role)
         {
@@ -706,49 +696,6 @@ namespace PFMPManager.Api.Controllers
            
         }
 
-        private class CurrentUserContext
-        {
-            public int UserId { get; set; }
-            public string Role { get; set; } = string.Empty;
-        }
-        private class CurrentUserContextResult
-        { 
-            public bool Success { get; set; }
-            public string? ErrorMessage { get; set; }
-            public CurrentUserContext? User { get; set; }
-        }
-
-        private CurrentUserContextResult TryGetCurrentUserContext()
-        {
-            if(!TryGetCurrentUserId(out int currentUserId))
-            {
-                return new CurrentUserContextResult
-                {
-                    Success = false,
-                    ErrorMessage = "Token invalide : identifiant utilisateur manquant"
-                };
-            }
-            var role = TryGetCurrentUserRole();
-            if (role == null || string.IsNullOrWhiteSpace(role))
-            {
-                return new CurrentUserContextResult
-                {
-                    Success = false,
-                    ErrorMessage = "Token invalide : role utilisateur manquant"
-                };
-            }
-            return new CurrentUserContextResult
-            {
-                Success = true,
-                User = new CurrentUserContext
-                {
-                    UserId = currentUserId,
-                    Role = role
-                }
-                
-            };
-
-        }
 
     }
 }

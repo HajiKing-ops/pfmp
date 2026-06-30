@@ -2,11 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
-using PFMPManager.Api.Helpers;
+using PFMPManager.Api.Services;
 using PFMPManager.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using Microsoft.VisualBasic; // creates  claims 
 
 
 namespace PFMPManager.Api.Controllers 
@@ -16,10 +15,12 @@ namespace PFMPManager.Api.Controllers
     public class TablePreseceController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly ICurrentUserService _currentUser;
 
-        public TablePreseceController(AppDbContext context)
+        public TablePreseceController(AppDbContext context, ICurrentUserService currentUser)
         {
             _context = context;
+            _currentUser = currentUser;
         }
 
       
@@ -33,7 +34,7 @@ namespace PFMPManager.Api.Controllers
             var etat = "PRESENT";
             var justification = false;
             var todayDate = DateTime.Today;
-            var currentUserResult = TryGetCurrentUserContext();
+            var currentUserResult = _currentUser.GetCurrentUser(User);
             if (!currentUserResult.Success)
             {
                 return Unauthorized(currentUserResult.ErrorMessage);
@@ -67,7 +68,7 @@ namespace PFMPManager.Api.Controllers
                                   && pfmp.DateDebut.Value.Date <= todayDate
                                   && pfmp.DateFin.Value.Date >= todayDate
                                   && plan.Jour == todayDay
-                                  && pfmp.Id_Utilisateur == currentUserResult.User!.UserId
+                                  && pfmp.Id_Utilisateur == currentUserResult.UserId
                                     select pfmp.Id_Utilisateur_1 
                                   
                                   ).Distinct().ToListAsync();
@@ -107,7 +108,7 @@ namespace PFMPManager.Api.Controllers
         public async Task<IActionResult> UpdateTablePresence(int studentId, UpdateTablePresenceDto request)
         {
 
-            var currentUserResult = TryGetCurrentUserContext();
+            var currentUserResult = _currentUser.GetCurrentUser(User);
             if (!currentUserResult.Success)
             {
                 return Unauthorized(currentUserResult.ErrorMessage);
@@ -121,12 +122,12 @@ namespace PFMPManager.Api.Controllers
             {
                 return BadRequest();
             }
-            if (currentUserResult.User!.Role == "Enseignant")
+            if (currentUserResult.Role == "Enseignant")
             {
                 var verify = await (from etud in _context.Etudiant
                                     join pfmp in _context.Pfmp
                                     on etud.Id_Utilisateur_1 equals pfmp.Id_Utilisateur_1
-                                    where etud.Id_Utilisateur == currentUserResult.User!.UserId
+                                    where etud.Id_Utilisateur == currentUserResult.UserId
                                     && pfmp.Id_Utilisateur_1 == studentId && pfmp.DateDebut.HasValue
                                     && pfmp.DateFin.HasValue && pfmp.DateDebut.Value.Date <= request.DateJour.Value.Date
                                     && pfmp.DateFin.Value.Date >= request.DateJour.Value.Date
@@ -138,9 +139,9 @@ namespace PFMPManager.Api.Controllers
                 }
             }
 
-            if (currentUserResult.User!.Role == "Administrateur")
+            if (currentUserResult.Role == "Administrateur")
             {
-                var verify = await _context.Pfmp.AsNoTracking().Where(pfmp => pfmp.Id_Utilisateur == currentUserResult.User!.UserId
+                var verify = await _context.Pfmp.AsNoTracking().Where(pfmp => pfmp.Id_Utilisateur == currentUserResult.UserId
                                                 && pfmp.Id_Utilisateur_1 == studentId && pfmp.DateDebut.HasValue
                                                 && pfmp.DateFin.HasValue && pfmp.DateDebut.Value.Date <= request.DateJour.Value.Date
                                                 && pfmp.DateFin.Value.Date >= request.DateJour.Value.Date
@@ -172,56 +173,6 @@ namespace PFMPManager.Api.Controllers
 
             return Ok();
 
-        }
-        private bool TryGetCurrentUserId(out int currentStudentId)
-        {
-
-            var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return int.TryParse(id, out currentStudentId);
-        }
-
-        private string? TryGetCurrentUserRole()
-        {
-
-            return User.FindFirstValue(ClaimTypes.Role);
-
-        }
-
-        private class CurrentUserContext
-        {
-            public int UserId { get; set; }
-            public string Role { get; set; } = string.Empty;
-        }
-        private class CurrentUserContextResult
-        {
-            public bool Success { get; set; }
-            public string? ErrorMessage { get; set; }
-            public CurrentUserContext? User { get; set; }
-        }
-        private CurrentUserContextResult TryGetCurrentUserContext()
-        {
-            var result = new CurrentUserContextResult();
-
-            if (!TryGetCurrentUserId(out int currentUserId))
-            {
-                result.Success = false;
-                result.ErrorMessage = "Token invalide : identifiant utilisateur manquant";
-                return result;
-            }
-            var role = TryGetCurrentUserRole();
-            if (role == null || string.IsNullOrWhiteSpace(role))
-            {
-                result.Success = false;
-                result.ErrorMessage = "Token invalide : role utilisateur manquant";
-                return result;
-            }
-            result.Success = true;
-            result.User = new CurrentUserContext
-            {
-                UserId = currentUserId,
-                Role = role
-            };
-            return result;
         }
     }
 }
