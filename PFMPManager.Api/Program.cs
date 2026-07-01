@@ -1,11 +1,12 @@
-using Microsoft.EntityFrameworkCore;
-using PFMPManager.Api.Data; // AppDBContext our custom database context
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using System.Security.Cryptography;
-using QuestPDF.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using PFMPManager.Api.Data; // AppDBContext our custom database context
+using PFMPManager.Api.Helpers;
 using PFMPManager.Api.Services;
+using QuestPDF.Infrastructure;
+
 
 
 
@@ -35,18 +36,19 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFlutterWeb", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.WithOrigins("http://localhost:65427")
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
     });
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
       {
-          var jwtKey = builder.Configuration["Jwt:Key"];
-          var jwtIssuer = builder.Configuration["Jwt:Issuer"];
-          var jwtAudience = builder.Configuration["Jwt:Audience"];
+            var jwtKey = builder.Configuration["Jwt:Key"];
+            var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+            var jwtAudience = builder.Configuration["Jwt:Audience"];
 
           options.TokenValidationParameters = new TokenValidationParameters
           {
@@ -61,7 +63,30 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                   Encoding.UTF8.GetBytes(jwtKey!)),
               ClockSkew = TimeSpan.Zero
           };
+          options.Events = new JwtBearerEvents
+          {
+              OnTokenValidated = context =>
+              {
+                  var fingerprintClaim = context.Principal?.FindFirst("fingerprint_hash")?.Value;
+                  var fingerprintCookie = context.HttpContext.Request.Cookies["Fgp"];
+
+                  if (string.IsNullOrWhiteSpace(fingerprintClaim) || string.IsNullOrWhiteSpace(fingerprintCookie))
+                    {
+                      context.Fail("Fingerprint missing");
+                      return Task.CompletedTask;
+                  }
+                  var fingerprintCookieHash = JwtHelper.HashFingerprint(fingerprintCookie);
+                  if (!string.Equals(fingerprintClaim, fingerprintCookieHash, StringComparison.Ordinal))
+                  {
+                      context.Fail("Invalid fingerprint");
+                      return Task.CompletedTask;
+                  }
+                  return Task.CompletedTask;
+              }
+          };
+
       });
+    
 
 builder.Services.AddAuthorization(); 
 

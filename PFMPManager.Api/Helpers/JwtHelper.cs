@@ -10,13 +10,14 @@ namespace PFMPManager.Api.Helpers
     public static class JwtHelper
     {
 
-        public static (string refreshTokenHash, string accessToken, string refreshToken) CreateTokens(IConfiguration configuration, int id_Utilisateur, string role, string login)
+        public static (string refreshTokenHash, string accessToken, string refreshToken) CreateTokens(IConfiguration configuration, int id_Utilisateur, string role, string login,string fingerprintHash)
         {
             var claims = new List<Claim>
             {
             new Claim(ClaimTypes.NameIdentifier, id_Utilisateur.ToString()), // inside the token, store the user ID
             new Claim(ClaimTypes.Role, role),
             new Claim(ClaimTypes.Name, login!),
+            new Claim("fingerprint_hash", fingerprintHash)
             };
 
             var accessToken = GenerateAccessToken(configuration , claims); // creates the JWT access token. 
@@ -62,11 +63,31 @@ namespace PFMPManager.Api.Helpers
             return Convert.ToBase64String(randomBytes);
         }
 
+        public static string GenerateFingerprint()
+        {
+            var randomBytes = new byte[64];
+
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomBytes);
+
+            return Convert.ToBase64String(randomBytes);
+        }
+
         public static string HashRefreshToken(string refreshToken)
         {
             using var sha256 = SHA256.Create();
 
             var tokenBytes = Encoding.UTF8.GetBytes(refreshToken);
+            var hashBytes = sha256.ComputeHash(tokenBytes);
+
+            return Convert.ToBase64String(hashBytes);
+        }
+
+        public static string HashFingerprint(string fingerprint)
+        {
+            using var sha256 = SHA256.Create();
+
+            var tokenBytes = Encoding.UTF8.GetBytes(fingerprint);
             var hashBytes = sha256.ComputeHash(tokenBytes);
 
             return Convert.ToBase64String(hashBytes);

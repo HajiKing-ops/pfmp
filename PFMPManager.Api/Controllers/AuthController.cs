@@ -15,6 +15,7 @@ public class AuthController : ControllerBase
     private readonly AppDbContext _context; // Database context injected via DI (Dependency Injection)
     private readonly IConfiguration _configuration;
     private readonly IRoleService _roleService;
+    private const string FingerprintCookieName = "Fgp";
 
     //DI container injects AppDbContext registered om program.cs
     public AuthController(AppDbContext context, IConfiguration configuration, IRoleService roleService)
@@ -69,8 +70,21 @@ public class AuthController : ControllerBase
         }
 
         var tokenFamilyId = Guid.NewGuid().ToString();
+        
+        var fingerprint = JwtHelper.GenerateFingerprint(); // creates a random secret string
 
-        var (refreshTokenHash, accessToken, refreshToken) = JwtHelper.CreateTokens(_configuration , user.Id_Utilisateur, role, user.Login);
+        var fingerprintHash = JwtHelper.HashFingerprint(fingerprint); // hashes the fingerprint
+        
+
+        var (refreshTokenHash, accessToken, refreshToken) = JwtHelper.CreateTokens(_configuration , user.Id_Utilisateur, role, user.Login, fingerprintHash);
+
+        Response.Cookies.Append(FingerprintCookieName, fingerprint, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = false,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTimeOffset.UtcNow.AddDays(7)
+        });
 
         var refreshTokenEntity = new RefreshToken()
         {
@@ -122,7 +136,7 @@ public class AuthController : ControllerBase
         }
         if (search.RevokedAt != null)
         {
-            if (search.TokenFamilyId != null && !string.IsNullOrWhiteSpace(search.TokenFamilyId))
+            if (!string.IsNullOrWhiteSpace(search.TokenFamilyId))
             {
                 var now = DateTime.UtcNow;
 
@@ -151,7 +165,14 @@ public class AuthController : ControllerBase
             return Unauthorized("Role introuvable.");
         }
 
-        var (newRefreshTokenHash, accessToken, newRefreshToken) = JwtHelper.CreateTokens( _configuration, utilisateur.Id_Utilisateur, role, utilisateur.Login);
+        var fingerprint = Request.Cookies[FingerprintCookieName];
+
+        if (string.IsNullOrWhiteSpace(fingerprint))
+        {
+            return Unauthorized("Fingerprint manquant");
+        }
+        var fingerprintHash = JwtHelper.HashFingerprint(fingerprint);
+        var (newRefreshTokenHash, accessToken, newRefreshToken) = JwtHelper.CreateTokens( _configuration, utilisateur.Id_Utilisateur, role, utilisateur.Login, fingerprintHash);
 
 
         search.RevokedAt = DateTime.UtcNow;
@@ -208,6 +229,8 @@ public class AuthController : ControllerBase
         }
 
         search.RevokedAt = DateTime.UtcNow;
+        Response.Cookies.Delete(FingerprintCookieName);
+
 
         await _context.SaveChangesAsync();
         return Ok("Vous etes deconnecte");

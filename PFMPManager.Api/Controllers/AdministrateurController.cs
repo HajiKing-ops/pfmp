@@ -11,7 +11,7 @@ using PFMPManager.Api.Helpers;
 namespace PFMPManager.Api.Controllers
 {
     [ApiController] // Enables model validation and smart binding 
-
+    
     [Route("api/administrateur")] // Base route for all endpoints in this controller
 
     public class AdministrateurController : ControllerBase
