@@ -68,6 +68,7 @@ public class AuthController : ControllerBase
             return NotFound("Role not found");
         }
 
+        var tokenFamilyId = Guid.NewGuid().ToString();
 
         var (refreshTokenHash, accessToken, refreshToken) = JwtHelper.CreateTokens(_configuration , user.Id_Utilisateur, role, user.Login);
 
@@ -78,7 +79,9 @@ public class AuthController : ControllerBase
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.AddDays(7),
             RevokedAt = null,
-            ReplacedByTokenHash = null
+            ReplacedByTokenHash = null,
+            TokenFamilyId = tokenFamilyId
+
         };
          _context.RefreshToken.Add(refreshTokenEntity);
         await _context.SaveChangesAsync();
@@ -119,6 +122,13 @@ public class AuthController : ControllerBase
         }
         if (search.RevokedAt != null)
         {
+            if (search.TokenFamilyId != null && !string.IsNullOrWhiteSpace(search.TokenFamilyId))
+            {
+                var now = DateTime.UtcNow;
+
+                await _context.RefreshToken.Where(r => r.RevokedAt == null && r.TokenFamilyId == search.TokenFamilyId).ExecuteUpdateAsync(setters=> setters .SetProperty(r=> r.RevokedAt, now));
+               
+            }
             return Unauthorized("Ce jeton a deja ete utilise ou vous etes deconnecte");
         }
         if (!search.ExpiresAt.HasValue || search.ExpiresAt.Value <= DateTime.UtcNow)
@@ -155,7 +165,8 @@ public class AuthController : ControllerBase
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.AddDays(7),
             RevokedAt = null,
-            ReplacedByTokenHash = null
+            ReplacedByTokenHash = null,
+            TokenFamilyId = search.TokenFamilyId
         };
 
         _context.RefreshToken.Add(newRefreshTokenEntity);

@@ -35,5 +35,9 @@ namespace PFMPManager.Api.Models
         [Column("Id_Utilisateur")]
         public int Id_Utilisateur { get; set; }
 
+        [MaxLength(36)]
+        public string TokenFamilyId { get; set; } = string.Empty;
+
+
     }
 }
