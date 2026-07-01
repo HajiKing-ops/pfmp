@@ -39,5 +39,8 @@ namespace PFMPManager.Api.Models
         public string TokenFamilyId { get; set; } = string.Empty;
 
 
+        [MaxLength(256)]
+        public string FingerprintHash { get; set; } = string.Empty;
+
     }
 }

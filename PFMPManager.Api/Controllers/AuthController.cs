@@ -94,7 +94,8 @@ public class AuthController : ControllerBase
             ExpiresAt = DateTime.UtcNow.AddDays(7),
             RevokedAt = null,
             ReplacedByTokenHash = null,
-            TokenFamilyId = tokenFamilyId
+            TokenFamilyId = tokenFamilyId,
+            FingerprintHash = fingerprintHash,
 
         };
          _context.RefreshToken.Add(refreshTokenEntity);
@@ -138,9 +139,7 @@ public class AuthController : ControllerBase
         {
             if (!string.IsNullOrWhiteSpace(search.TokenFamilyId))
             {
-                var now = DateTime.UtcNow;
-
-                await _context.RefreshToken.Where(r => r.RevokedAt == null && r.TokenFamilyId == search.TokenFamilyId).ExecuteUpdateAsync(setters=> setters .SetProperty(r=> r.RevokedAt, now));
+               await RevokeFamilyAsync(search.TokenFamilyId);
                
             }
             return Unauthorized("Ce jeton a deja ete utilise ou vous etes deconnecte");
@@ -172,6 +171,13 @@ public class AuthController : ControllerBase
             return Unauthorized("Fingerprint manquant");
         }
         var fingerprintHash = JwtHelper.HashFingerprint(fingerprint);
+        if (!string.Equals(fingerprintHash, search.FingerprintHash, StringComparison.Ordinal))
+        {
+           await RevokeFamilyAsync(search.TokenFamilyId);
+
+            return Unauthorized("Fingerprint invalide");
+        }
+        
         var (newRefreshTokenHash, accessToken, newRefreshToken) = JwtHelper.CreateTokens( _configuration, utilisateur.Id_Utilisateur, role, utilisateur.Login, fingerprintHash);
 
 
@@ -187,7 +193,8 @@ public class AuthController : ControllerBase
             ExpiresAt = DateTime.UtcNow.AddDays(7),
             RevokedAt = null,
             ReplacedByTokenHash = null,
-            TokenFamilyId = search.TokenFamilyId
+            TokenFamilyId = search.TokenFamilyId,
+            FingerprintHash = search.FingerprintHash
         };
 
         _context.RefreshToken.Add(newRefreshTokenEntity);
@@ -237,5 +244,21 @@ public class AuthController : ControllerBase
 
     }
 
+    private async Task<int> RevokeFamilyAsync(string TokenFamilyId)
+    {
+        if (string.IsNullOrWhiteSpace(TokenFamilyId))
+        {
+            return 0;
+        }
+        var now = DateTime.UtcNow;
+
+        return await _context.RefreshToken.Where(r => r.RevokedAt == null 
+        && r.TokenFamilyId == TokenFamilyId)
+       .ExecuteUpdateAsync(setters => setters
+       .SetProperty(r => r.RevokedAt, now));
+    }
+
 
 }
+
+
