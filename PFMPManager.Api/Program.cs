@@ -27,6 +27,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IPfmpAccessService, PfmpAccessService>();
+builder.Services.AddScoped<IPlanningValidationService, PlanningValidationService>();
 
 
 // CORS policy - allows the Flutter web client to call this API from any origin 

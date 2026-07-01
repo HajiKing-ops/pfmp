@@ -1,4 +1,4 @@
-namespace PFMPManager.Api.Services
+namespace PFMPManager.Api.Services.Results
 {
     public class CurrentUserResult
     {
