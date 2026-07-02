@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
 using PFMPManager.Api.Helpers;
 using PFMPManager.Api.Models;
 using PFMPManager.Api.Services;
+using PFMPManager.Api.Data;
 namespace PFMPManager.Api.Controllers
 {
     [ApiController] // Enables model validation and smart binding 

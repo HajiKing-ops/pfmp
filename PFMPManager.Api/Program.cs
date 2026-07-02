@@ -2,8 +2,8 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using PFMPManager.Api.Data; // Contains AppDbContext for database access
 using PFMPManager.Api.Helpers;
+using PFMPManager.Api.Data;
 using PFMPManager.Api.Services;
 using QuestPDF.Infrastructure;
 
@@ -38,7 +38,6 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFlutterWeb", policy =>
     {
         policy.WithOrigins("http://localhost:65427")
-
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials();

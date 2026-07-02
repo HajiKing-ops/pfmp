@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
 using PFMPManager.Api.Helpers;
 using PFMPManager.Api.Models;
+using PFMPManager.Api.Data;
 
 
 
@@ -72,7 +72,7 @@ public class AuthController : ControllerBase
 
 
         var tokenFamilyId = Guid.NewGuid().ToString(); // create a new refresh token family identifier 
-        
+
         var fingerprint = JwtHelper.GenerateSecureRandomString(); // Generate a session fingerprint
 
         var fingerprintHash = JwtHelper.HashFingerprint(fingerprint); // Store only the fingerprint hash in tokens/database
