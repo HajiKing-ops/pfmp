@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
@@ -5,18 +6,18 @@ using PFMPManager.Api.DTOs;
 using PFMPManager.Api.Helpers;
 using PFMPManager.Api.Models;
 using PFMPManager.Api.Services;
-using Microsoft.AspNetCore.Authorization;
 namespace PFMPManager.Api.Controllers
 {
     [ApiController] // Enables model validation and smart binding 
     [Route("api/pfmp")] // Base route for all endpoints in this controller
     public class PfmpController : ControllerBase
     {
-        private readonly AppDbContext _context; // Database context injected via DI (Dependency Injection)
+        private readonly AppDbContext _context; 
         private readonly ICurrentUserService _currentUserService;
         private readonly IPfmpAccessService _pfmpAccessService;
         private readonly IPlanningValidationService _planningValidationService;
-                                                //DI container injects AppDbContext registered om program.cs
+
+        //Dependencies are injected by the ASP.NET Core DI container
         public PfmpController(AppDbContext context, ICurrentUserService currentUserService, IPfmpAccessService pfmpAccessService ,IPlanningValidationService planningValidationService)
         {
             _context = context;
@@ -25,13 +26,13 @@ namespace PFMPManager.Api.Controllers
             _planningValidationService = planningValidationService;
         }
 
-
+        // Retrieves PFMP details for an authorized student or teacher
 
         [Authorize(Roles = "Etudiant,Enseignant")]
-        [HttpGet("recherche/{studentId}/{pfmpId?}")] //address of the method
+        [HttpGet("recherche/{studentId}/{pfmpId?}")] 
         public async Task<IActionResult> GetStudentPfmps(int studentId, int? pfmpId)
         {
-           
+
             var currentUserResult = _currentUserService.GetCurrentUser(User);
             if (!currentUserResult.Success)
             {
@@ -63,20 +64,20 @@ namespace PFMPManager.Api.Controllers
 
 
 
-
+        //Create a complete PFMP request with organisation, supervisor, planning and PFMP data
         [Authorize(Roles = "Etudiant")]
         [HttpPost("complete")]
         public async Task<IActionResult> CompletePfmp(CreateCompletePfmpDto request)
         {
-            //entreprise
+         
             var siret = request.SIRET;
-            //planning
+           
             var requestedWeeklyTotal = request.TotalHebdo;
 
             var currentYear = DateTime.Today.Year;
 
 
-            //Get current student id
+            //Get the connected student from the JWT claims
             var currentUserResult = _currentUserService.GetCurrentUser(User);
             if (!currentUserResult.Success)
             {
@@ -86,7 +87,7 @@ namespace PFMPManager.Api.Controllers
            var currentStudentId = currentUserResult.UserId;
            
 
-            //Validate basic request fields
+            //Checks whether the request contains all required PFMP fields
             if (IsBasicCompletePfmpRequestInvalid(request))
             {
                 return BadRequest();
@@ -100,7 +101,7 @@ namespace PFMPManager.Api.Controllers
             var calculatedWeeklyTotal = planningValidation.CalculatedWeeklyTotal;
             var validPlanningDays = planningValidation.ValidPlanningDays;
 
-            //Find administrator
+            //Find the administrator responsible for the student's establishment 
             var administratorId = await FindAdministratorIdForStudentAsync(currentStudentId, currentYear);
 
             if (administratorId <= 0)
@@ -108,14 +109,15 @@ namespace PFMPManager.Api.Controllers
                 return NotFound("L’administrateur n’existe pas.");
             }
 
-            //check business rules
+            // Check whether the student has an accepted contact request with the organisation 
             var hasAcceptedContactRequest = await HasAcceptedContactRequestAsync(currentStudentId, siret);
 
             if (!hasAcceptedContactRequest)
             {
                 return BadRequest("Vous devez d'abord contacter l'organisation");
             }
-            //search
+            //Prevent overlapping PFMP periods for the same student
+
             var startDate = request.DateDebut!.Value.Date;
             var endDate = request.DateFin!.Value.Date;
 
@@ -132,7 +134,7 @@ namespace PFMPManager.Api.Controllers
                 return NotFound("L’organisation est introuvable");
             }
 
-            //Create/Update database entities inside transaction 
+            //Create or update related PFMP entities inside a transaction
             await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
@@ -140,7 +142,7 @@ namespace PFMPManager.Api.Controllers
 
                 await UpdateOrganisationWebsiteAsync(organisation, request.SiteWeb!);
 
-
+                // Creates the supervisor user account if it does not already exist
                 var user = await GetOrCreateSupervisorUserAsync(request.NomMaitreStage!, request.PrenomMaitreStage!, request.EmailMaitreStage!);
 
                 var prf = await GetOrCreateProfessionalProfileAsync(user.Id_Utilisateur, request.FonctionMaitreStage!, request.EmailMaitreStage!, request.TelephoneMaitreStage!);
@@ -149,11 +151,11 @@ namespace PFMPManager.Api.Controllers
                 await EnsureWorkRelationExistsAsync(prf.Id_Utilisateur, siret);
 
 
-
+                //Create a planning and its validated planning days 
                 var idPlanning = await CreatePlanningWithDaysAsync(calculatedWeeklyTotal, validPlanningDays);
 
 
-
+                // Create the PFMP linked to the student, planning, organisation and administrator
                 var createdPfmp = await CreatePfmpAsync(request, idPlanning, currentStudentId, administratorId);
 
                 var responseDto = BuildCompletePfmpResponse(createdPfmp, currentStudentId, administratorId);
@@ -198,7 +200,7 @@ namespace PFMPManager.Api.Controllers
             var user = new Utilisateur();
             if (userExist == null)
             {
-                var pwd = "test1234";
+                var pwd = "test1234"; // Temporary default password for development only
                 string savedPasswordHash = PasswordHelper.HashPassword(pwd);
                 user.Nom = supervisorLastName;
                 user.Prenom = supervisorFirstName;
@@ -214,6 +216,7 @@ namespace PFMPManager.Api.Controllers
             return user;
         }
 
+        //Creates the professional profile linked to the supervisor user
         private async Task<Professionnel> GetOrCreateProfessionalProfileAsync(int supervisorUserId, string fonctionMaitreStage, string supervisorEmail, string telephoneMaitreStage)
         {
             var prf = new Professionnel();
@@ -235,6 +238,7 @@ namespace PFMPManager.Api.Controllers
             return prf;
         }
 
+        // Ensure the supervisor is linked to the organisation 
         private async Task EnsureWorkRelationExistsAsync(int supervisorUserId, string siret)
         {
             var checkTravail = await _context.Travailler.FirstOrDefaultAsync(o => o.Id_Utilisateur == supervisorUserId && o.SIRET == siret);
@@ -323,6 +327,7 @@ namespace PFMPManager.Api.Controllers
         {
             return await _context.Contacter.AnyAsync(c => c.SIRET == siret && c.Id_Utilisateur == currentStudentId && c.StatutDemande!.Trim().ToLower() == "accepte");
         }
+        // Checks whether the student already has a PFMP during the requested period
         private async Task<bool> HasOverlappingPfmpAsync(int currentStudentId, DateTime startDate, DateTime endDate)
         {
             return await _context.Pfmp.AnyAsync(pf => pf.Id_Utilisateur_1 == currentStudentId &&
@@ -503,6 +508,7 @@ namespace PFMPManager.Api.Controllers
             public Dictionary<string, SupervisorDetailsDto> SupervisorDetailsBySiret { get; set; } = new();
         }
 
+        //Builds lookup dictionaries used to avoid repeated database queries 
         private async Task<PfmpDetailLookupData> BuildPfmpDetailLookupDataAsync(List<Pfmp> pfmps)
         {
             var planningIds = pfmps.Select(pfmp => pfmp.Id_Planning).Distinct().ToList();

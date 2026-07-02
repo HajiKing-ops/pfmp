@@ -2,8 +2,10 @@ using PFMPManager.Api.DTOs;
 using PFMPManager.Api.Services.Results;
 namespace PFMPManager.Api.Services
 {
+    // Validates PFMP planning days and weekly total duration
     public class PlanningValidationService : IPlanningValidationService
     {
+        //Validates planning days and returns calulated valid days or an error message
         public PlanningValidationResult ValidatePlanningDays(List<CreatePlanningJoursDto>? planningDays, int? requestedWeeklyTotal)
         {
             var result = new PlanningValidationResult();
@@ -49,7 +51,7 @@ namespace PFMPManager.Api.Services
         }
 
        
-
+        //validate morning and afternoon time slots for one plannning day
         private string? GetPlanningDayValidationError(CreatePlanningJoursDto planningDay)
         {
             if (string.IsNullOrWhiteSpace(planningDay.Jour))
@@ -88,6 +90,7 @@ namespace PFMPManager.Api.Services
             }
             return null;
         }
+        
         private bool IsTimeSlotComplete(TimeSpan? start, TimeSpan? end)
         {
             return start != null && end != null;
@@ -132,7 +135,9 @@ namespace PFMPManager.Api.Services
             }
             return morningEnd.Value >= afternoonStart.Value;
         }
-          private bool IsWeeklyTotalInvalid(int calculatedWeeklyTotal, int? requestedWeeklyTotal)
+
+        //Weekly total must match the requested total and stay within the allowed limit
+        private bool IsWeeklyTotalInvalid(int calculatedWeeklyTotal, int? requestedWeeklyTotal)
         {
             return calculatedWeeklyTotal != requestedWeeklyTotal || calculatedWeeklyTotal <= 0 || calculatedWeeklyTotal > 2100;
         }
@@ -141,7 +146,7 @@ namespace PFMPManager.Api.Services
             return IsTimeSlotEmpty(planningDay.MatinDebut, planningDay.MatinFin) && IsTimeSlotEmpty(planningDay.ApresMidiDebut, planningDay.ApresMidiFin);
 
         }
-                private CreatePlanningJoursDto CreateValidatedPlanningDay(CreatePlanningJoursDto planningDay)
+        private CreatePlanningJoursDto CreateValidatedPlanningDay(CreatePlanningJoursDto planningDay)
         {
 
             return new CreatePlanningJoursDto
