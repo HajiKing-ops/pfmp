@@ -1,5 +1,6 @@
 namespace PFMPManager.Api.DTOs
 {
+    // Represents dashboard data for the connected student's active PFMP
     public class DashboardDto
     {
         public DateTime? DateDebut { get; set; }
@@ -11,7 +12,7 @@ namespace PFMPManager.Api.DTOs
         public int IdPfmp { get; set; }
         public int JourRestants { get; set; }
         public int JoursRenseignes { get; set; }
-        public int HeuresTotales { get; set; }
-        public int HeuresParJour { get; set; }
+        public int MinutesTotales  { get; set; }
+        public int MinutesParJour  { get; set; }
     }
 }

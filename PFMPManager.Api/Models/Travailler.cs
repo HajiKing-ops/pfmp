@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
+    // Represents the relationship between a professional user and an organisatio
     [Table("Travailler")]
     public class Travailler
     {

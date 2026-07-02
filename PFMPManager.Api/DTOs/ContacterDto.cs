@@ -1,5 +1,6 @@
 namespace PFMPManager.Api.DTOs
 {
+    // Represents a student's contact request with an organisation
     public class ContacterDto
     {
         public int Id_Utilisateur { get; set; }

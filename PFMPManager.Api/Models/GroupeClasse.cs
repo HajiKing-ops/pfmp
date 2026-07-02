@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
+    // Represents a class group linked to an establishment and a filiere
     [Table("GroupeClasse")]
     public class GroupeClasse
     {

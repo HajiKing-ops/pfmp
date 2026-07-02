@@ -15,7 +15,7 @@ namespace PFMPManager.Api.Controllers
 
     public class UtilisateurController : ControllerBase
     {
-        private readonly AppDbContext _context; // Database context injected via DI (Dependency Injection)
+        private readonly AppDbContext _context; 
 
         //DI container injects AppDbContext registered om program.cs
         public UtilisateurController(AppDbContext context)
@@ -24,16 +24,7 @@ namespace PFMPManager.Api.Controllers
         }
         
         [Authorize(Roles = "Administrateur")]
-        [HttpGet] // GEt /api/organisation returns all organisations as JSON
-        public async Task<IActionResult> GetAll()
-        {
-            var utilisateur = await _context.Utilisateur.ToListAsync(); //Query all rows
-            return Ok(utilisateur); // 200 ok with json array 
-        }
-
-
         [HttpPost]
-
         public async Task<IActionResult> CreateUtilisateur(CreateUtilisateurDto request)
         {
             var nom = request.Nom;

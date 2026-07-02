@@ -1,4 +1,5 @@
 services:
+  # MySQL database container used by the PFMP API
   mysql:
     image: mysql:8.0
     container_name: pfmp_mysql
@@ -16,6 +17,7 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+   # ASP.NET Core API container
   api:
     build:
       context: ./PFMPManager.Api
@@ -34,6 +36,7 @@ services:
       - "${API_PORT}:8080"
 
 volumes:
+ # Reuse the existing MySQL data volume
   mysql_data:
     external: true
     name: docker-test_mysql_data

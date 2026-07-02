@@ -1,5 +1,6 @@
 namespace PFMPManager.Api.DTOs
 {
+    // Represents a message returned in a PFMP chat
     public class MessageResponseDto
     {
         public int IdUtilisateur { get; set; }

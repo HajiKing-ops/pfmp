@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
+     // Represents a training field linked to class groups
     [Table("Filiere")]
     public class Filiere
     {

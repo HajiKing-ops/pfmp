@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
+    // Represents an administrator user profile
     [Table("Administrateur")]
     public class Administrateur
     {

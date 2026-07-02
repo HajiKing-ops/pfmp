@@ -3,38 +3,47 @@ using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims; // creates  claims 
 using PFMPManager.Api.Models;
-using Microsoft.VisualBasic;
+using PFMPManager.Api.Services;
 
 
 
 namespace PFMPManager.Api.Controllers
 {
-    [ApiController]
+    
 
+    // Manages student contact requests with organisations
     [Route("api/demarches")]
+    [ApiController]
     [Authorize]
-
     public class DemarcheController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private const string EnAttente = "En attente";
+        private const string Refuse = "Refuse";
+        private const string Accepte = "Accepte";
+        private readonly ICurrentUserService _currentUserService;
 
-        public DemarcheController(AppDbContext context)
+        public DemarcheController(AppDbContext context, ICurrentUserService currentUserService)
         {
             _context = context;
+            _currentUserService = currentUserService;
         }
+
+        // Retrieves contact requests for the connected student
         [HttpGet]
         [Authorize(Roles = "Etudiant")]
-
         public async Task<IActionResult> Get()
         {
-            var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdTest, out int idEtudiant))
+            var user = _currentUserService.GetCurrentUser(User);
+            if(!user.Success)
             {
-                return Unauthorized("Token invalide : identifiant utilisateur manquant.");
+                return Unauthorized(user.ErrorMessage);
             }
-            var getAllDemarches = await _context.Contacter.Where(c => c.Id_Utilisateur == idEtudiant).ToListAsync();
+            var idEtudiant = user.UserId;
+            
+            // Load contact requests owned by the connected student
+            var getAllDemarches = await _context.Contacter.AsNoTracking().Where(c => c.Id_Utilisateur == idEtudiant).ToListAsync();
             if (!getAllDemarches.Any())
             {
                 return NotFound("Aucune Demarche");
@@ -44,11 +53,11 @@ namespace PFMPManager.Api.Controllers
 
             foreach (var d in getAllDemarches)
             {
-                var checkOrg = await _context.Organisation.Where(o => o.SIRET == d.SIRET).Select(o => o.RaisonSociale).FirstOrDefaultAsync();
+                var checkOrg = await _context.Organisation.AsNoTracking().Where(o => o.SIRET == d.SIRET).Select(o => o.RaisonSociale).FirstOrDefaultAsync();
 
                 if (checkOrg == null)
                 {
-                    return NotFound("L'Organisation untrovable");
+                    return NotFound("L'Organisation introuvable");
                 }
                 var dto = new ContacterDto
                 {
@@ -66,60 +75,55 @@ namespace PFMPManager.Api.Controllers
         }
 
 
+        // Creates a contact request for the connected student and selected organisation
         [HttpPost("{siret}")]
         [Authorize(Roles = "Etudiant")]
-
         public async Task<IActionResult> Create(CreateContacterDto request, string siret)
         {
-            var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdTest, out int idEtudiant))
+            var user = _currentUserService.GetCurrentUser(User);
+            if(!user.Success)
             {
-                return Unauthorized("Token invalide : identifiant utilisateur manquant.");
+                return Unauthorized(user.ErrorMessage);
             }
-
-            var DateDemande = request.DateDemande;
+            var idEtudiant = user.UserId;
             var SIRET = siret;
-            var TypeContact = request.TypeContact;
-            var statutDemande = request.StatutDemande.Trim().ToLower();
-            var enAttente = "En attente";
-            var refuse = "Refuse";
-            var accepte = "Accepte";
+            if(request == null)
+            {
+                return BadRequest();
+            }
+            
      
 
-
-            if (string.IsNullOrWhiteSpace(SIRET) || string.IsNullOrWhiteSpace(TypeContact) || string.IsNullOrWhiteSpace(statutDemande))
+            // Validate required contact request fields
+            if (string.IsNullOrWhiteSpace(SIRET) || string.IsNullOrWhiteSpace(request.TypeContact) || string.IsNullOrWhiteSpace(request.StatutDemande))
             {
                 return BadRequest();
             }
-            if (!DateDemande.HasValue)
+            var dateDemande = request.DateDemande;
+            var typeContact = request.TypeContact;
+            var statutDemande = request.StatutDemande.Trim().ToLower();
+            if (!dateDemande.HasValue)
             {
                 return BadRequest();
             }
 
-            if (statutDemande != enAttente.Trim().ToLower() && statutDemande != refuse.Trim().ToLower() && statutDemande != accepte.Trim().ToLower())
+            if (statutDemande != EnAttente.Trim().ToLower())
             {
-                return BadRequest("il faut entre en attend, refuse ou accepte");
+                return BadRequest("il faut entre en attend");
             }
-            if (statutDemande == enAttente.Trim().ToLower())
+            if (statutDemande == EnAttente.Trim().ToLower())
             {
-                statutDemande = enAttente;
+                statutDemande = EnAttente;
             }
-            else if (statutDemande == refuse.Trim().ToLower())
-            {
-                statutDemande = refuse;
-            }
-            else if (statutDemande == accepte.Trim().ToLower())
-            {
-                statutDemande = accepte;
-            }
+            // Ensure the organisation exists before creating the contact request
 
-            var searchOrg = await _context.Organisation.Where(o => o.SIRET == SIRET).Select(o=> o.RaisonSociale).FirstOrDefaultAsync();
+            var searchOrg = await _context.Organisation.AsNoTracking().Where(o => o.SIRET == SIRET).Select(o=> o.RaisonSociale).FirstOrDefaultAsync();
             if (searchOrg == null)
             {
                 return NotFound("l'organisation n'existe pas");
             }
-
-            var check = await _context.Contacter.AnyAsync(d => d.Id_Utilisateur == idEtudiant && d.SIRET == SIRET);
+            // Prevent duplicate contact requests for the same organisation
+            var check = await _context.Contacter.AsNoTracking().AnyAsync(d => d.Id_Utilisateur == idEtudiant && d.SIRET == SIRET);
             if (check)
             {
                 return Conflict();
@@ -129,9 +133,9 @@ namespace PFMPManager.Api.Controllers
 
                 Id_Utilisateur = idEtudiant,
                 SIRET = SIRET,
-                TypeContact = TypeContact,
-                DateDemande = DateDemande,
-                StatutDemande = statutDemande,
+                TypeContact = typeContact,
+                DateDemande = dateDemande,
+                StatutDemande = EnAttente,
             };
             _context.Contacter.Add(query);
             await _context.SaveChangesAsync();
@@ -149,61 +153,59 @@ namespace PFMPManager.Api.Controllers
         }
 
 
+        // Updates an existing contact request owned by the connected student
         [Authorize(Roles = "Etudiant")]
         [HttpPut("modify/{siret}")]
-
         public async Task<IActionResult> Update(CreateContacterDto request, string siret)
         {
-
-            var DateDemande = request.DateDemande;
-            var TypeContact = request.TypeContact;
-            var statutDemande = request.StatutDemande.Trim().ToLower();
-            var enAttente = "En attente";
-            var refuse = "Refuse";
-            var accepte = "Accepte";
-
-
-            var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdTest, out int idEtudiant)) 
+            var user = _currentUserService.GetCurrentUser(User);
+            if(!user.Success)
             {
-                return Unauthorized("Token invalide : identifiant utilisateur manquant.");
+                return Unauthorized(user.ErrorMessage);
             }
-
+            var idEtudiant = user.UserId;
+            if(request == null)
+            {
+                return BadRequest();
+            }
            
-
-            if (string.IsNullOrWhiteSpace(siret) || string.IsNullOrWhiteSpace(TypeContact) || string.IsNullOrWhiteSpace(statutDemande))
+            // Validate required contact request fields
+            if (string.IsNullOrWhiteSpace(siret) || string.IsNullOrWhiteSpace(request.TypeContact) || string.IsNullOrWhiteSpace(request.StatutDemande))
             {
                 return BadRequest();
             }
-            if (!DateDemande.HasValue)
+            var dateDemande = request.DateDemande;
+            var typeContact = request.TypeContact;
+            var statutDemande = request.StatutDemande.Trim().ToLower();
+            if (!dateDemande.HasValue)
             {
                 return BadRequest();
             }
 
-            if (statutDemande != enAttente.Trim().ToLower() && statutDemande != refuse.Trim().ToLower() && statutDemande != accepte.Trim().ToLower())
+            if (statutDemande != EnAttente.Trim().ToLower() && statutDemande != Refuse.Trim().ToLower() && statutDemande != Accepte.Trim().ToLower())
             {
                 return BadRequest("il faut entre en attend, refuse ou accepte");
             }
-            if (statutDemande == enAttente.Trim().ToLower())
+            if (statutDemande == EnAttente.Trim().ToLower())
             {
-                statutDemande = enAttente;
+                statutDemande = EnAttente;
             }
-            else if (statutDemande == refuse.Trim().ToLower())
+            else if (statutDemande == Refuse.Trim().ToLower())
             {
-                statutDemande = refuse;
+                statutDemande = Refuse;
             }
-            else if (statutDemande == accepte.Trim().ToLower())
+            else if (statutDemande == Accepte.Trim().ToLower())
             {
-                statutDemande = accepte;
+                statutDemande = Accepte;
             }
 
 
-            var searchOrg = await _context.Organisation.Where(o => o.SIRET == siret).Select(o=> o.RaisonSociale).FirstOrDefaultAsync();
+            var searchOrg = await _context.Organisation.AsNoTracking().Where(o => o.SIRET == siret).Select(o=> o.RaisonSociale).FirstOrDefaultAsync();
             if (searchOrg == null)
             {
                 return NotFound("l'organisation n'existe pas");
             }
-
+            // Find the contact request owned by the connected student
             var update = await _context.Contacter.FirstOrDefaultAsync(d => d.Id_Utilisateur == idEtudiant && d.SIRET == siret);
             if (update == null)
             {

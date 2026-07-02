@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
+     // Represents a student's enrolment in a class for a school year
     [Table("Etudier")]
     public class Etudier
     {

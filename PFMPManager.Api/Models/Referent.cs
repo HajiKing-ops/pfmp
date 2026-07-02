@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
+    // Represents a referent user profile linked to supervised students
     [Table("Referent")]
     public class Referent
     {

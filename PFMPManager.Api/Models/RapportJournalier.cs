@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
+	 // Represents a daily report linked to a PFMP
 	[Table("RapportJournalier")]
 	public class RapportJournalier
 	{
