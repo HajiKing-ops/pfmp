@@ -122,7 +122,7 @@ namespace PFMPManager.Api.Controllers
             var alreadyInInternship = await HasOverlappingPfmpAsync(currentStudentId, startDate, endDate);
             if (alreadyInInternship)
             {
-                return BadRequest("Vous êtes deja en stage sur cette periode");
+                return BadRequest("Vous etes deja en stage sur cette periode");
             }
 
 
@@ -267,7 +267,7 @@ namespace PFMPManager.Api.Controllers
                     MatinFin = pj.MatinFin,
                     ApresMidiDebut = pj.ApresMidiDebut,
                     ApresMidiFin = pj.ApresMidiFin,
-                    TotalHeures = pj.TotalHeures,
+                    TotalMinutes   = pj.TotalMinutes ,
                     Id_Planning = idPlanning,
                 };
                 _context.PlanningJours.Add(planjour);
@@ -484,7 +484,7 @@ namespace PFMPManager.Api.Controllers
                         MatinFin = j.MatinFin,
                         ApresMidiDebut = j.ApresMidiDebut,
                         ApresMidiFin = j.ApresMidiFin,
-                        TotalHeures = j.TotalHeures
+                        TotalMinutes  = j.TotalMinutes 
                     }
                 })
                 .ToListAsync();

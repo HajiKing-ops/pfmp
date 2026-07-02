@@ -1,5 +1,6 @@
 namespace PFMPManager.Api.DTOs
 {
+    // Represents basic PFMP information returned by the API
     public class PfmpDto
     { 
         public DateTime? DateDebut { get; set; }

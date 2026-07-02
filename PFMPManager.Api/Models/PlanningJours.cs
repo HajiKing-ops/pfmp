@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
+    // Represents one working day in a weekly PFMP planning
     [Table("PlanningJours")]
     public class PlanningJours
     {
@@ -29,7 +30,7 @@ namespace PFMPManager.Api.Models
         public TimeSpan? ApresMidiFin { get; set; }
 
         [Column("TotalHeures")]
-        public int TotalHeures { get; set; }
+        public int TotalMinutes  { get; set; }
 
         [Column("Id_Planning")]
         public int Id_Planning { get; set; }

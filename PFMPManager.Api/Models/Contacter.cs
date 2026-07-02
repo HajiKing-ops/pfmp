@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
+    // Represents a contact request between a student and an organisation
     [Table("Contacter")]
 
     public class Contacter

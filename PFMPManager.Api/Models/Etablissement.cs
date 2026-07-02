@@ -3,7 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
-    [Table("Etablissement ")]
+    // Represents an establishment/class record linked to a filiere
+    [Table("Etablissement")]
     public class Etablissement
     {
         

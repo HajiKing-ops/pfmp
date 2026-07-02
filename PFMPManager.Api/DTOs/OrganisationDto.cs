@@ -1,5 +1,6 @@
 namespace PFMPManager.Api.DTOs
 {
+    // Represents organisation information returned by the API
     public class OrganisationDto
     {
         public string SIRET { get; set; } = string.Empty;

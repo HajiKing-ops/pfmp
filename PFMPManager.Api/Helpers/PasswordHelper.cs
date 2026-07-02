@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 
 namespace PFMPManager.Api.Helpers
 {
+    // Provides password hashing and verification using PBKDF2
     public static class PasswordHelper
     {
         private const int SaltSize = 16;
@@ -11,28 +12,21 @@ namespace PFMPManager.Api.Helpers
         public static string HashPassword(string pwd)
         {
             
-                
-            // hashing  and stuff 
-            //make a new byte array  
+            // Generate a random salt for this password
             byte[] salt  = new byte[SaltSize];
-            //generate salt 
             RandomNumberGenerator.Fill(salt);
 
-            //hash and salt it using PBKDF2
+            // Derive the password hash using PBKDF2 with SHA-256
             var pbkdf2 = new Rfc2898DeriveBytes(pwd, salt, Iteration, HashAlgorithmName.SHA256);
 
-            //place the string in the byte array (thats what getbytes does)
             byte[] hash = pbkdf2.GetBytes(HashSize);
-
-            //make new byte array where to store the hashed password+salt
-            //why 64? cause 48 are for the hash and 16 for the salt 
+            
+            // Store salt and hash together before converting to Base64
             byte[] hashBytes = new byte[64];
 
-            //place the hash and salt in their  respective places 
             Array.Copy(salt, 0, hashBytes, 0, SaltSize);
             Array.Copy(hash, 0, hashBytes, SaltSize, HashSize);
 
-            //now, convert our fancy byte array to a string 
             string savedPasswordHash = Convert.ToBase64String(hashBytes);
                 
             return savedPasswordHash;
@@ -42,25 +36,21 @@ namespace PFMPManager.Api.Helpers
         public static bool VerifyPassword(string storedHash, string pwdFromFlutter)
         {
 
-            //get the saved string 
             string savedPassword = storedHash.ToString();
 
-            //turn it into bytes
+            // Decode the stored Base64 password hash
             byte[] hashBytes = Convert.FromBase64String(savedPassword);
 
-            //take the salt out of the string 
+            // Extract the original salt from the stored hash
             byte[] salt = new byte[SaltSize];
             Array.Copy(hashBytes, 0, salt, 0, SaltSize);
 
-            //hash teh user inputted PW with the salt 
+            // Hash the provided password using the original salt
             var pbkdf2 = new Rfc2898DeriveBytes(pwdFromFlutter, salt, Iteration, HashAlgorithmName.SHA256);
 
-            //put the hashed input in a byte array so we can compare it byte-by-byte
             byte[] hash = pbkdf2.GetBytes(HashSize);
-
-
-            //compare redults! byte-by-byte
-            //starting from 16 in the stored array cause 0-15 are the salt there
+            
+            // Compare the stored hash with the newly generated hash
             bool ok = true;
             for (int i = 0; i< HashSize; i++)
                 if (hashBytes[i + SaltSize] != hash[i])

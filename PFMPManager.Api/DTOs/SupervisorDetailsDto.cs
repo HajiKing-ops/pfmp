@@ -1,6 +1,7 @@
 
 namespace PFMPManager.Api.DTOs
 {
+    // Represents internship supervisor details returned with PFMP information
     public class SupervisorDetailsDto
     {
         public string PrenomMaitreStage { get; set; } = string.Empty;

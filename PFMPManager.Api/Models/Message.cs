@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
+    // Represents a message sent in a PFMP chat
     [Table("Message")]
     public class Message
     {

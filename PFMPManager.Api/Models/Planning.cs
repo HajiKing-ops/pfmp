@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
+     // Represents the weekly planning linked to a PFMP
     [Table("Planning")]
     public class Planning
     {

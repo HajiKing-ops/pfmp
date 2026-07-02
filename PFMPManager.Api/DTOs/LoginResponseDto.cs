@@ -1,5 +1,6 @@
 namespace PFMPManager.Api.DTOs
 {
+    // Contains user information returned after successful login
     public class LoginResponseDto
     {
         public int Id_Utilisateur { get; set; }

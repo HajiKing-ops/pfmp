@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
+     // Represents a professional user profile linked to organisations
     [Table("Professionnel")]
     public class Professionnel
     {

@@ -26,7 +26,7 @@ namespace PFMPManager.Api.Services
                     return null;
                 }
             }
-            return "Vous n’avez pas le droit d’accéder à cette PFMP.";
+            return "Vous n’avez pas le droit d’acceder à cette PFMP.";
 
         }
     }

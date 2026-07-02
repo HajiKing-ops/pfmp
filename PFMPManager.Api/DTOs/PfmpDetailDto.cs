@@ -1,5 +1,6 @@
 namespace PFMPManager.Api.DTOs
 {
+    // Represents detailed PFMP information returned to the frontend
     public class PfmpDetailDto
     {
         public DateTime? DateDebut { get; set; }
@@ -19,7 +20,7 @@ namespace PFMPManager.Api.DTOs
         public string? TelephoneMaitreStage { get; set; }
         public string? EmailMaitreStage { get; set; }
 
-        //PlanningJour
+        // Planning days
         public List<CreatePlanningJoursDto> PlanningJours { get; set; } = new();
 
     }

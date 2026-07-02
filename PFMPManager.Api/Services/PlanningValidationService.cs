@@ -26,7 +26,7 @@ namespace PFMPManager.Api.Services
                     continue;
                 }
                 int dayMinutes = CalculatePlanningDayMinutes(planningDay);
-                if (dayMinutes != planningDay.TotalHeures)
+                if (dayMinutes != planningDay.TotalMinutes )
                 {
                     result.ErrorMessage = "Le total des heures du jour ne correspond pas au planning";
                     return result;
@@ -151,7 +151,7 @@ namespace PFMPManager.Api.Services
                 MatinFin = planningDay.MatinFin,
                 ApresMidiDebut = planningDay.ApresMidiDebut,
                 ApresMidiFin = planningDay.ApresMidiFin,
-                TotalHeures = planningDay.TotalHeures
+                TotalMinutes  = planningDay.TotalMinutes 
             };
         }
 

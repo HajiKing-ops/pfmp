@@ -1,5 +1,6 @@
 namespace PFMPManager.Api.DTOs
 {
+    // Contains all data required to create a complete PFMP request
     public class CreateCompletePfmpDto
     {
         //Entreprise
@@ -21,10 +22,8 @@ namespace PFMPManager.Api.DTOs
         //PFMP
         public DateTime? DateDebut { get; set; }
         public DateTime? DateFin { get; set; }
-        public int IdEtudiant { get; set; }
-        public int IdAdministrateur { get; set;} 
         
-        //maître de stage fields
+        
         public string? PrenomMaitreStage {get; set;}
         public string? NomMaitreStage {get; set;}
         public string? FonctionMaitreStage {get; set;}

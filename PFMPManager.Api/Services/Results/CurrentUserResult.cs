@@ -1,5 +1,6 @@
 namespace PFMPManager.Api.Services.Results
 {
+    // Stores the authenticated user's context extracted from JWT claims
     public class CurrentUserResult
     {
         public bool Success {get; set;}

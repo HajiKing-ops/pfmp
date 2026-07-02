@@ -1,5 +1,6 @@
 namespace PFMPManager.Api.DTOs
 {
+    // Represents a cybersecurity news item returned from the CERT-FR RSS feed
     public class NewsDto
     {
         public string? Title {get; set;} = string.Empty;

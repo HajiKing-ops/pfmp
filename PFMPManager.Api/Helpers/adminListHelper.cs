@@ -1,40 +1,39 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
-using System.Security.Claims; // creates  claims 
 
 
 namespace PFMPManager.Api.Helpers
 {
+    // Builds administrator dashboard rows and statistics from PFMP data
     public static class AdminListHelper
     {
 
-
+        // Builds dashboard rows for PFMPs managed by the connected administrator
         public static async Task<List<AdminStageRowDto>> CreateList(AppDbContext _context, List<PfmpDto> pfmps, List<int> etablissementIds)
         {
             var adminRowDto = new List<AdminStageRowDto>();
 
             foreach (var pfmp in pfmps)
             {
-                var IdEtudiant = pfmp.IdEtudiant;
+                var idEtudiant = pfmp.IdEtudiant;
 
-                string libelleFiliere = "Non renseign�";
-                string nomEtudiant = "Non renseign�";
-                string prenomEtudiant = "Non renseign�";
+                string libelleFiliere = "Non renseigne";
+                string nomEtudiant = "Non renseigne";
+                string prenomEtudiant = "Non renseigne";
                 int totalJourStage = 0;
                 bool status = false;
-                int Absences = 0;
-                int Presences = 0;
-                int Restants = 0;
-                string nom = "Non renseign�";
-                string prenom = "Non renseign�";
-                string telephone = "Non renseign�";
-                string nomEntreprise = "Non renseign�";
+                int absences = 0;
+                int presences = 0;
+                int restants = 0;
+                string nom = "Non renseigne";
+                string prenom = "Non renseigne";
+                string telephone = "Non renseigne";
+                string nomEntreprise = "Non renseigne";
                 var siret = pfmp.SIRET;
-                int IdEtablissement = 0;
-                int IdClasse = 0;
-                string LibelleClasse = "";
+                int idEtablissement = 0;
+                int idClasse = 0;
+                string libelleClasse = "";
 
 
 
@@ -44,14 +43,14 @@ namespace PFMPManager.Api.Helpers
                 {
                     var pfmpAnnee = pfmp.DateDebut.Value.Date.Year;
 
-                    //varifier que l'etudiant appartenait bien a l'etablissement de l'admin pendant l'annee de la PFMP
+                    // Ensure the student belonged to one of the administrator's establishments during the PFMP year
                     var search = await (from etudier in _context.Etudier
                                         join gc in _context.GroupeClasse
                                         on new { etudier.Id_Etablissement, etudier.Id_Classe }
                                         equals new { gc.Id_Etablissement, gc.Id_Classe }
                                         where pfmpAnnee <= etudier.AnneeSortie
                                          && pfmpAnnee >= etudier.AnneeRentree
-                                         && etudier.Id_Utilisateur == IdEtudiant
+                                         && etudier.Id_Utilisateur == idEtudiant
 
                                         select gc).FirstOrDefaultAsync();
 
@@ -60,10 +59,10 @@ namespace PFMPManager.Api.Helpers
                     {
                         continue;
                     }
-                    // Recuperer les informations d'affichage : eleve, filier, entreprise, maitre de stage
-                    IdEtablissement = search.Id_Etablissement;
-                    IdClasse = search.Id_Classe;
-                    LibelleClasse = search.LibelleClasse;
+                    // Store class and filiere information used in the dashboard row
+                    idEtablissement = search.Id_Etablissement;
+                    idClasse = search.Id_Classe;
+                    libelleClasse = search.LibelleClasse;
                     var fil = await _context.Filiere.FirstOrDefaultAsync(fi => fi.Id_Filiere == search.Id_Filiere);
 
                     if (fil != null)
@@ -74,7 +73,8 @@ namespace PFMPManager.Api.Helpers
                 }
                 else { continue; }
 
-                var utSearch = await _context.Utilisateur.FirstOrDefaultAsync(ut => ut.Id_Utilisateur == IdEtudiant);
+                // Load student identity information
+                var utSearch = await _context.Utilisateur.FirstOrDefaultAsync(ut => ut.Id_Utilisateur == idEtudiant);
 
                 if (utSearch != null)
                 {
@@ -84,7 +84,7 @@ namespace PFMPManager.Api.Helpers
 
 
 
-
+                // Load organisation information linked to the PFMP
                 var orgSearch = await _context.Organisation.FirstOrDefaultAsync(o => o.SIRET == siret);
 
                 if (orgSearch != null)
@@ -93,10 +93,10 @@ namespace PFMPManager.Api.Helpers
                 }
                 else
                 {
-                    nomEntreprise = "Non renseign�";
+                    nomEntreprise = "Non renseigne";
                 }
 
-
+                // Load internship supervisor information from the organisation work relation
                 var tSearch = await _context.Travailler.FirstOrDefaultAsync(t => t.SIRET == siret);
 
 
@@ -123,9 +123,9 @@ namespace PFMPManager.Api.Helpers
                 }
                 else
                 {
-                    nom = "Non renseign�";
-                    prenom = "Non renseign�";
-                    telephone = "Non renseign�";
+                    nom = "Non renseigne";
+                    prenom = "Non renseigne";
+                    telephone = "Non renseigne";
 
                 }
 
@@ -136,7 +136,7 @@ namespace PFMPManager.Api.Helpers
 
 
 
-                //Calculer le nombre de jours prevus selon le planning
+                // Calculate the expected number of internship days from the planning
                 if (pfmp.DateDebut.HasValue && pfmp.DateFin.HasValue)
                 {
                     if (planSearch != null)
@@ -170,24 +170,24 @@ namespace PFMPManager.Api.Helpers
                     }
 
 
-                    // Calculer les presences, absences, jours restants et statut
-                    var tableSearch = await _context.TablePresence.Where(tp => tp.Id_Utilisateur == IdEtudiant && tp.DateJour.HasValue && tp.DateJour.Value.Date >= pfmp.DateDebut.Value.Date && tp.DateJour.Value.Date <= pfmp.DateFin.Value.Date).ToListAsync();
+                   // Load presences and absences recorded during the PFMP period
+                    var tableSearch = await _context.TablePresence.Where(tp => tp.Id_Utilisateur == idEtudiant && tp.DateJour.HasValue && tp.DateJour.Value.Date >= pfmp.DateDebut.Value.Date && tp.DateJour.Value.Date <= pfmp.DateFin.Value.Date).ToListAsync();
                     if (tableSearch.Any())
                     {
-                        Absences = tableSearch.Count(a => a.Etat.Contains("ABSENT"));
-                        Presences = tableSearch.Count(c => c.Etat.Contains("PRESENT"));
+                        absences = tableSearch.Count(a => a.Etat.Contains("ABSENT"));
+                        presences = tableSearch.Count(c => c.Etat.Contains("PRESENT"));
                     }
                 }
+                // Calculate remaining days and completion status
+                restants = Math.Max(0, totalJourStage - presences - absences);
 
-                Restants = Math.Max(0, totalJourStage - Presences - Absences);
-
-                if (totalJourStage > 0 && Restants == 0)
+                if (totalJourStage > 0 && restants == 0)
                 {
                     status = true;
                 }
 
 
-                // Construire le DTO retourne auy frontend
+                // Build the dashboard row returned to the frontend
                 var dto = new AdminStageRowDto
                 {
                     Nom  = nomEtudiant,
@@ -200,13 +200,13 @@ namespace PFMPManager.Api.Helpers
                     DateDebut = pfmp.DateDebut,
                     DateFin = pfmp.DateFin,
                     Id_PFMP = pfmp.IdPfmp,
-                    Presence = Presences,
-                    Absence = Absences,
+                    Presence = presences,
+                    Absence = absences,
                     Status = status,
-                    Restants = Restants,
-                    IdEtablissement = IdEtablissement,
-                    IdClasse = IdClasse,
-                    LibelleClasse = LibelleClasse,
+                    Restants = restants,
+                    IdEtablissement = idEtablissement,
+                    IdClasse = idClasse,
+                    LibelleClasse = libelleClasse,
 
                 };
                 adminRowDto.Add(dto);
@@ -214,7 +214,7 @@ namespace PFMPManager.Api.Helpers
 
             return adminRowDto;
         }
-
+            // Calculates global dashboard statistics from administrator dashboard rows            
             public static AdminStageStatsDto Calculation(List<AdminStageRowDto> adminRowDto)
             {
                 int stageTotal = adminRowDto.Count;
