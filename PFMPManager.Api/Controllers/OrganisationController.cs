@@ -1,8 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
-using Microsoft.AspNetCore.Authorization;
+using PFMPManager.Api.Models;
 namespace PFMPManager.Api.Controllers
 {
     [ApiController] // Enables model validation and smart binding 
@@ -11,41 +12,32 @@ namespace PFMPManager.Api.Controllers
 
     public class OrganisationController : ControllerBase
     {
-        private readonly AppDbContext _context; // Database context injected via DI (Dependency Injection)
+        private readonly AppDbContext _context; //Database context injected by DI
 
-        //DI container injects AppDbContext registered om program.cs
+        // Dependencies are injected by the ASP.NET Core DI container
+
         public OrganisationController(AppDbContext context)
         {
             _context = context;
         }
 
+        // Returns all organisations available to authenticated users
         [Authorize]
-
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var result = await _context.Organisation.Select(o => new OrganisationDto // created object of the dto 
-            {
-                SIRET = o.SIRET ?? string.Empty, // ?? string.Empty -> if the database value exists use it, if its null, use empty text
-                RaisonSociale = o.RaisonSociale ?? string.Empty,
-                SecteurActivite = o.SecteurActivite ?? string.Empty,
-                Activite = o.Activite ?? string.Empty,
-                Adresse = o.Adresse ?? string.Empty,
-                CodePostal = o.CodePostal ?? string.Empty,
-                Ville = o.Ville ?? string.Empty,
-                AdresseMail = o.AdresseMail ?? string.Empty,
-                NumTelephone = o.NumTelephone ?? string.Empty,
-                SiteWeb = o.SiteWeb ?? string.Empty,
-            }).ToListAsync(); //Query all rows
+            var query = _context.Organisation.AsNoTracking();
+            var result = await ToOrganisationDtoAsync(query);
             return Ok(result); // 200 ok with json array 
         }
 
 
+        // Searches organisations using optional filters
+        [Authorize]
         [HttpGet("recherche")]
-
         public async Task<IActionResult> Recherche (string? nom, string? codePostal, string? secteur)
         {
-            var query = _context.Organisation.AsQueryable();
+            var query = _context.Organisation.AsNoTracking().AsQueryable();
 
 
             if (!string.IsNullOrWhiteSpace(nom))
@@ -62,7 +54,19 @@ namespace PFMPManager.Api.Controllers
                 query = query.Where(o => o.SecteurActivite.Contains(secteur));
              }
           
-            var result = await query.Select(o => new OrganisationDto
+            var result = await ToOrganisationDtoAsync(query);
+
+            if (!result.Any())
+            {
+                return NotFound();
+            }
+            return Ok(result);
+        }
+        
+        // Maps organisation entities to DTOs
+        private async Task<List<OrganisationDto>>  ToOrganisationDtoAsync(IQueryable<Organisation> query)
+        {
+            return await query.Select(o => new OrganisationDto
             {
                 SIRET = o.SIRET ?? string.Empty, // ?? string.Empty -> if the database value exists use it, if its null, use empty text
                 RaisonSociale = o.RaisonSociale ?? string.Empty,
@@ -75,14 +79,6 @@ namespace PFMPManager.Api.Controllers
                 NumTelephone = o.NumTelephone ?? string.Empty,
                 SiteWeb = o.SiteWeb ?? string.Empty,
             }).ToListAsync();
-
-            if (!result.Any())
-            {
-                return NotFound();
-            }
-            return Ok(result);
-            
-
         }
     }
 
