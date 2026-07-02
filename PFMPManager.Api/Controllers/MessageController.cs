@@ -1,11 +1,10 @@
-
-using System.Security.Claims; // creates  claims
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
 using PFMPManager.Api.Models;
+using PFMPManager.Api.Services;
 
 
 namespace PFMPManager.Api.Controllers
@@ -17,36 +16,27 @@ namespace PFMPManager.Api.Controllers
     public class MessageController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IRoleService _roleService;
-
-        public MessageController(AppDbContext context, IRoleService roleService)
+        //private readonly IRoleService _roleService;
+        private readonly ICurrentUserService _currentUserService;
+        public MessageController(AppDbContext context, ICurrentUserService currentUserService)
         {
             _context = context;
-            _roleService = roleService;
+            //_roleService = roleService;
+            _currentUserService = currentUserService;
         }
 
 
         [Authorize]
 
         [HttpGet("{idPfmp}")]
-
+        //Retrieves the message history for an authorized pfmp participant 
         public async Task<IActionResult> GetHistory(int idPfmp)
         {
-            var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(id, out int idUtilisateur))
+            var user = _currentUserService.GetCurrentUser(User);
+            if (!user.Success)
             {
-                return Unauthorized("Token invalide : identifiant utilisateur manquant.");
+                return Unauthorized(user.ErrorMessage);
             }
-
-
-
-            var role = await _roleService.GetUserRoleAsync(idUtilisateur);
-
-            if (string.IsNullOrWhiteSpace(role))
-            {
-                return Unauthorized("Role introuvable.");
-            }
-
             bool existPfmp = await PfmpExistsAsync(idPfmp);
             if (!existPfmp)
             {
@@ -59,7 +49,7 @@ namespace PFMPManager.Api.Controllers
             {
                 return BadRequest("PFMP est deactive");
             }
-            bool canAccessPfmp = await CanAccessPfmpAsync(idUtilisateur, role, idPfmp);
+            bool canAccessPfmp = await CanAccessPfmpAsync(user.UserId, user.Role, idPfmp);
 
             if (!canAccessPfmp)
             {
@@ -86,42 +76,33 @@ namespace PFMPManager.Api.Controllers
         [Authorize]
 
         [HttpPost("{idPfmp}")]
-
+        //Sends a message to the pfmp chat if the user is authorized 
         public async Task<IActionResult> SendMessage(MessageRequestDto request, int idPfmp)
         {
-
-            var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(id, out int idUtilisateur))
+            var user = _currentUserService.GetCurrentUser(User);
+            if (!user.Success)
             {
-                return Unauthorized("Token invalide : identifiant utilisateur manquant.");
+                return Unauthorized(user.ErrorMessage);
             }
-
             if (request == null || string.IsNullOrWhiteSpace(request.Contenu))
             {
-                return BadRequest("Contenu est vide");
-            }
-
-            var role = await _roleService.GetUserRoleAsync(idUtilisateur);
-
-            if (string.IsNullOrWhiteSpace(role))
-            {
-                return Unauthorized("Role introuvable.");
+                return BadRequest("Le contenu du message est obligatoire");
             }
 
             var existPfmp = await PfmpExistsAsync(idPfmp);
             if (!existPfmp)
             {
-                return NotFound("PFMP n'existe pas");
+                return NotFound("la PFMP n'existe pas");
 
             }
             var activePfmp = await IsPfmpActiveAsync(idPfmp);
 
             if (!activePfmp)
             {
-                return BadRequest("PFMP est deactive");
+                return BadRequest("La PFMP n'est pas active.");
             }
 
-            bool canAccessPfmp = await CanAccessPfmpAsync(idUtilisateur, role, idPfmp);
+            bool canAccessPfmp = await CanAccessPfmpAsync(user.UserId, user.Role, idPfmp);
 
             if (!canAccessPfmp)
             {
@@ -130,9 +111,9 @@ namespace PFMPManager.Api.Controllers
 
             var newMsg = new Message
             {
-                Id_Utilisateur = idUtilisateur,
+                Id_Utilisateur = user.UserId,
                 Id_PFMP = idPfmp,
-                RoleExpediteur = role,
+                RoleExpediteur = user.Role,
                 Contenu = request.Contenu,
                 DateEnvoi = DateTime.UtcNow,
             };
@@ -154,64 +135,63 @@ namespace PFMPManager.Api.Controllers
 
         }
 
-        //check if PFMP exist or not
+        //check whether the PFMP exists
         private async Task<bool> PfmpExistsAsync(int idPfmp)
         {
-            return await _context.Pfmp.AnyAsync(p => p.Id_PFMP == idPfmp);
+            return await _context.Pfmp.AsNoTracking().AnyAsync(p => p.Id_PFMP == idPfmp);
         }
 
 
 
-        // check if the pfmp is active or not
+        // check whether the pfmp is currently active
         private async Task<bool> IsPfmpActiveAsync(int idPfmp)
         {
-            var activePfmp = await _context.Pfmp.AnyAsync(pfmp => pfmp.Id_PFMP == idPfmp && pfmp.DateDebut.HasValue
+            var activePfmp = await _context.Pfmp.AsNoTracking().AnyAsync(pfmp => pfmp.Id_PFMP == idPfmp && pfmp.DateDebut.HasValue
                                            && pfmp.DateFin.HasValue && pfmp.DateFin.Value.Date >= DateTime.Today.Date
                                            && pfmp.DateDebut.Value.Date <= DateTime.Today.Date);
             return activePfmp;
         }
 
 
-        // Can this user access this active PFMP chat?
+        // Check whether the user can access the pfmp chat
         private async Task<bool> CanAccessPfmpAsync(int idUtilisateur, string role, int idPfmp)
         {
-            bool canAccess = false;
             if (role == "Etudiant")
             {
-                canAccess = await _context.Pfmp.AnyAsync(pf => pf.Id_Utilisateur_1 == idUtilisateur && pf.Id_PFMP == idPfmp);
+                return await _context.Pfmp.AsNoTracking().AnyAsync(pf => pf.Id_Utilisateur_1 == idUtilisateur && pf.Id_PFMP == idPfmp);
             }
             else if (role == "Enseignant")
             {
-                canAccess = await (from e in _context.Etudiant
-                                  join pfmp in _context.Pfmp
-                                      on e.Id_Utilisateur_1 equals pfmp.Id_Utilisateur_1
-                                  where e.Id_Utilisateur == idUtilisateur
-                                      && pfmp.Id_PFMP == idPfmp
-                                  select pfmp
-                                        ).AnyAsync();
+                return await (from e in _context.Etudiant
+                              join pfmp in _context.Pfmp
+                                  on e.Id_Utilisateur_1 equals pfmp.Id_Utilisateur_1
+                              where e.Id_Utilisateur == idUtilisateur
+                                  && pfmp.Id_PFMP == idPfmp
+                              select pfmp
+                                        ).AsNoTracking().AnyAsync();
 
             }
             else if (role == "Administrateur")
             {
-                canAccess = await (from admin in _context.Administrer
-                                  join gc in _context.GroupeClasse
-                                      on admin.Id_Etablissement equals gc.Id_Etablissement
-                                  join e in _context.Etudier
-                                      on new { gc.Id_Etablissement, gc.Id_Classe }
-                                      equals new { e.Id_Etablissement, e.Id_Classe }
-                                  join etud in _context.Etudiant
-                                      on e.Id_Utilisateur equals etud.Id_Utilisateur_1
-                                  join p in _context.Pfmp
-                                      on etud.Id_Utilisateur_1 equals p.Id_Utilisateur_1
-                                  where admin.Id_Utilisateur == idUtilisateur
-                                      && p.Id_PFMP == idPfmp
-                                  select p
-                                       ).AnyAsync();
+                return await (from admin in _context.Administrer
+                              join gc in _context.GroupeClasse
+                                  on admin.Id_Etablissement equals gc.Id_Etablissement
+                              join e in _context.Etudier
+                                  on new { gc.Id_Etablissement, gc.Id_Classe }
+                                  equals new { e.Id_Etablissement, e.Id_Classe }
+                              join etud in _context.Etudiant
+                                  on e.Id_Utilisateur equals etud.Id_Utilisateur_1
+                              join p in _context.Pfmp
+                                  on etud.Id_Utilisateur_1 equals p.Id_Utilisateur_1
+                              where admin.Id_Utilisateur == idUtilisateur
+                                  && p.Id_PFMP == idPfmp
+                              select p
+                                       ).AsNoTracking().AnyAsync();
 
 
 
             }
-            return canAccess;
+            return false;
         }
     }
 }
