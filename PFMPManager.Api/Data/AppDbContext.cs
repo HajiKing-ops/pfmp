@@ -56,9 +56,6 @@ namespace PFMPManager.Api.Data
 
             modelBuilder.Entity<Administrer>()
               .HasKey(c => new { c.Id_Utilisateur, c.Id_Etablissement });
-
-            modelBuilder.Entity<Etablissement>()
-              .HasKey(c => new { c.Id_Etablissement, c.Id_Classe });
         }
 
     }
