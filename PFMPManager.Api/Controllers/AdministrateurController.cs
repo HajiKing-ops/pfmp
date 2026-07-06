@@ -1,9 +1,10 @@
-using System.Security.Claims; // creates  claims 
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PFMPManager.Api.Data;
 using PFMPManager.Api.DTOs;
+using PFMPManager.Api.Services;
 using PFMPManager.Api.Helpers;
 
 
@@ -11,48 +12,52 @@ using PFMPManager.Api.Helpers;
 namespace PFMPManager.Api.Controllers
 {
     [ApiController] // Enables model validation and smart binding 
-
+    
     [Route("api/administrateur")] // Base route for all endpoints in this controller
 
     public class AdministrateurController : ControllerBase
     {
-        private readonly AppDbContext _context; // Database context injected via DI (Dependency Injection)
+        private readonly AppDbContext _context; 
+        private readonly ICurrentUserService _currentUserService;
 
-        //DI container injects AppDbContext registered om program.cs
-        public AdministrateurController(AppDbContext context)
+       // Dependencies are injected by the ASP.NET Core DI container
+        public AdministrateurController(AppDbContext context, ICurrentUserService currentUserService)
         {
             _context = context;
+            _currentUserService = currentUserService;
         }
 
+        // Returns PFMP dashboard data for the connected administrator
        [Authorize(Roles = "Administrateur")]
-
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            //Verifie que l'administrateur gere au moins un etablissement 
-             var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdTest, out int idAdmin))
+           
+            var user = _currentUserService.GetCurrentUser(User);
+            if (!user.Success)
             {
-                return Unauthorized("Token invalide : identifiant utilisateur manquant.");
+                return Unauthorized(user.ErrorMessage);
             }
+            var idAdmin = user.UserId;
+            
             var admin = await _context.Administrer.Where(a => a.Id_Utilisateur == idAdmin).ToListAsync();
             if (!admin.Any())
             {
                 return NotFound("l'Administrateur n'exite pas");
             }
-
+            // Verify that the connected administrator manages at least one establishment
             var etablissementIds = admin.Select(a => a.Id_Etablissement).Distinct().ToList();
 
             if (!etablissementIds.Any())
             {
                 return NotFound("L'Etablissement n'existe pas");
             }
-                
-            //Recuperer les etudiants appartenant aux etablissements de l'administrateur
+
+            // Load students from the administrator's establishments
             var classes = await _context.GroupeClasse.Where(gc => etablissementIds.Contains(gc.Id_Etablissement)).ToListAsync();
             if (!classes.Any())
             {
-                return NotFound("Aucune classe trouv�e pour cet administrateur");
+                return NotFound("Aucune classe trouvee pour cet administrateur");
             }
 
 
@@ -73,7 +78,7 @@ namespace PFMPManager.Api.Controllers
 
 
 
-            //Recuperer les PFMP des etudiants trouves 
+            // Load PFMPs for the selected students
             var pfmps = await _context.Pfmp.Where(pf => etudiantIds.Contains(pf.Id_Utilisateur_1)).Select(
             p => new PfmpDto
             {
@@ -91,34 +96,29 @@ namespace PFMPManager.Api.Controllers
                 return NotFound("Aucune PFMP trouvee pour cet administrateur");
             }
 
-
             var adminRowDto = await AdminListHelper.CreateList(_context, pfmps, etablissementIds);
 
             var stat = AdminListHelper.Calculation(adminRowDto);
                         
-                    
-
-
-                   
             return Ok(new { adminRowDto, stat });
         }
 
 
 
-        //
+        // Returns filtered PFMP dashboard data for the connected administrator
         [Authorize(Roles = "Administrateur")]
 
         [HttpGet("recherche")]
         public async Task<IActionResult> GetAll(string? nomRecherche, string? entrepriseRecherche, string? status, int? idEtablissement, int? idClasse)
         {
-
-            var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdTest, out int idAdmin))
+            
+            var user = _currentUserService.GetCurrentUser(User);
+            if(!user.Success)
             {
-                return Unauthorized("Token invalide : identifiant utilisateur manquant.");
+                return Unauthorized(user.ErrorMessage);
             }
-
-            //Verifie que l'administrateur gere au moins un etablissement 
+            var idAdmin = user.UserId;
+            // Verify that the connected administrator manages at least one establishment
             var admin = await _context.Administrer.Where(a => a.Id_Utilisateur == idAdmin).ToListAsync();
             if (!admin.Any())
             {
@@ -132,7 +132,7 @@ namespace PFMPManager.Api.Controllers
                 return NotFound("L'Etablissement n'existe pas");
             }
             
-            //Recuperer les etudiants appartenant aux etablissements de l'administrateur
+            // Verify that the connected administrator manages at least one establishment
             var classes = await _context.GroupeClasse.Where(gc => etablissementIds.Contains(gc.Id_Etablissement)).ToListAsync();
             if (!classes.Any())
             {
@@ -173,7 +173,7 @@ namespace PFMPManager.Api.Controllers
 
 
 
-            //Recuperer les PFMP des etudiants trouves 
+            // Load PFMPs for the selected students
             var pfmps = await _context.Pfmp.Where(pf => etudiantIds.Contains(pf.Id_Utilisateur_1)).Select(
             p => new PfmpDto
             {
@@ -188,7 +188,7 @@ namespace PFMPManager.Api.Controllers
 
             if (!pfmps.Any())
             {
-                return NotFound("Aucune PFMP trouv�e pour cet administrateur");
+                return NotFound("Aucune PFMP trouvee pour cet administrateur");
             }
 
             var adminRowDto = await AdminListHelper.CreateList(_context, pfmps, etablissementIds);
@@ -208,7 +208,7 @@ namespace PFMPManager.Api.Controllers
 
                 adminRowDto = adminRowDto.Where(r => r.Entreprise.ToLower().Contains(search)).ToList();
             }
-
+            
             if (!string.IsNullOrWhiteSpace(status))
             {
                 var statutRecherche = status.Trim().ToLower();
@@ -237,14 +237,17 @@ namespace PFMPManager.Api.Controllers
             return Ok(new { adminRowDto, stat });
         }
 
+        // Returns PFMP statistics grouped by class for the connected administrator
+        [Authorize (Roles =  "Administrateur")]
         [HttpGet("classes")]
         public async Task<IActionResult> Classes()
         {
-            var userIdTest = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdTest, out int idAdmin))
+            var user = _currentUserService.GetCurrentUser(User);
+            if(!user.Success)
             {
-                return Unauthorized("Token invalide : identifiant utilisateur manquant.");
+                return Unauthorized(user.ErrorMessage);
             }
+            var idAdmin = user.UserId;
             var admin = await _context.Administrer.Where(a => a.Id_Utilisateur == idAdmin).ToListAsync();
             if (!admin.Any())
             {
@@ -280,7 +283,7 @@ namespace PFMPManager.Api.Controllers
             }
 
 
-            var etudiantIds = etud.Select(e => e.Id_Utilisateur).Distinct().ToList(); // extract students ids
+            var etudiantIds = etud.Select(e => e.Id_Utilisateur).Distinct().ToList(); 
 
 
 
@@ -316,10 +319,10 @@ namespace PFMPManager.Api.Controllers
 
             foreach (var g in groupByClass)
             {
-                var Presences = g.Sum(r => r.Presence);
-                var Absences = g.Sum(ab => ab.Absence);
-                var total = Presences + Absences;
-                var TauxPresence = total == 0 ? 0 : Math.Round((double)Presences / total * 100);
+                var presences = g.Sum(r => r.Presence);
+                var absences = g.Sum(ab => ab.Absence);
+                var total = presences + absences;
+                var tauxPresence = total == 0 ? 0 : Math.Round((double)presences / total * 100);
 
                 var dto = new AdminClassStatsDto
                 {
@@ -335,9 +338,9 @@ namespace PFMPManager.Api.Controllers
                     r.DateDebut.Value.Date <= DateTime.Today.Date &&
                     r.DateFin.Value.Date >= DateTime.Today.Date),
 
-                    Presence = Presences,
-                    Absence = Absences,
-                    TauxPresence = (int)TauxPresence,
+                    Presence = presences,
+                    Absence = absences,
+                    TauxPresence = (int)tauxPresence,
                 };
                 classStats.Add(dto);
             }

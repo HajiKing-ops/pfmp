@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
+    // Represents an organisation that can host PFMPs
     [Table("Organisation")]
     public class Organisation
     {

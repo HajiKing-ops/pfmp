@@ -16,6 +16,7 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+
   api:
     build:
       context: ./PFMPManager.Api
@@ -24,14 +25,28 @@ services:
     restart: unless-stopped
     depends_on:
       mysql:
-       condition: service_healthy
-
+        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: "server=mysql;port=3306;database=${MYSQL_DATABASE};user=root;password=${MYSQL_ROOT_PASSWORD};"
+      Jwt__Key: ${JWT_SECRET}
+      Jwt__Issuer: PFMPManager
+      Jwt__Audience: PFMPManagerUsers
+      Jwt__ExpireMinutes: 15
     ports:
       - "${API_PORT}:8080"
+
+  flutter_web:
+    build:
+      context: ./appli_pfmp
+      dockerfile: Dockerfile
+    container_name: pfmp_flutter
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${FLUTTER_PORT}:80"
 
 volumes:
   mysql_data:

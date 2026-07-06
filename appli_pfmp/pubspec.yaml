@@ -1,0 +1,39 @@
+name: appli_pfmp
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5                            # Sofware Development Kit de Flutter, il permet d'utiliser les services et technologies proposées par le Framework Flutter.
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.1.0                            # Package http pour effectuer les requêtes à l'API.
+  intl: ^0.20.2                           # Package intl qui fournit des fonctions pour le formatage de dates.
+  url_launcher: ^6.0.20                   # Package url_launcher pour associer la carte des entreprises à l'application.
+  flutter_localization: ^0.4.0            # Package flutter_localization utile pour afficher les dates et horaires en français, notamment pour la sélection d'horaires.
+  flutter_easy_search_bar: ^0.0.3         # Package flutter_easy_search_bar qui fournit un widget d'AppBar de recherche, utilisé ici pour la recherche d'élève dans l'espace administrateur.
+  cupertino_icons: ^1.0.8                 # Package cupertino_icons qui fournit l'ensemble des icônes utilisés pour l'application.
+  flutter_bloc: ^9.1.1                    # Package BLoC (Business Logic Component) qui permet la gestion d'état de l'application, utile notamment pour les requêtes à l'API.
+  flutter_localizations:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0                   # Package importé automatiquement à la création du projet, permettant d'avoir des recommendations de bonnes pratiques lors de l'écriture du code
+
+
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - images/logo-noir.png                # Logo de l'application PFMP Manager
+
+  fonts:
+    - family: Syne
+      fonts:
+        - asset: Syne-Regular.ttf

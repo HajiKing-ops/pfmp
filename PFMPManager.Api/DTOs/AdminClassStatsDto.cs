@@ -1,5 +1,6 @@
 namespace PFMPManager.Api.DTOs
 {
+    // Represents PFMP attendance statistics for an administrator's class
     public class AdminClassStatsDto
     {
         public int IdEtablissement { get; set; }

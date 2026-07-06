@@ -3,12 +3,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PFMPManager.Api.Models
 {
+    // Represents a student profile linked to a user account and a referent
     [Table("Etudiant")]
     public class Etudiant
     {
         [Key]
         [Column("Id_Utilisateur_1")]
-        public int Id_Utilisateur_1 { get; set; }  // ? -> can be null 
+        public int Id_Utilisateur_1 { get; set; }  
   
 
         [Column("Date_Naissance")]

@@ -1,18 +1,4 @@
 #VS code settings
 .vscode/
 .vs/
-
-.backup_db.bat
-
 .env
-*.sql
-
-# System files
-.DS_Store
-Thumbs.db
-
-# PHP error logs 
-*.log
-
-bin/
-obj/

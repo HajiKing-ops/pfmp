@@ -1,6 +1,7 @@
 
 namespace PFMPManager.Api.DTOs
 {
+    // Represents professional profile information returned by the API
     public class ProfessionnelDto
     {
         public int Id_Utilisateur { get; set; } 

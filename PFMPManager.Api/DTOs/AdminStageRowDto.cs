@@ -1,5 +1,6 @@
 namespace PFMPManager.Api.DTOs
 {
+    // Represents one PFMP row in the administrator dashboard
     public class AdminStageRowDto
     {
         public string? Nom { get; set; }
@@ -19,10 +20,8 @@ namespace PFMPManager.Api.DTOs
         public int IdEtablissement { get; set; }
         public int IdClasse { get; set; }
         public string LibelleClasse { get; set; } = string.Empty;
-
-
-
-
-
+        public int StudentId {get; set;}
+        
+        public List<CreateTablePresenceDto> TablePresence { get; set; } = new();
     }
 }

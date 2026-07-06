@@ -1,5 +1,6 @@
 namespace PFMPManager.Api.DTOs
 {
+    // Represents a daily PFMP report returned by the API
     public class JournalDto 
     { 
         public int IdRapportJournalier { get; set; }

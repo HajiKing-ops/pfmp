@@ -1,5 +1,6 @@
 namespace PFMPManager.Api.DTOs
 {
+    // Represents basic user information returned by the API
     public class UtilisateurDto 
     {
         public int Id_Utilisateur { get; set; }
