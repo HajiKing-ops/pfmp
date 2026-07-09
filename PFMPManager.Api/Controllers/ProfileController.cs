@@ -12,6 +12,7 @@ using System.Net;
 
 [ApiController]
 [Route("api/profile")]
+[Authorize(Roles = "Etudiant")]
 public class ProfileController : ControllerBase
 {
     private readonly AppDbContext _context; // Database context injected by DI

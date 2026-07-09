@@ -1,0 +1,14 @@
+services:
+  mysql:
+    ports:
+      - "${MYSQL_PORT}:3306"
+
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "${API_PORT}:8080"
+
+  flutter_web:
+    ports:
+      - "${FLUTTER_PORT}:80"

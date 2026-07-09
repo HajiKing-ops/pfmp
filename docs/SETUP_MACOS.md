@@ -1,37 +1,33 @@
 # macOS Setup Guide
 
-Other platform? [Windows](SETUP_WINDOWS.md) · [Linux](SETUP_LINUX.md)
+Other platforms: [Windows](SETUP_WINDOWS.md) | [Linux](SETUP_LINUX.md)
 
-This guide walks through installing every tool needed to run PFMP Manager on
-macOS, whether you use Docker Compose or run pieces locally. Commands are for
-`zsh` (the macOS default) via Terminal.
+This guide explains how to install the tools needed to run PFMP Manager on macOS, either with Docker Compose or with local services. Commands use `zsh`, the default macOS shell.
 
-For the actual run steps once tools are installed, see the main
-[README](../README.md#run-with-docker) — this guide only covers getting the
-toolchain in place.
+For actual run commands after installation, see the main [README](../README.md).
 
-## Required tools
+## Required Tools
 
-| Tool | Why it's needed |
+| Tool | Why it is needed |
 | --- | --- |
-| Homebrew | Package manager used to install everything below |
-| Git | Clone the repository and push changes |
-| Docker Desktop | Run MySQL, API, and optional Flutter Web containers |
-| Docker Compose plugin | Bundled with Docker Desktop |
-| .NET SDK 9 | Build and run the ASP.NET Core API locally |
-| Flutter SDK | Run or build the Flutter frontend locally |
-| MySQL Workbench (optional) | Inspect, import, or export the database |
-| VS Code or JetBrains Rider (optional) | Development environment |
+| Homebrew | Package manager used in this guide. |
+| Git | Clone the repository and manage changes. |
+| Docker Desktop | Run MySQL, API, and Flutter Web containers. |
+| Docker Compose plugin | Bundled with Docker Desktop. |
+| .NET SDK 9 | Build and run the ASP.NET Core API locally. |
+| Flutter SDK | Run or build the Flutter frontend locally. |
+| MySQL Workbench (optional) | Inspect, import, or export the database. |
+| VS Code or JetBrains Rider (optional) | Development environment. |
 
 ## 0. Homebrew
 
-Skip this if `brew --version` already works.
+Skip if `brew --version` already works.
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-Follow the "Next steps" it prints to add Homebrew to your PATH, then verify:
+Follow the instructions printed by Homebrew, then verify:
 
 ```bash
 brew --version
@@ -39,16 +35,8 @@ brew --version
 
 ## 1. Git
 
-macOS ships with an old Git via Xcode Command Line Tools. To get a current
-version:
-
 ```bash
 brew install git
-```
-
-Verify:
-
-```bash
 git --version
 ```
 
@@ -56,29 +44,24 @@ git --version
 
 Download: [Docker Desktop for Mac](https://docs.docker.com/desktop/setup/install/mac-install/)
 
-Or via Homebrew:
+Or install with Homebrew:
 
 ```bash
 brew install --cask docker
 ```
 
-Open Docker from Applications (or Spotlight), wait until it reports it's
-running, then verify:
+Open Docker from Applications, wait until it is running, then verify:
 
 ```bash
 docker --version
 docker compose version
 ```
 
-If you download directly instead of using `brew`, pick the build that
-matches your chip — Apple Silicon or Intel. Homebrew handles this
-automatically.
-
 ## 3. .NET SDK 9
 
 Download: [.NET 9](https://dotnet.microsoft.com/download/dotnet/9.0)
 
-Or via Homebrew:
+Or install with Homebrew:
 
 ```bash
 brew install --cask dotnet-sdk
@@ -94,7 +77,7 @@ dotnet --version
 
 Guide: [Flutter macOS Web setup](https://docs.flutter.dev/get-started/install/macos/web)
 
-Via Homebrew:
+With Homebrew:
 
 ```bash
 brew install --cask flutter
@@ -117,23 +100,19 @@ flutter --version
 flutter doctor
 ```
 
-`flutter doctor` may flag Xcode or CocoaPods — those are only needed for iOS
-builds, not for Flutter Web, so they're safe to ignore for this project.
+`flutter doctor` may report Xcode or CocoaPods issues. Those are required for iOS builds, not for this Flutter Web project.
 
-## 5. MySQL Workbench (optional)
-
-Only needed if you'd rather inspect the database with a GUI instead of
-Docker/CLI commands.
+## 5. MySQL Workbench (Optional)
 
 Download: [MySQL Workbench](https://dev.mysql.com/downloads/workbench/)
 
-Or via Homebrew:
+Or install with Homebrew:
 
 ```bash
 brew install --cask mysqlworkbench
 ```
 
-## Install project dependencies
+## Install Project Dependencies for Local Runs
 
 ```bash
 cd PFMPManager.Api
@@ -144,11 +123,9 @@ cd ../appli_pfmp
 flutter pub get
 ```
 
-If you're running with Docker instead, `docker compose up --build` downloads
-and builds the MySQL, API, and (if present) Flutter Web images automatically
-— you can skip the two steps above.
+If you run with Docker, `docker compose up --build` builds the services automatically.
 
-## Verify the full toolchain
+## Verify the Toolchain
 
 ```bash
 git --version
@@ -159,6 +136,4 @@ flutter --version
 flutter doctor
 ```
 
-If every command succeeds, continue with
-[Run With Docker](../README.md#run-with-docker) or
-[Run Locally](../README.md#run-locally) in the main README.
+If every command succeeds, continue with the run instructions in the main [README](../README.md).

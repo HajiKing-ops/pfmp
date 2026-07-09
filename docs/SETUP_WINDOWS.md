@@ -1,28 +1,20 @@
 # Windows Setup Guide
 
-This guide walks through installing every tool needed to run PFMP Manager on
-Windows, whether you use Docker Compose or run pieces locally. Commands are
-PowerShell unless noted; some installs need PowerShell run **as
-Administrator**.
+This guide explains how to install the tools needed to run PFMP Manager on Windows, either with Docker Compose or with local services. Commands are written for PowerShell unless noted. Some installers may require PowerShell as Administrator.
 
-For the actual run steps once tools are installed, see the main
-[README](../README.md#run-with-docker) — this guide only covers getting the
-toolchain in place.
+For actual run commands after installation, see the main [README](../README.md).
 
-## Required tools
+## Required Tools
 
-| Tool | Why it's needed |
+| Tool | Why it is needed |
 | --- | --- |
-| Git | Clone the repository and push changes |
-| Docker Desktop | Run MySQL, API, and optional Flutter Web containers |
-| Docker Compose plugin | Start all services with `docker compose up` (bundled with Docker Desktop) |
-| .NET SDK 9 | Build and run the ASP.NET Core API locally |
-| Flutter SDK | Run or build the Flutter frontend locally |
-| MySQL client (optional) | Inspect, import, or export the database |
-| VS Code or Visual Studio (optional) | Development environment |
-
-Each tool can be installed by downloading the official installer and clicking
-through, or with `winget` from PowerShell. Both options are given below.
+| Git | Clone the repository and manage changes. |
+| Docker Desktop | Run MySQL, API, and Flutter Web containers. |
+| Docker Compose plugin | Start all services with `docker compose up`. Bundled with Docker Desktop. |
+| .NET SDK 9 | Build and run the ASP.NET Core API locally. |
+| Flutter SDK | Run or build the Flutter frontend locally. |
+| MySQL client or Workbench (optional) | Inspect, import, or export the database. |
+| VS Code or Visual Studio (optional) | Development environment. |
 
 ## 1. Git
 
@@ -32,7 +24,7 @@ Download: [Git for Windows](https://git-scm.com/downloads/win)
 winget install --id Git.Git -e
 ```
 
-Close and reopen the terminal, then verify:
+Verify:
 
 ```powershell
 git --version
@@ -46,15 +38,14 @@ Download: [Docker Desktop for Windows](https://docs.docker.com/desktop/setup/ins
 winget install --id Docker.DockerDesktop -e
 ```
 
-After installing: open Docker Desktop from the Start menu, wait until it
-reports it's running, restart your terminal, then verify:
+Open Docker Desktop, wait until it is running, then verify:
 
 ```powershell
 docker --version
 docker compose version
 ```
 
-If Docker commands don't work, restart Windows once and reopen Docker Desktop.
+If Docker commands fail, restart Windows and open Docker Desktop again.
 
 ## 3. .NET SDK 9
 
@@ -88,13 +79,9 @@ flutter --version
 flutter doctor
 ```
 
-If `flutter` isn't recognized, confirm `C:\src\flutter\bin` is on PATH, or
-restart the computer.
+If `flutter` is not recognized, confirm `C:\src\flutter\bin` is on PATH or restart the computer.
 
-## 5. MySQL Workbench (optional)
-
-Only needed if you'd rather inspect the database with a GUI instead of
-Docker/CLI commands.
+## 5. MySQL Workbench (Optional)
 
 Download: [MySQL Workbench](https://dev.mysql.com/downloads/workbench/)
 
@@ -102,7 +89,7 @@ Download: [MySQL Workbench](https://dev.mysql.com/downloads/workbench/)
 winget install --id Oracle.MySQLWorkbench -e
 ```
 
-## Install project dependencies
+## Install Project Dependencies for Local Runs
 
 ```powershell
 cd PFMPManager.Api
@@ -113,11 +100,9 @@ cd ..\appli_pfmp
 flutter pub get
 ```
 
-If you're running with Docker instead, `docker compose up --build` downloads
-and builds the MySQL, API, and (if present) Flutter Web images automatically —
-you can skip the two steps above.
+If you run with Docker, `docker compose up --build` builds the services automatically.
 
-## Verify the full toolchain
+## Verify the Toolchain
 
 ```powershell
 git --version
@@ -128,6 +113,4 @@ flutter --version
 flutter doctor
 ```
 
-If every command succeeds, continue with
-[Run With Docker](../README.md#run-with-docker) or
-[Run Locally](../README.md#run-locally) in the main README.
+If every command succeeds, continue with the run instructions in the main [README](../README.md).
