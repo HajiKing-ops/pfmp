@@ -1,16 +1,16 @@
-# 08 - Docker and Deployment
+# 08 - Docker and deployment
 
-## Docker Files
+## Docker files
 
-| File | Purpose |
+| File | Role |
 | --- | --- |
-| `docker-compose.yml` | Shared service configuration for MySQL, API, and Flutter/Nginx. |
-| `docker-compose.override.yml` | Development configuration: exposed ports and `Development` environment. |
-| `docker-compose.prod.yml` | Production-style configuration: only Nginx is exposed on port 80. |
-| `PFMPManager.Api/Dockerfile` | Builds and publishes the .NET API, then runs it with the ASP.NET runtime. |
-| `appli_pfmp/Dockerfile` | Builds Flutter Web, then serves it with Nginx. |
+| `docker-compose.yml` | Shared configuration for the MySQL, API, and Flutter/Nginx services. |
+| `docker-compose.override.yml` | Development configuration: exposed ports and the Development environment. |
+| `docker-compose.prod.yml` | Production-style configuration: only Nginx exposes port 80. |
+| `PFMPManager.Api/Dockerfile` | Builds/publishes .NET 9, then runs it on the ASP.NET runtime image. |
+| `appli_pfmp/Dockerfile` | Builds Flutter Web, then serves it via the Nginx runtime image. |
 | `appli_pfmp/nginx.conf` | Serves Flutter and proxies `/api`. |
-| `.env.example` | Safe template for environment variables. |
+| `.env.example` | Example variables, with no real secrets. |
 
 ## Services
 
@@ -33,9 +33,9 @@ Configuration:
 - `MYSQL_ROOT_PASSWORD`;
 - `MYSQL_DATABASE`;
 - external volume `docker-test_mysql_data`;
-- `mysqladmin ping` healthcheck.
+- healthcheck via `mysqladmin ping`.
 
-To verify: `docker-compose.yml` does not currently declare `MYSQL_USER` and `MYSQL_PASSWORD` in the MySQL service environment, even though the API connection string uses them. A fresh volume may need explicit application user creation.
+Watch out: the current compose file does not declare `MYSQL_USER` and `MYSQL_PASSWORD` in the MySQL service's environment, even though the API uses them to connect. To verify for a fresh install.
 
 ### `api`
 
@@ -45,13 +45,13 @@ Container:
 pfmp_api
 ```
 
-Build context:
+Build:
 
 ```text
-./PFMPManager.Api
+./PFMPManager.Api/Dockerfile
 ```
 
-Important environment variables:
+Variables:
 
 - `ASPNETCORE_URLS=http://+:8080`;
 - `ConnectionStrings__DefaultConnection`;
@@ -60,7 +60,7 @@ Important environment variables:
 - `Jwt__Audience`;
 - `Jwt__ExpireMinutes`.
 
-The API waits for MySQL to be healthy.
+Depends on MySQL being healthy.
 
 ### `flutter_web`
 
@@ -70,37 +70,39 @@ Container:
 pfmp_flutter
 ```
 
-Build context:
+Build:
 
 ```text
-./appli_pfmp
+./appli_pfmp/Dockerfile
 ```
 
-The container serves the compiled Flutter Web application with Nginx on internal port 80.
+The Flutter build is served by Nginx on internal port 80.
 
-## MySQL Volume
+## MySQL volume
 
-The MySQL volume is external:
+The volume is external:
 
 ```text
 docker-test_mysql_data
 ```
 
-Create it before the first run:
+Creation:
 
 ```bash
 docker volume create docker-test_mysql_data
 ```
 
-Do not run this unless you intentionally want to delete local database data:
+Do not delete it with:
 
 ```bash
 docker compose down -v
 ```
 
-## Development Mode
+unless deleting local data is intentional.
 
-Create `.env` from the template:
+## Starting Docker development
+
+Copy the example environment file:
 
 ```powershell
 Copy-Item .env.example .env
@@ -112,13 +114,13 @@ Create the volume:
 docker volume create docker-test_mysql_data
 ```
 
-Start the stack:
+Start:
 
 ```bash
 docker compose up --build
 ```
 
-With `.env.example`, expected ports are:
+With `.env.example`, expected ports:
 
 | Service | Host port | Container port |
 | --- | --- | --- |
@@ -126,7 +128,7 @@ With `.env.example`, expected ports are:
 | API | `5002` | `8080` |
 | MySQL | `3307` | `3306` |
 
-Development URLs:
+URLs:
 
 ```text
 http://localhost:65427
@@ -134,11 +136,9 @@ http://localhost:5002
 localhost:3307
 ```
 
-Development mode exposes more ports because it is useful for debugging, API testing, and database inspection.
+## Starting production-style
 
-## Production-Style Mode
-
-Start:
+Required command:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
@@ -147,9 +147,9 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 In this mode:
 
 - Nginx is exposed on `http://localhost`;
-- the API remains internal;
-- MySQL remains internal;
-- the frontend calls `/api` through Nginx.
+- the API stays internal;
+- MySQL stays internal;
+- the frontend calls `/api` on Nginx.
 
 Stop:
 
@@ -157,11 +157,9 @@ Stop:
 docker compose -f docker-compose.yml -f docker-compose.prod.yml down
 ```
 
-This mode is safer for temporary public testing because only the frontend/Nginx entry point is public.
+## Logs
 
-## Logs and Debug Commands
-
-Required log commands:
+Required commands:
 
 ```bash
 docker logs pfmp_api
@@ -169,7 +167,7 @@ docker logs pfmp_flutter
 docker logs pfmp_mysql
 ```
 
-Useful alternatives:
+Useful commands:
 
 ```bash
 docker compose ps
@@ -178,60 +176,60 @@ docker compose logs -f flutter_web
 docker compose logs -f mysql
 ```
 
-## Backup and Restore
+## Backup and restore
 
-Detailed instructions already exist in:
+Documentation already exists: [MySQL backup & restore](DATABASE_BACKUP.md).
 
-- [DATABASE_BACKUP.md](DATABASE_BACKUP.md)
-
-Example backup:
+Generic backup example:
 
 ```bash
 mkdir -p backups
 docker exec pfmp_mysql mysqldump -uroot -pYOUR_PASSWORD pfmp_manager > backups/pfmp_manager_backup.sql
 ```
 
-Example restore on macOS/Linux:
+macOS/Linux restore example:
 
 ```bash
 docker exec -i pfmp_mysql mysql -uroot -pYOUR_PASSWORD pfmp_manager < backups/pfmp_manager_backup.sql
 ```
 
-Use placeholder values in documentation. Do not write real passwords in docs.
+On Windows, see [MySQL backup & restore](DATABASE_BACKUP.md) for the CMD and PowerShell variants.
 
 ## Nginx
 
-`appli_pfmp/nginx.conf` provides:
+`appli_pfmp/nginx.conf` includes:
 
-- short caching for Flutter bootstrap files;
-- longer caching for assets and CanvasKit files;
-- SPA fallback to `index.html`;
-- `/api/` reverse proxy to `http://api:8080/api/`.
+- short-lived caching for the main Flutter files;
+- long-lived caching for assets/canvaskit/icons;
+- an SPA fallback to `index.html`;
+- a proxy from `/api/` to `http://api:8080/api/`.
 
-## Network Exposure
+Full details: [Nginx reverse proxy](NGINX_PROXY.md).
+
+## Network exposure
 
 Development:
 
-- Flutter/Nginx is exposed;
-- API is exposed;
-- MySQL is exposed.
+- API exposed on the host;
+- MySQL exposed on the host;
+- Flutter exposed on the host.
 
 Production-style:
 
-- only Nginx on port 80 is exposed;
-- API and MySQL stay inside the Docker network.
+- only Nginx's port 80 is exposed;
+- the API and MySQL are not exposed.
 
-This reduces the public attack surface and keeps database access behind the API.
+This model is safer for a temporary public test.
 
-## Before Real Deployment
+## Checklist before a real deployment
 
-- Replace all development secrets.
-- Enable HTTPS.
-- Use `Secure=true` cookies under HTTPS.
-- Use a limited MySQL application user.
+- Replace every secret in `.env`.
+- Use HTTPS.
+- Switch cookies to `Secure=true`.
+- Create an application-level MySQL user with limited privileges.
 - Do not expose MySQL publicly.
-- Do not expose the API directly if Nginx can proxy `/api`.
-- Add CI/CD.
+- Do not expose the API directly.
+- Add a CI/CD pipeline.
 - Add automated backups.
-- Add monitoring and logs.
-- Verify forwarded headers if HTTPS is terminated before the API.
+- Add monitoring/logs.
+- Check `UseForwardedHeaders` behind Nginx if HTTPS is terminated before reaching the API.

@@ -1,109 +1,124 @@
-# 03 - Roles and Permissions
+# 03 - Roles and permissions
 
 Application roles are resolved by `RoleService`:
 
-1. If the user exists in `Etudiant`, the role is `Etudiant`.
-2. Otherwise, if the user exists in `Referent`, the role is `Enseignant`.
-3. Otherwise, if the user exists in `Administrateur`, the role is `Administrateur`.
+1. If the user is in `Etudiant`, role `Etudiant`.
+2. Otherwise, if they are in `Referent`, role `Enseignant`.
+3. Otherwise, if they are in `Administrateur`, role `Administrateur`.
 4. Otherwise, no role is returned.
 
-The Professional / Internship supervisor exists in the business model, but `RoleService` does not return a `Professionnel` role.
+```mermaid
+flowchart TD
+    Start["Authenticated user"] --> Q1{"Present in Etudiant?"}
+    Q1 -->|Yes| REtudiant["Role: Etudiant"]
+    Q1 -->|No| Q2{"Present in Referent?"}
+    Q2 -->|Yes| REnseignant["Role: Enseignant"]
+    Q2 -->|No| Q3{"Present in Administrateur?"}
+    Q3 -->|Yes| RAdmin["Role: Administrateur"]
+    Q3 -->|No| RNone["No role returned"]
+```
 
-## Important Teacher / Referent Rule
+The `Professionnel` role exists in the data model, but it is never returned by `RoleService` (see "Professional / Workplace supervisor" below).
 
-A Teacher / Referent must only follow assigned students.
+## Important rule for teacher/referent
 
-In the current code, this assignment is checked through the `Etudiant` table:
+A teacher/referent should only follow the students assigned to them.
 
-- `Etudiant.Id_Utilisateur` appears to represent the referent;
-- `Etudiant.Id_Utilisateur_1` appears to represent the student.
+In the current code, this assignment is checked using the `Etudiant` table:
 
-A Teacher / Referent is not an Administrator. The current code does not confirm that a teacher officially validates PFMP records. Teacher access is limited to endpoints where the `Enseignant` role is allowed and where the student assignment check passes.
+- `Etudiant.Id_Utilisateur` corresponds to the referent;
+- `Etudiant.Id_Utilisateur_1` corresponds to the student.
 
-## Permission Table
+A teacher is not an administrator. They do not officially validate PFMPs in the current code. They can only access endpoints where the `Enseignant` role is authorized and where the student is linked to them.
 
-| Feature | Student | Teacher / Referent | Administrator | Professional / Internship supervisor |
+## Permission table
+
+| Function | Student | Teacher / Referent | Administrator | Professional |
 | --- | --- | --- | --- | --- |
-| Log in | Yes | Backend role exists | Yes | Not confirmed in code |
-| Dedicated Flutter area | Yes | No visible area wired | Yes | No |
-| View own dashboard | Yes | No | No | No |
-| View PFMP records | Own PFMPs only | Assigned students only | Through admin endpoints | No |
+| Log in | Yes | Yes, backend only | Yes | No |
+| Dedicated Flutter area | Yes | Not wired up yet | Yes | No |
+| View their own dashboard | Yes | No | No | No |
+| View their PFMPs | Yes, only their own | Yes, assigned students | Via admin endpoints | No |
 | Create a complete PFMP | Yes | No | No | No |
-| Manage contact requests | Yes | No | No | No |
-| Fill daily reports | Yes | No | No | No |
-| Export own daily report PDF | Yes | No confirmed support | No confirmed support | No |
-| Read/send PFMP messages | Own active PFMPs | Active PFMPs of assigned students | Active PFMPs in admin scope | No |
+| Manage their applications | Yes | No | No | No |
+| Fill in their logbook | Yes | No | No | No |
+| Export their logbook (PDF / JSON) | Yes, only their own PFMPs | No, in the current code | No, in the current code | No |
+| Read/send PFMP messages | Yes, their active PFMPs | Yes, active PFMPs of assigned students | Yes, active PFMPs visible via their schools | No |
 | Initialize attendance | No | No | Yes | No |
-| Update attendance | No | Assigned students and valid PFMP dates | Admin-owned PFMPs and valid dates | No |
+| Edit attendance | No | Yes, for an assigned student and a date within the PFMP | Yes, for a PFMP tied to the admin and a date within the PFMP | No |
 | View admin statistics | No | No | Yes | No |
 | Create a base user account | No | No | Yes | No |
 
-## Student
+> The "Professional" column is entirely *No*: see the detailed justification at the end of this file — no login mechanism for this role was found in the code inspected.
 
-A Student can:
+## Details by role
 
-- access the student Flutter area;
-- view PFMPs through `/api/pfmp/recherche/{studentId}`;
-- create a PFMP through `/api/pfmp/complete`;
-- create and update contact requests;
-- create and view daily reports;
-- check whether today's daily report exists;
-- export daily report data and PDF for owned PFMPs;
-- use messaging for active owned PFMPs.
+### Student
 
-Limits:
+A student can:
 
-- a Student cannot read another student's PFMP data;
-- a Student cannot access administrator endpoints;
-- a Student cannot initialize or update attendance.
-
-## Teacher / Referent
-
-Confirmed backend capabilities:
-
-- read PFMPs of assigned students;
-- read and send messages for active PFMPs of assigned students;
-- update attendance for an assigned student when the date is inside the PFMP period.
+- access their Flutter area;
+- view their PFMPs via `/api/pfmp/recherche/{studentId}`;
+- create a PFMP via `/api/pfmp/complete`;
+- create and edit their applications;
+- create and view their daily logbook entries;
+- check whether today's logbook entry already exists;
+- export their reports (PDF, and JSON on the backend);
+- use messaging on their active PFMP.
 
 Limits:
 
-- no dedicated Flutter Teacher / Referent area is wired in `main.dart`;
-- no administrator access;
-- no PFMP creation;
-- no official PFMP validation confirmed in code;
-- no dedicated `/api/referent/...` controller routes currently exist.
+- cannot read another student's PFMPs;
+- cannot access administrator endpoints;
+- cannot initialize or edit attendance.
 
-## Administrator
+### Teacher / Referent
 
-An Administrator can:
+On the backend, a teacher can:
 
-- access the Flutter administrator area;
-- view PFMPs for students in managed establishments;
-- filter students by name, company, status, establishment, or class;
-- view class-level statistics;
-- initialize attendance for the current day;
-- update attendance for PFMPs in their scope;
+- read the PFMPs of an assigned student;
+- read/send messages on an active PFMP of an assigned student;
+- edit the attendance of an assigned student for a date covered by their PFMP.
+
+Limits:
+
+- no dedicated Flutter interface wired into `main.dart`;
+- no admin access;
+- cannot create a PFMP;
+- no official PFMP validation visible in the code;
+- no dedicated `/api/referent/...` endpoint in the current controllers.
+
+### Administrator
+
+An administrator can:
+
+- open the Flutter admin area;
+- view PFMPs for students in their schools;
+- filter trainees by name, company, status, or class;
+- view per-class statistics;
+- initialize the day's attendance;
+- edit attendance for PFMPs they administer;
 - use admin messaging on visible active PFMPs;
-- create a base user account through `/api/utilisateur`.
+- create a base user account via `/api/utilisateur`.
 
 Limits:
 
-- `POST /api/utilisateur` creates only a base `Utilisateur`, not a role profile;
-- admin attendance scope uses `Pfmp.Id_Utilisateur == adminId`;
-- the current daily report PDF endpoint effectively requires the connected user to be the student who owns the PFMP.
+- creating via `/api/utilisateur` does not automatically create a role profile;
+- the scope of admin attendance access uses `Pfmp.Id_Utilisateur == adminId`;
+- an admin cannot, through the current endpoints, generate a student's logbook PDF, because the `pdf` action effectively restricts access to the student who owns the PFMP.
 
-## Professional / Internship Supervisor
+### Professional / Workplace supervisor
 
-The business model includes:
+The professional is modeled by:
 
 - `Professionnel`;
 - `Travailler`;
-- a related `Utilisateur` record created or reused during PFMP creation.
+- `Utilisateur`, created or found while a PFMP is being created.
 
-However:
+But:
 
-- `RoleService` does not return `Professionnel`;
-- no controller uses `[Authorize(Roles = "Professionnel")]`;
-- no Flutter Professional / Internship supervisor UI is visible.
+- `RoleService` never returns `Professionnel`;
+- no controller declares `[Authorize(Roles = "Professionnel")]`;
+- no professional-facing Flutter interface is visible.
 
-Conclusion: this actor exists in the business model only in the current version.
+Conclusion: this role only exists in the business model in the current version; it does not log into the application. That is why the permission table above shows *No* across the entire "Professional" column rather than "not confirmed" — the three points above, taken together, confirm the absence of a login path rather than mere uncertainty.

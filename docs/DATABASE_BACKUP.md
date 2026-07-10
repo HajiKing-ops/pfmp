@@ -1,8 +1,9 @@
-# Database Backup and Restore
+# Database Backup & Restore
 
-## MySQL Volume
+## The MySQL volume
 
-Database data is stored in a persistent Docker volume configured as external:
+Database data is stored in a persistent Docker volume, configured as
+**external** so it survives `docker compose down`:
 
 ```yaml
 volumes:
@@ -11,84 +12,75 @@ volumes:
     name: docker-test_mysql_data
 ```
 
-Create the volume before the first run on a new machine:
+Create it before the first run on any new machine:
 
 ```bash
 docker volume create docker-test_mysql_data
-docker volume ls
+docker volume ls   # confirm it exists
 ```
 
-Do not run `docker compose down -v` unless you intentionally want to delete local database data. The `-v` option removes volumes.
+**Never run `docker compose down -v` unless you intentionally want to delete
+local database data** — `-v` removes volumes, including this one.
 
-## Create a Backup
+## Restore from a backup
 
-Create a backup directory:
-
-```bash
-mkdir -p backups
-```
-
-Create a dump:
-
-```bash
-docker exec pfmp_mysql mysqldump -uroot -pYOUR_PASSWORD pfmp_manager > backups/pfmp_manager_backup.sql
-```
-
-Before risky work, use a descriptive name:
-
-```bash
-docker exec pfmp_mysql mysqldump -uroot -pYOUR_PASSWORD pfmp_manager > backups/pfmp_manager_before_changes.sql
-```
-
-Use placeholders in documentation. Do not write real database passwords in committed files.
-
-## Restore from a Backup
-
-Place the `.sql` backup somewhere accessible, for example:
-
-```text
-backups/pfmp_manager_backup.sql
-```
-
-Start MySQL only:
+Place the `.sql` backup somewhere accessible, e.g.
+`backups/pfmp_manager_backup.sql`, then start MySQL only:
 
 ```bash
 docker compose up -d mysql
-docker compose ps
+docker compose ps   # wait until healthy
 ```
 
-Wait until `pfmp_mysql` is healthy.
-
-### Windows CMD
+**Windows CMD:**
 
 ```cmd
 cmd /c "docker exec -i pfmp_mysql mysql -uroot -pYOUR_PASSWORD pfmp_manager < backups\pfmp_manager_backup.sql"
 ```
 
-There is no space between `-p` and the password.
+Note: there is no space between `-p` and the password.
 
-### PowerShell
+**PowerShell:**
 
 ```powershell
 Get-Content .\backups\pfmp_manager_backup.sql | docker exec -i pfmp_mysql mysql -uroot -pYOUR_PASSWORD pfmp_manager
 ```
 
-For large backups, CMD can be more reliable than piping through `Get-Content`.
+For large backups, CMD tends to be more reliable than piping through
+`Get-Content`.
 
-### macOS/Linux
+**macOS/Linux:**
 
 ```bash
 docker exec -i pfmp_mysql mysql -uroot -pYOUR_PASSWORD pfmp_manager < backups/pfmp_manager_backup.sql
 ```
 
-## Before Sharing the Project
+## Create a backup
 
-Testing and local development can create real rows: users, PFMPs, messages, daily reports, attendance, and refresh tokens.
+```bash
+mkdir -p backups
+docker exec pfmp_mysql mysqldump -uroot -pYOUR_PASSWORD pfmp_manager > backups/pfmp_manager_backup.sql
+```
 
-Before sharing a database export:
+Take one before any risky change:
 
-- provide a clean backup, or
-- document which rows are test data, or
-- delete test data carefully with SQL while respecting table relationships.
+```bash
+docker exec pfmp_mysql mysqldump -uroot -pYOUR_PASSWORD pfmp_manager > backups/pfmp_manager_before_changes.sql
+```
 
-Always take a backup before cleaning data.
+## Before handing the project to someone else
+
+Testing and local development create real rows: users, PFMPs, messages,
+reports, refresh tokens. Before sharing the project or a database export:
+
+- Provide a clean backup, **or**
+- Document exactly which rows are test data, **or**
+- Delete test data carefully with SQL, respecting foreign key order.
+
+Always take a backup before cleaning anything out.
+
+## See also
+
+- [06 - Database model](06-database-model.md) for the entities stored in this database.
+- [08 - Docker and deployment](08-docker-deployment.md) for the full list of Docker services and ports.
+- [Troubleshooting](TROUBLESHOOTING.md) if the volume is missing or data disappeared unexpectedly.

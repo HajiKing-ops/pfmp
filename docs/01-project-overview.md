@@ -1,85 +1,89 @@
-# 01 - Project Overview
+# 01 - Project overview
 
-PFMP Manager is a web application for managing PFMP internship periods in a school context. It helps students, administrators, and partially teachers/referents follow internship information, company contact steps, daily reports, attendance, and PFMP-related messages.
+PFMP Manager is an application for tracking PFMP work-based training placements in a school context. It helps students, administrators, and, on the backend side, teachers/referents, follow placement periods, applications, the logbook, attendance, and messages.
 
-## Purpose
+## Goal
 
-The application centralizes information that is often spread across several tools:
+The application centralizes information that is often scattered across different places:
 
-- student PFMP periods;
-- host organisations;
-- contact requests and internship search steps;
-- weekly schedules;
-- daily reports;
-- attendance, absences, and lateness;
-- PFMP-scoped messages;
-- administrator supervision by establishment and class group.
+- a student's PFMPs;
+- host organizations;
+- contact applications;
+- the weekly schedule;
+- the logbook;
+- attendance and absences;
+- messages tied to a PFMP;
+- oversight of classes and students by the administration.
 
 ## Users
 
 | Actor | Current usage |
 | --- | --- |
-| Student | Logs in, follows PFMPs, manages contact requests, fills daily reports, creates PFMP records, and uses messaging. |
-| Administrator | Logs in, supervises PFMPs for managed establishments, reviews class statistics, initializes or updates attendance, and uses admin messaging. |
-| Teacher / Referent | Supported by some backend authorization rules for assigned students. A dedicated Flutter UI is not currently wired in `main.dart`. |
-| Professional / Internship supervisor | Exists in the data model through `Professionnel` and `Travailler`. This actor does not log into the application in the current version. |
+| Student | Logs in, tracks their PFMPs, submits applications, fills in their logbook, views/creates a PFMP, and uses messaging. |
+| Administrator | Logs in, views PFMPs for students in their schools, filters trainees, tracks classes, initializes/edits attendance, and uses admin messaging. |
+| Teacher / Referent | On the backend, can access PFMPs for assigned students, messages, and attendance edits, depending on the existing endpoints. On the Flutter side, no dedicated interface is wired into `main.dart`. |
+| Professional / Workplace supervisor | Exists in the `Professionnel` and `Travailler` entities. Created/linked while a PFMP is being created, but this role does not currently log in. |
 
-## Main User Flows
+## Main flows
 
-### Student Flow
+### Student
 
-1. Log in through `POST /api/login`.
-2. Open the student area when the returned role is `Etudiant`.
-3. View dashboard and PFMP information.
-4. Create or update organisation contact requests.
-5. Create a complete PFMP after an accepted contact request.
-6. Fill the daily report.
-7. Use messaging for the active PFMP.
-8. Export a PFMP daily report PDF from `Mes PFMP`.
+1. Log in via `/api/login`.
+2. Access the student area if the returned role is `Etudiant`.
+3. View the dashboard and PFMPs.
+4. Add or edit applications to organizations.
+5. Create a complete PFMP after an application is accepted.
+6. Fill in the logbook.
+7. Message on the active PFMP.
+8. Export the logbook to PDF from `My PFMPs`.
 
-### Administrator Flow
+### Administrator
 
-1. Log in through `POST /api/login`.
-2. Open the admin area when the returned role is `Administrateur`.
-3. Review PFMPs for students in managed establishments.
-4. View global and class-level statistics.
-5. Initialize attendance for the current day.
-6. Update attendance or absence information.
-7. Use messaging for visible active PFMPs.
+1. Log in via `/api/login`.
+2. Access the admin area if the returned role is `Administrateur`.
+3. Oversee the PFMPs visible for their schools.
+4. View overall and per-class statistics.
+5. Initialize the day's attendance.
+6. Edit attendance/absences.
+7. Message on the visible active PFMPs.
 
-### Teacher / Referent Flow
+### Teacher / Referent
 
-The backend recognizes the role `Enseignant` from the `Referent` table. Access checks also use the `Etudiant` table, where `Id_Utilisateur` appears to represent the referent and `Id_Utilisateur_1` the student.
+The backend recognizes the `Enseignant` role based on the `Referent` table. Access checks also use the relationship visible on `Etudiant`: `Id_Utilisateur` appears to represent the referent, and `Id_Utilisateur_1` the student.
 
-Backend capabilities confirmed in code:
+Existing backend functions:
 
-- read PFMPs for assigned students;
-- read and send messages for active PFMPs of assigned students;
-- update attendance for an assigned student when the date is inside the PFMP period.
+- reading PFMPs for assigned students;
+- access to messages on active PFMPs for assigned students;
+- updating attendance for an assigned student on a date within their PFMP.
 
-TODO: create or wire a Flutter Teacher / Referent area if this role must be used in the application.
+TODO: build or wire up a Flutter teacher interface if this role is meant to be used by the application.
 
-## Current Scope
+## Current scope
 
-Confirmed in code:
+Features visible in the code:
 
-- ASP.NET Core API under `/api`;
-- JWT authentication through HttpOnly cookies;
-- refresh token storage as hashes in the database;
-- fingerprint cookie `Fgp`;
-- roles `Etudiant`, `Enseignant`, and `Administrateur`;
-- Flutter student area;
-- Flutter administrator area;
-- Nginx static hosting and `/api` reverse proxy;
-- MySQL persistence through EF Core;
-- PDF generation for daily reports with QuestPDF;
-- PFMP-scoped messaging;
-- attendance states `PRESENT`, `ABSENT`, and `NON_RENSEIGNE`.
+- REST API built with ASP.NET Core under `/api`;
+- JWT authentication via HttpOnly cookies;
+- refresh token stored hashed in the database;
+- `Fgp` fingerprint cookie;
+- roles `Etudiant`, `Enseignant`, `Administrateur`;
+- dedicated Flutter area for students;
+- dedicated Flutter area for administrators;
+- Nginx serving Flutter Web and proxying `/api`;
+- MySQL database via EF Core;
+- PDF logbook export with QuestPDF;
+- PFMP messaging flow;
+- attendance with states `PRESENT`, `ABSENT`, `NON_RENSEIGNE`;
+- a security-news feed (CERT-FR) via `/api/news`.
 
-## Not Included Yet or To Verify
+## Out of scope or incomplete
 
-- No dedicated Flutter Teacher / Referent area is currently wired.
-- No Professional / Internship supervisor login flow is implemented.
-- No CI/CD pipeline is visible.
-- No production HTTPS configuration is implemented in the repository.
-- No monitoring, automated backups, or log rotation setup is visible.
+- No teacher/referent Flutter interface wired up yet.
+- No login for the professional/workplace-supervisor role.
+- Profile backend to verify: the controller exists, but the action carries no explicit HTTP attribute.
+- `GET /api/news` and `GET /api/journal/export/{idPfmp}` (JSON logbook export) both exist on the backend, but no Flutter page consuming them was identified in the files reviewed — to verify. See [04 - Backend API](04-backend-api.md#endpoints-with-no-confirmed-frontend-consumer).
+- No visible backend test project.
+- No visible CI/CD.
+- No complete production HTTPS configuration in the repository.
+- No visible monitoring, automated backups, or log rotation.

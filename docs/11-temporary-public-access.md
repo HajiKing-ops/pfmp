@@ -1,8 +1,8 @@
-# 11 - Temporary Public Access
+# 11 - Temporary public access
 
-This procedure is only for short local testing. It is not a production deployment.
+This procedure is only meant for a short test from a local PC. It is not a production deployment.
 
-Goal: expose only the Nginx frontend on port 80. Nginx forwards `/api` requests to the internal API container.
+Goal: expose only the Nginx frontend on port 80, which proxies `/api` to the internal API.
 
 ## Principle
 
@@ -11,9 +11,9 @@ Internet
   |
   | WAN 80
   v
-Router
+Router / box
   |
-  | forward to PC LAN IP, port 80
+  | forwarded to the PC's LAN IP, port 80
   v
 Local PC
   |
@@ -32,9 +32,9 @@ Do not expose:
 
 - MySQL;
 - the API directly;
-- development ports.
+- the development ports.
 
-## Start Production-Style Docker
+## Start the production-style stack
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
@@ -55,7 +55,7 @@ Test locally:
 http://localhost
 ```
 
-## Find the PC LAN IP
+## Find the PC's LAN IP
 
 Windows:
 
@@ -69,7 +69,7 @@ Look for the IPv4 address of the active network adapter, for example:
 192.168.1.50
 ```
 
-## Configure Router Port Forwarding
+## Configure port forwarding on the router
 
 In the router/box admin interface:
 
@@ -83,28 +83,28 @@ Example:
 WAN 80 -> 192.168.1.50:80
 ```
 
-Do not forward:
+Do not create a forwarding rule for:
 
-- `3306` or `3307` for MySQL;
-- `5002` for the API;
-- `65427` for development Flutter.
+- `3306` / `3307` MySQL;
+- `5002` API;
+- `65427` Flutter dev.
 
-## Test from Outside the Network
+## Test from outside
 
-1. Use a phone.
+1. Grab a phone.
 2. Turn off Wi-Fi.
-3. Open the browser over mobile data.
-4. Go to the public IP address:
+3. Open the browser over 4G/5G.
+4. Go to the connection's public IP:
 
 ```text
 http://YOUR_PUBLIC_IP
 ```
 
-5. Test login and a few protected pages.
+5. Test login and a few pages.
 
-## After the Test
+## After the test
 
-Disable or delete the router port forwarding rule immediately.
+Disable or delete the port forwarding rule immediately.
 
 Then stop the stack if needed:
 
@@ -112,14 +112,14 @@ Then stop the stack if needed:
 docker compose -f docker-compose.yml -f docker-compose.prod.yml down
 ```
 
-## CGNAT Warning
+## CGNAT
 
-If the phone test does not work, the Internet provider may use CGNAT. In that case, the router does not have a real inbound public IP.
+If the phone test doesn't work, the internet provider may be using CGNAT. In that case, the router does not have a real, routable public IP.
 
 Possible signs:
 
-- the router WAN IP differs from the IP shown by a "what is my IP" website;
-- port forwarding never works.
+- the WAN IP shown in the router differs from the IP shown by a "what is my IP" website;
+- no port forwarding rule works.
 
 Temporary alternatives:
 
@@ -127,25 +127,25 @@ Temporary alternatives:
 - ngrok;
 - another temporary HTTPS tunnel.
 
-## Security Warning
+## Security
 
-This mode is for testing only:
+This mode is still just a test:
 
 - use test accounts;
-- avoid sensitive data;
-- use a strong JWT secret even for demos;
+- do not use sensitive data;
+- use a strong JWT secret even for a demo;
 - do not expose MySQL;
 - do not expose the API directly;
-- remove port forwarding after the test;
-- use HTTPS for any real deployment.
+- remove the port forwarding rule after the test;
+- move to HTTPS for any real deployment.
 
-## Temporary Public Test Checklist
+## Public test checklist
 
-- [ ] Production-style stack is running.
+- [ ] Production-style stack started.
 - [ ] `http://localhost` works on the PC.
-- [ ] Only `WAN 80 -> PC LAN 80` is forwarded.
-- [ ] Test was done from phone with Wi-Fi off.
+- [ ] Port forwarding limited to `WAN 80 -> PC LAN 80`.
+- [ ] Tested from a phone with Wi-Fi off.
 - [ ] Login works.
 - [ ] A protected page loads.
 - [ ] `/api` works through Nginx.
-- [ ] Port forwarding was removed after the test.
+- [ ] Port forwarding removed after the test.

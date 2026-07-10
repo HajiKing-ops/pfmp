@@ -1,6 +1,6 @@
 # 02 - Architecture
 
-## Global Architecture
+## Overview
 
 ```text
 Browser
@@ -18,142 +18,79 @@ MySQL
 
 PFMP Manager is split into three main layers:
 
-| Layer | Folder or service | Responsibility |
+| Layer | Folder/service | Role |
 | --- | --- | --- |
-| Frontend | `appli_pfmp` / `pfmp_flutter` | User interface and browser experience. |
-| Backend | `PFMPManager.Api` / `pfmp_api` | Authentication, authorization, business rules, and API responses. |
-| Database | MySQL / `pfmp_mysql` | Persistent application data. |
+| Frontend | `appli_pfmp` / `pfmp_flutter` | Flutter Web interface served by Nginx. |
+| Backend | `PFMPManager.Api` / `pfmp_api` | REST API, authentication, business rules, and database access. |
+| Data | MySQL / `pfmp_mysql` | Stores users, roles, PFMPs, attendance, logbooks, messages, etc. |
 
-## Why This Architecture Was Chosen
+## Backend architecture
 
-The separated architecture makes the project easier to understand, test, and evolve.
+The ASP.NET Core backend exposes controllers under `PFMPManager.Api/Controllers`.
 
-### Why separate frontend, backend, and database?
-
-Each layer has a clear responsibility:
-
-- the frontend focuses on screens, navigation, forms, loading states, and user experience;
-- the backend owns sensitive logic such as authentication, role checks, PFMP access rules, attendance rules, schedule validation, and API responses;
-- the database stores long-lived data such as users, PFMPs, attendance, daily reports, messages, organisations, and establishments.
-
-This separation also avoids putting business or security rules directly in the browser.
-
-### Why ASP.NET Core API?
-
-ASP.NET Core is a good fit for this backend because it provides:
-
-- controller-based REST endpoints;
-- built-in authentication and authorization middleware;
-- strong integration with JWT bearer validation;
-- dependency injection for services such as `RoleService`, `CurrentUserService`, and `PlanningValidationService`;
-- Entity Framework Core integration for MySQL access.
-
-### Why Flutter Web?
-
-Flutter Web lets the same UI framework manage the student and administrator screens with reusable widgets and BLoC state management. In this project, it is used for responsive web screens, forms, dashboards, messaging views, and admin supervision.
-
-### Why MySQL?
-
-The project has relational data: users, role profile tables, PFMPs, schedules, establishments, class groups, organisations, attendance rows, daily reports, and messages. MySQL fits this structure and is already configured through EF Core and the Docker Compose service `pfmp_mysql`.
-
-### Why Docker Compose?
-
-Docker Compose runs the frontend, backend, and database together with one command:
-
-```bash
-docker compose up --build
-```
-
-This makes the project easier to start on another machine, because developers do not need to manually wire every service, port, and connection string.
-
-### Why Nginx in front of Flutter Web?
-
-Nginx serves the compiled Flutter Web files and provides a stable HTTP entry point. It also handles the single-page app fallback by returning `index.html` for Flutter routes.
-
-### Why use the `/api` reverse proxy?
-
-The Flutter frontend calls `/api/...` instead of calling the backend host and port directly. Nginx forwards those requests to `http://api:8080/api/...` inside Docker.
-
-Benefits:
-
-- the browser talks to one origin;
-- cookies stay scoped to the same origin;
-- CORS is simpler for Dockerized frontend traffic;
-- the API service port does not need to be public in production-style mode.
-
-### Why keep the API internal in production-style mode?
-
-In production-style mode, only Nginx is exposed on port 80. The API stays on the Docker network and is reached through the Nginx `/api` proxy. This reduces the public attack surface because users cannot directly access the API container port.
-
-### Why keep MySQL internal?
-
-MySQL contains application data and should never be exposed publicly. The API is the only component that should access the database. Public MySQL exposure would add unnecessary risk.
-
-### Why environment variables and `.env.example`?
-
-Environment variables allow local and Docker configuration to change without editing source code. `.env.example` provides a safe template without real secrets. The real `.env` must stay local and must not be committed.
-
-### Why JWT in HttpOnly cookies?
-
-The API stores the JWT access token in an HttpOnly cookie. This prevents Flutter/JavaScript from reading the token directly and lets the browser send it automatically with credentialed requests. The project also binds the JWT to a fingerprint cookie.
-
-### Why separate development and production-style Docker configs?
-
-Development mode exposes useful ports for debugging: Flutter, API, and MySQL. Production-style mode exposes only the public frontend/Nginx entry point. This keeps local development convenient while modeling a safer deployment shape.
-
-## Backend Architecture
-
-Typical backend flow:
+Typical internal flow:
 
 ```text
 Controller
   |
-  | DTO request/response
+  | Request/response DTO
   v
-Service or helper when present
+Service or helper, where present
   |
   v
-AppDbContext / EF Core
+AppDbContext (EF Core)
   |
   v
 MySQL
 ```
 
-Important services:
+Key services:
 
-- `RoleService`: resolves the application role from role-specific tables.
-- `CurrentUserService`: extracts user id and role from JWT claims.
-- `PfmpAccessService`: restricts PFMP access to the student or assigned teacher/referent.
-- `PlanningValidationService`: validates schedule days, time slots, and weekly totals.
+- `RoleService`: determines the application role from the `Etudiant`, `Referent`, and `Administrateur` tables.
+- `CurrentUserService`: extracts the user id and role from the JWT claims.
+- `PfmpAccessService`: restricts a student's PFMP access to themselves or their assigned teacher/referent.
+- `PlanningValidationService`: validates the days, time slots, and weekly total of a schedule.
 
-## Frontend Architecture
+## Frontend architecture
 
-The Flutter app is organized around:
+The Flutter frontend is organized around:
 
 - `lib/application`: screens;
 - `lib/data`: HTTP calls to `/api/...`;
-- `lib/bloc`: BLoC state management;
+- `lib/bloc`: state management with BLoC;
 - `lib/model`: Dart models;
-- `lib/custom`: shared widgets and helpers.
+- `lib/custom`: shared widgets and helper functions.
 
-API calls use `BrowserClient()..withCredentials = true`, allowing the browser to include HttpOnly cookies.
+API calls use `BrowserClient()..withCredentials = true`, which lets the browser send HttpOnly cookies along with requests.
 
-## Docker Architecture
+## Docker architecture
+
+Services in `docker-compose.yml`:
 
 | Compose service | Container | Description |
 | --- | --- | --- |
-| `mysql` | `pfmp_mysql` | MySQL 8 database with persistent external volume. |
-| `api` | `pfmp_api` | ASP.NET Core API listening on internal port 8080. |
-| `flutter_web` | `pfmp_flutter` | Flutter Web build served by Nginx on internal port 80. |
+| `mysql` | `pfmp_mysql` | MySQL 8 with a persistent volume. |
+| `api` | `pfmp_api` | ASP.NET Core API published in release mode, internal port 8080. |
+| `flutter_web` | `pfmp_flutter` | Flutter Web build served by Nginx, internal port 80. |
 
-Services communicate by Docker Compose service names:
+The MySQL volume is external:
 
-- the API connects to MySQL using `server=mysql;port=3306`;
-- Nginx proxies API traffic to `http://api:8080/api/`.
+```yaml
+volumes:
+  mysql_data:
+    external: true
+    name: docker-test_mysql_data
+```
 
-## Nginx `/api` Reverse Proxy
+It must exist before the first run:
 
-`appli_pfmp/nginx.conf` contains:
+```bash
+docker volume create docker-test_mysql_data
+```
+
+## Nginx and the `/api` reverse proxy
+
+`appli_pfmp/nginx.conf` serves the Flutter files and contains:
 
 ```nginx
 location /api/ {
@@ -161,21 +98,32 @@ location /api/ {
 }
 ```
 
-This is the bridge between the browser-facing frontend and the internal backend container.
+Thanks to this proxy, Flutter can call `/api/login`, `/api/dashboard`, etc. on the same origin as the web page. This avoids exposing the API directly to the browser in production-style mode.
 
-## Development Architecture
+For the full detail of `nginx.conf` (SPA fallback, asset caching, proxy headers), see [Nginx reverse proxy](NGINX_PROXY.md).
 
-Development Docker mode exposes:
+## Development
 
-- Flutter/Nginx on `${FLUTTER_PORT}`;
-- API on `${API_PORT}`;
-- MySQL on `${MYSQL_PORT}`.
+In Docker development:
 
-This is useful for debugging, direct API checks, and database inspection.
+```text
+http://localhost:${FLUTTER_PORT}
+  -> pfmp_flutter / Nginx
+  -> /api proxied to pfmp_api:8080
+  -> pfmp_mysql:3306
+```
 
-## Production-Style Architecture
+`docker-compose.override.yml` also exposes the API and MySQL:
 
-`docker-compose.prod.yml` exposes only:
+- `${API_PORT}:8080`;
+- `${MYSQL_PORT}:3306`;
+- `${FLUTTER_PORT}:80`.
+
+In development outside Docker, note: Flutter URLs are relative (`/api/...`). You therefore need to check or add a local proxy if Flutter is launched directly with `flutter run -d chrome`.
+
+## Local production-style
+
+`docker-compose.prod.yml` only exposes:
 
 ```yaml
 flutter_web:
@@ -183,14 +131,13 @@ flutter_web:
     - "80:80"
 ```
 
-The API and MySQL stay internal. This is the recommended shape for temporary public testing and a safer model for a future deployment.
+The API and MySQL stay internal to the Docker network. This is the right model for a temporary public test: expose Nginx, not MySQL, and not the API directly.
 
-## Mermaid Diagram
+## Mermaid diagram
 
 ```mermaid
 flowchart TD
-    Browser[Browser] --> Nginx[pfmp_flutter / Nginx]
-    Nginx -->|/api/*| Api[pfmp_api / ASP.NET Core API]
-    Api -->|EF Core| Mysql[pfmp_mysql / MySQL]
-    Nginx -->|static files| Flutter[Flutter Web]
+    Browser[Browser] --> Nginx["pfmp_flutter / Nginx<br/>serves the Flutter Web build + proxies /api"]
+    Nginx -->|"/api/*"| Api["pfmp_api / ASP.NET Core"]
+    Api -->|"EF Core"| Mysql["pfmp_mysql / MySQL"]
 ```

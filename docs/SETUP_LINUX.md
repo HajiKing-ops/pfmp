@@ -1,49 +1,61 @@
 # Linux Setup Guide
 
-Other platforms: [Windows](SETUP_WINDOWS.md) | [macOS](SETUP_MACOS.md)
+Other platform? [Windows](SETUP_WINDOWS.md) · [macOS](SETUP_MACOS.md)
 
-This guide explains how to install the tools needed to run PFMP Manager on Linux, either with Docker Compose or with local services. Commands target Debian/Ubuntu with `apt`. On Fedora, Arch, or another distribution, use the equivalent package manager.
+This guide walks through installing every tool needed to run PFMP Manager on
+Linux, whether you use Docker Compose or run pieces locally. Commands target
+Debian/Ubuntu (`apt`) — on Fedora, Arch, or another distro, swap in `dnf`,
+`pacman`, etc.; package names are usually identical or very close.
 
-For actual run commands after installation, see the main [README](../README.md).
+For the actual run steps once tools are installed, see the main
+[README](../README.md#run-with-docker) — this guide only covers getting the
+toolchain in place.
 
-## Required Tools
+## Required tools
 
-| Tool | Why it is needed |
+| Tool | Why it's needed |
 | --- | --- |
-| Git | Clone the repository and manage changes. |
-| Docker Engine + Compose plugin | Run MySQL, API, and Flutter Web containers. |
-| .NET SDK 9 | Build and run the ASP.NET Core API locally. |
-| Flutter SDK | Run or build the Flutter frontend locally. |
-| MySQL client (optional) | Inspect, import, or export the database. |
-| VS Code or JetBrains Rider (optional) | Development environment. |
+| Git | Clone the repository and push changes |
+| Docker Engine + Compose plugin | Run MySQL, API, and optional Flutter Web containers |
+| .NET SDK 9 | Build and run the ASP.NET Core API locally |
+| Flutter SDK | Run or build the Flutter frontend locally |
+| MySQL client (optional) | Inspect, import, or export the database |
+| VS Code or JetBrains Rider (optional) | Development environment |
 
 ## 1. Git
 
 ```bash
 sudo apt update
 sudo apt install -y git
+```
+
+Verify:
+
+```bash
 git --version
 ```
 
-## 2. Docker Engine and Compose Plugin
+## 2. Docker Engine + Compose plugin
 
-Docker Engine and the Compose plugin are enough for this project.
+Linux doesn't need "Docker Desktop" — the Docker Engine, CLI, and Compose
+plugin are enough, and it's what production Linux servers run too.
 
-Convenience script for a development machine:
+Official convenience script (fine for a dev machine):
 
 ```bash
 curl -fsSL https://get.docker.com | sudo sh
 sudo usermod -aG docker $USER
 ```
 
-Log out and back in, or run `newgrp docker`, then verify:
+Log out and back in (or run `newgrp docker`) so the group change takes
+effect, then verify:
 
 ```bash
 docker --version
 docker compose version
 ```
 
-If `docker compose version` fails:
+If `docker compose version` fails, install the plugin explicitly:
 
 ```bash
 sudo apt install -y docker-compose-plugin
@@ -51,7 +63,7 @@ sudo apt install -y docker-compose-plugin
 
 ## 3. .NET SDK 9
 
-For Ubuntu, use Microsoft's package feed:
+Via Microsoft's package feed:
 
 ```bash
 wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
@@ -67,7 +79,9 @@ Verify:
 dotnet --version
 ```
 
-For another distribution, follow the official [.NET on Linux](https://learn.microsoft.com/dotnet/core/install/linux) instructions.
+If your distro isn't Ubuntu, follow the distro-specific steps at
+[.NET on Linux](https://learn.microsoft.com/dotnet/core/install/linux)
+instead — the package feed URL differs per distro/version.
 
 ## 4. Flutter SDK
 
@@ -89,19 +103,19 @@ flutter --version
 flutter doctor
 ```
 
-## 5. MySQL Client (Optional)
+## 5. MySQL client (optional)
 
 ```bash
 sudo apt install -y mysql-client
 ```
 
-For a GUI:
+Or MySQL Workbench for a GUI:
 
 ```bash
 sudo apt install -y mysql-workbench
 ```
 
-## Install Project Dependencies for Local Runs
+## Install project dependencies
 
 ```bash
 cd PFMPManager.Api
@@ -112,9 +126,11 @@ cd ../appli_pfmp
 flutter pub get
 ```
 
-If you run with Docker, `docker compose up --build` builds the services automatically.
+If you're running with Docker instead, `docker compose up --build` downloads
+and builds the MySQL, API, and (if present) Flutter Web images automatically
+— you can skip the two steps above.
 
-## Verify the Toolchain
+## Verify the full toolchain
 
 ```bash
 git --version
@@ -125,4 +141,8 @@ flutter --version
 flutter doctor
 ```
 
-If every command succeeds, continue with the run instructions in the main [README](../README.md).
+If every command succeeds, continue with
+[Run With Docker](../README.md#run-with-docker) or
+[Run Locally](../README.md#run-locally) in the main README.
+
+Running into a problem instead? Check [Troubleshooting](TROUBLESHOOTING.md).

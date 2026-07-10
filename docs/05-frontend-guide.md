@@ -1,23 +1,23 @@
-# 05 - Frontend Guide
+# 05 - Flutter frontend guide
 
-The frontend is located in `appli_pfmp`. It is a Flutter application, mainly used as Flutter Web in this repository.
+The frontend lives in `appli_pfmp`. It is a Flutter application that mainly targets Flutter Web in this repository.
 
-## Project Structure
+## Structure
 
 ```text
 appli_pfmp/lib/
 |-- application/      # Main screens
-|-- bloc/             # BLoC events, states, and logic
-|-- custom/           # Widgets, colors, helpers, responsive utilities
+|-- bloc/             # BLoC events/states/logic
+|-- custom/           # Widgets, colors, helpers, responsive layout
 |-- data/             # HTTP API calls
 |-- helpers/          # Utility functions
 |-- model/            # Dart models
-`-- main.dart         # Application entry point and main navigation
+`-- main.dart         # Entry point and top-level navigation
 ```
 
-## Entry Point and Navigation
+## Entry point
 
-`main.dart` creates a `MaterialApp` with these BLoC providers:
+`main.dart` creates a `MaterialApp` with several BLoCs:
 
 - `AuthentificationBloc`;
 - `PfmpBloc`;
@@ -29,28 +29,28 @@ The initial screen is `PageAuth`.
 
 After login:
 
-- role `Administrateur` opens `AccueilAdmin`;
-- role `Etudiant` opens the student shell `PfmpManager`;
-- any other role currently shows `Utilisateur inconnu`.
+- role `Administrateur` -> `AccueilAdmin`;
+- role `Etudiant` -> student shell `PfmpManager`;
+- any other role -> `Utilisateur inconnu` ("unknown user") screen.
 
-This means the backend has partial Teacher / Referent support, but no dedicated Flutter Teacher / Referent area is currently wired.
+Conclusion: the `Enseignant` role exists on the API side, but has no Flutter shell wired up currently.
 
-## API Calls
+## API calls
 
 Files in `lib/data` use `BrowserClient()..withCredentials = true`.
 
-Implications:
+This means:
 
-- the frontend does not send an `Authorization` header;
-- the browser sends HttpOnly cookies automatically;
-- Flutter does not read the JWT directly;
-- API URLs are relative, such as `/api/login` and `/api/dashboard`.
+- the frontend never sends an `Authorization` header;
+- HttpOnly cookies are sent by the browser itself;
+- the JWT is never read by the Flutter code;
+- URLs are relative: `/api/login`, `/api/dashboard`, etc.
 
-In Docker, Nginx forwards `/api/...` to the ASP.NET Core API container. When running Flutter directly with `flutter run`, verify how `/api` is routed because the Flutter development server does not proxy it automatically.
+In Docker, relative URLs go through the Nginx proxy. In direct Flutter development, you need to check the local proxy, since `flutter run -d chrome` does not automatically redirect `/api` to ASP.NET Core.
 
-## Authentication Behavior
+## Authentication
 
-Relevant files:
+Files:
 
 - `application/authentification.dart`;
 - `bloc/authentification_bloc/*`;
@@ -58,61 +58,67 @@ Relevant files:
 
 Flow:
 
-1. The user enters login and password.
+1. The user enters their login and password.
 2. `AuthentificationBloc` calls `loginRequest`.
-3. `POST /api/login` returns user information and sets cookies.
-4. The returned role controls navigation.
-5. `logout()` calls `POST /api/logout` and returns to `PageAuth`.
+3. `POST /api/login` returns the user and sets the cookies.
+4. The role determines the navigation.
+5. `logout()` calls `POST /api/logout`, then returns to `PageAuth`.
 
 Visible states:
 
-- local form validation;
-- loading indicator after successful login transition;
-- error message for empty credentials, invalid credentials, or unreachable server.
+- form with local login validation;
+- loader during the transition after success;
+- error message for empty fields, incorrect credentials, or an unreachable server.
 
-## Student Area
+## Student area
 
-Main student navigation in `PfmpManager`:
+Main navigation inside `PfmpManager`:
 
-| Page | Widget | Purpose |
+| Page | Widget | Function |
 | --- | --- | --- |
-| Dashboard | `Accueil` | PFMP dashboard, statistics, daily report reminders. |
-| PFMP Search | `RecherchePfmp` | Contact request management and external map link. |
-| Daily Report | `JournalBord` | Daily report list and creation. |
+| Home | `Accueil` | Dashboard, PFMP stats, logbook reminders. |
+| Find a PFMP | `RecherchePfmp` | Contact applications and a link to Google Maps. |
+| Logbook | `JournalBord` | List and creation of logbook entries. |
 | Messaging | `Messagerie` | Messages for the active PFMP. |
-| My PFMPs | `MesPfmp` | PFMP list, PFMP creation, PDF export. |
-| My Profile | `MonProfil` | Student profile display through profile endpoints to verify. |
+| My PFMPs | `MesPfmp` | List of PFMPs, PFMP creation, PDF export. |
+| My profile | `MonProfil` | Displays the student profile via profile endpoints that need to be verified. |
 
-### Dashboard
+### Student home
 
-Relevant files:
+Files:
 
 - `application/accueil.dart`;
 - `data/dashboard_api.dart`;
 - `data/journal_api.dart`;
 - `helpers/pfmp_stats.dart`.
 
-The dashboard loads PFMPs, dashboard data, daily report counts, and planned PFMP hours. Daily report reminders are stored in browser `localStorage` for Flutter Web.
+Functions:
 
-### PFMP Search and Contact Requests
+- loads PFMPs with `PfmpBloc`;
+- loads `/api/dashboard`;
+- counts logbook entries;
+- computes scheduled hours across PFMPs;
+- suggests logbook reminders stored in web `localStorage`.
 
-Relevant files:
+### Find a PFMP
+
+Files:
 
 - `application/recherche_pfmp.dart`;
 - `application/formulaire_nouvelle_demarche.dart`;
 - `application/formulaire_modif_demarche.dart`;
 - `data/demarche_api.dart`.
 
-Features:
+Functions:
 
-- list the connected student's contact requests;
-- create a new `En attente` request;
-- update a request to `En attente`, `Refuse`, or `Accepte`;
-- open an external Google Maps link.
+- lists the student's applications;
+- creates an application with status `En attente`;
+- edits an application to `En attente`, `Refuse`, or `Accepte`;
+- shows a link to an external Google Maps view.
 
-### My PFMPs and PFMP Creation
+### My PFMPs and PFMP creation
 
-Relevant files:
+Files:
 
 - `application/mes_pfmp.dart`;
 - `application/formulaire_nouvelle_pfmp.dart`;
@@ -120,62 +126,61 @@ Relevant files:
 - `custom/custom_functions/format_planning.dart`;
 - `custom/custom_functions/calculs_horaires.dart`.
 
-Features:
+Functions:
 
-- load student PFMPs;
-- show a `+ Nouvelle PFMP` action;
-- build a weekly schedule from selected days and time slots;
-- call `POST /api/pfmp/complete`;
-- open `/api/journal/pdf/{idPfmp}` with `Uri.base.resolve`.
+- loads the student's PFMPs;
+- shows a `+ New PFMP` button;
+- builds a schedule across days and time slots;
+- sends `POST /api/pfmp/complete`;
+- opens `/api/journal/pdf/{idPfmp}` via `Uri.base.resolve`.
 
-TODO / risks:
+TODO / risks found:
 
-- the form has `siteWebController`, but the inspected payload does not include `siteWeb`;
-- the backend requires `siteWeb`;
-- the inspected payload currently uses hardcoded PFMP dates `2026-08-20` and `2026-09-20`;
-- verify this before demonstrating PFMP creation.
+- the form has a `siteWebController`, but the inspected payload does not include `siteWeb`;
+- the API requires `siteWeb`;
+- the dates currently sent are hardcoded as `2026-08-20` and `2026-09-20`;
+- to verify before any live demo of PFMP creation.
 
-### Daily Reports
+### Logbook
 
-Relevant files:
+Files:
 
 - `application/journal_de_bord.dart`;
 - `bloc/journal_bloc/*`;
 - `data/journal_api.dart`.
 
-Features:
+Functions:
 
-- load daily reports with `GET /api/journal`;
-- create a report with `POST /api/journal`;
-- check today's report with `GET /api/journal/alerte`.
+- loads entries with `GET /api/journal`;
+- adds an entry with `POST /api/journal`;
+- checks today's alert with `GET /api/journal/alerte`;
+- the visible frontend code does not call the backend endpoints `PUT /api/journal/update/{id}` or `GET /api/journal/export/{idPfmp}` (see [04 - Backend API](04-backend-api.md)).
 
-The backend has `PUT /api/journal/update/{id}`, but the inspected frontend code does not clearly use it.
+### Student messaging
 
-### Student Messaging
-
-Relevant files:
+Files:
 
 - `application/messagerie.dart`;
 - `data/message_api.dart`.
 
-Features:
+Functions:
 
 - selects the active PFMP;
-- loads message history with `/api/messages/{idPfmp}`;
-- sends messages;
-- shows loading, empty, and error states.
+- loads the history from `/api/messages/{idPfmp}`;
+- sends a message;
+- handles the loader, empty state, and error SnackBar.
 
-The backend only allows messaging for active PFMPs and authorized users.
+The backend messaging endpoints reject inactive PFMPs.
 
-### Student Profile
+### My profile
 
-Relevant files:
+Files:
 
 - `application/mon_profil.dart`;
 - `data/profile_api.dart`;
 - `model/profile.dart`.
 
-The frontend tries several profile endpoints:
+The frontend tries several endpoints:
 
 - `GET /api/profile/me`;
 - `GET /api/profile`;
@@ -183,99 +188,101 @@ The frontend tries several profile endpoints:
 - `PUT /api/profile/me`;
 - `PUT /api/etudiants/me/profile`.
 
-TODO: the backend profile controller must be verified or completed before these routes are considered stable.
+TODO: the profile backend needs verification, since `ProfileController.ProfileMe()` has no explicit HTTP attribute (see [04 - Backend API](04-backend-api.md)).
 
-## Administrator Area
+## Administrator area
 
 Main file: `application/accueil_admin.dart`.
 
-| Tab/action | Widget | Purpose |
+Tabs:
+
+| Tab | Widget | Function |
 | --- | --- | --- |
-| Supervision | `SupervisionAdmin` | PFMP list/table, filters, statistics, attendance updates. |
-| Period management | `PeriodesAdmin` | Class statistics and students in a selected class. |
-| Messaging | `MessagerieAdmin` | Messages for visible active PFMPs. |
-| Drawer action | Attendance initialization | Calls `/api/presence/initialiser`. |
+| Supervision | `SupervisionAdmin` | PFMP table/list, filters, statistics, and attendance edits. |
+| Class management | `PeriodesAdmin` | Per-class statistics and the list of students in a class. |
+| Messaging | `MessagerieAdmin` | Messages for the active PFMPs visible to the admin. |
+| Action drawer | Initialize attendance | Calls `/api/presence/initialiser`. |
 
-### Admin Supervision
+TODO: no user-creation screen (`POST /api/utilisateur`) was identified in the tabs above, even though the endpoint exists on the backend — see [04 - Backend API](04-backend-api.md).
 
-Relevant files:
+### Admin supervision
+
+Files:
 
 - `application/supervision_admin.dart`;
 - `data/infos_admin_api.dart`;
 - `data/presence_api.dart`;
 - `model/infos_admin.dart`.
 
-Features:
+Functions:
 
-- display `stageTotal`, `encours`, `valide`, and `absencesTotal`;
-- filter by status and student name;
-- show a responsive table/card layout;
-- open an attendance dialog;
-- send attendance updates.
+- displays the `stageTotal`, `encours`, `valide`, `absencesTotal` statistics;
+- filters by valid/incomplete status and name/first-name search;
+- shows a desktop table or responsive cards;
+- opens an attendance modal;
+- sends attendance edits.
 
-To verify:
+Point to verify:
 
 - `presence_api.dart` first tries `PUT /api/presence/modify`;
-- if it receives 404 or 405, it falls back to `PUT /api/presence/update/{idEtudiant}`;
-- `/api/presence/modify` is not confirmed in backend code.
+- on a 404/405, it calls the real endpoint `PUT /api/presence/update/{idEtudiant}`;
+- the `modify` endpoint does not exist on the backend.
 
-### Period Management
+### Class management
 
-Relevant files:
+Files:
 
 - `application/periodes_admin.dart`;
 - `data/infos_admin_api.dart`;
 - `model/admin_class_stats.dart`.
 
-Features:
+Functions:
 
-- load class statistics;
-- first try `/api/administrateur/classes/stats`, then fallback to `/api/administrateur/classes`;
-- select a class;
-- load students with `/api/administrateur/recherche?idEtablissement=...&idClasse=...`.
+- loads class statistics;
+- tries `/api/administrateur/classes/stats`, then falls back to `/api/administrateur/classes`;
+- selects a class;
+- loads the students in that class via `/api/administrateur/recherche?idEtablissement=...&idClasse=...`.
 
-Only `/api/administrateur/classes` is confirmed in backend code.
+### Admin messaging
 
-### Admin Messaging
-
-Relevant files:
+Files:
 
 - `application/messagerie_admin.dart`;
 - `data/message_api.dart`.
 
-Features:
+Functions:
 
-- selects active PFMP conversations among visible students;
-- loads and sends messages through `/api/messages/{idPfmp}`;
-- handles loading, empty, and error states.
+- selects conversations among the active PFMPs of visible trainees;
+- loads and sends messages via `/api/messages/{idPfmp}`;
+- handles the loader, empty state, and SnackBar.
 
-## Teacher / Referent Area
+## Teacher / referent area
 
-No dedicated Flutter Teacher / Referent area is currently wired in `main.dart`.
+No dedicated interface is wired into `main.dart`.
 
-Backend support exists for:
+The backend does, however, authorize `Enseignant` on:
 
 - `GET /api/pfmp/recherche/{studentId}/{pfmpId?}`;
 - `PUT /api/presence/update/{studentId}`;
-- `GET /api/messages/{idPfmp}`;
-- `POST /api/messages/{idPfmp}`.
+- `GET/POST /api/messages/{idPfmp}`, via internal checks.
 
-TODO: create or wire a Teacher / Referent frontend area if this role must be available to users.
+TODO: build or wire up a Flutter teacher shell if this role is meant to be made available.
 
-## Loading and Error Handling
+## Loading/error states
 
-Patterns visible in the frontend:
+The project uses several mechanisms:
 
 - `CircularProgressIndicator` during loading;
-- BLoC states such as `Loading`, `Success`, and `Error`;
-- SnackBar messages for user actions;
-- empty states in several pages;
-- fallback endpoint attempts in profile, attendance, and admin class APIs.
+- BLoC states `Loading`, `Success`, `Error`;
+- SnackBar for action errors;
+- cards or empty-state messages on several pages;
+- fallback endpoints on the admin/profile/attendance side in some services.
 
-## Frontend Risks and To Verify
+## Frontend points to watch
 
-- Relative `/api` URLs work with Nginx but require routing/proxy verification when using `flutter run` directly.
-- Teacher / Referent UI is missing.
-- Profile frontend exists but backend routing is not confirmed.
-- PFMP creation must be verified for `siteWeb` and hardcoded dates.
-- Some existing source comments/text may contain encoding issues; this documentation avoids relying on those comments for behavior.
+- Relative `/api` URLs work with Nginx, but are not enough on their own for a direct `flutter run`.
+- Teacher interface missing.
+- Profile frontend exists, but the backend needs verification.
+- PFMP creation to verify before real use: `siteWeb` and hardcoded dates.
+- `GET /api/news` and `GET /api/journal/export/{idPfmp}` exist on the backend with no identified Flutter page consuming them (see [04 - Backend API](04-backend-api.md)).
+- Some comments and text strings contain incorrectly encoded characters in a few existing files.

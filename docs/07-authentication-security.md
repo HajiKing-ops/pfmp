@@ -1,16 +1,16 @@
-# 07 - Authentication and Security
+# 07 - Authentication and security
 
 ## Summary
 
 PFMP Manager uses JWT authentication with HttpOnly cookies:
 
-- `AccessToken`: short-lived JWT access token;
-- `RefreshToken`: long-lived token, stored raw only in the browser cookie and hashed in the database;
-- `Fgp`: session fingerprint cookie.
+- `AccessToken`: short-lived JWT;
+- `RefreshToken`: long-lived token, only ever raw in the browser, hashed in the database;
+- `Fgp`: session fingerprint.
 
-The Flutter frontend does not read the JWT directly. It uses `BrowserClient()..withCredentials = true`, so the browser sends cookies automatically.
+The frontend never reads the JWT. It calls the API with `BrowserClient()..withCredentials = true`, and the browser sends the cookies automatically.
 
-## Login Flow
+## Login
 
 Endpoint:
 
@@ -21,74 +21,92 @@ POST /api/login
 Flow:
 
 1. The frontend sends `login` and `pwd`.
-2. The API finds `Utilisateur.Login`.
-3. `PasswordHelper.VerifyPassword` validates the PBKDF2 password hash.
-4. `RoleService` resolves the application role.
+2. The API looks up `Utilisateur.Login`.
+3. `PasswordHelper.VerifyPassword` checks the PBKDF2 hash.
+4. `RoleService` determines the role.
 5. `JwtHelper.CreateTokens` creates:
    - a JWT access token;
    - a raw refresh token;
-   - a refresh token hash.
-6. The API generates a fingerprint and stores only its hash.
-7. The API sets HttpOnly cookies.
+   - the refresh token's hash.
+6. The API generates a fingerprint and stores its hash.
+7. The API sets the HttpOnly cookies.
 8. The API returns `LoginResponseDto`.
 
-## Password Hashing
+```mermaid
+sequenceDiagram
+    participant N as Browser
+    participant A as API (AuthController)
+    participant D as MySQL database
+
+    N->>A: POST /api/login (login, pwd)
+    A->>D: Look up Utilisateur.Login
+    D-->>A: User + password hash
+    A->>A: PasswordHelper.VerifyPassword (PBKDF2)
+    A->>D: RoleService: check Etudiant / Referent / Administrateur
+    D-->>A: Application role
+    A->>A: JwtHelper.CreateTokens (access token, raw refresh token, hash)
+    A->>A: Generate a fingerprint, store its hash
+    A->>D: Store the refresh token hash
+    A-->>N: HttpOnly cookies (AccessToken, RefreshToken, Fgp) + LoginResponseDto
+```
+
+## Password
 
 `PasswordHelper` uses:
 
 - PBKDF2 with SHA-256;
-- random 16-byte salt;
-- 48-byte derived hash;
+- a random 16-byte salt;
+- a 48-byte hash;
 - 100,000 iterations;
-- Base64 storage of salt plus hash.
+- salt + hash stored together, Base64-encoded.
 
-## JWT Contents and Validation
+## JWT
 
-`JwtHelper` adds these claims:
+`JwtHelper` places the following in the JWT:
 
 - `ClaimTypes.NameIdentifier`: user id;
-- `ClaimTypes.Role`: application role;
+- `ClaimTypes.Role`: role;
 - `ClaimTypes.Name`: login;
 - `fingerprint_hash`: hash of the `Fgp` cookie.
 
-Validation in `Program.cs` checks:
+Validation in `Program.cs`:
 
-- issuer;
-- audience;
-- lifetime;
-- signing key;
-- zero clock skew;
-- access token from the `AccessToken` cookie;
-- fingerprint hash from the `Fgp` cookie against the JWT claim.
+- valid issuer;
+- valid audience;
+- valid lifetime;
+- valid signing key;
+- `ClockSkew = TimeSpan.Zero`;
+- the JWT is read from the `AccessToken` cookie;
+- the hash of the `Fgp` cookie is compared against the `fingerprint_hash` claim.
 
-## Refresh Token Rotation
+## Refresh token
 
 The refresh token:
 
-- is generated randomly;
+- is randomly generated;
 - is sent in an HttpOnly cookie;
 - is stored hashed in the database;
 - expires after 7 days in the current code;
-- is rotated on refresh;
+- is replaced on every refresh;
 - belongs to a `TokenFamilyId`.
 
-If a previously revoked refresh token is reused, the token family is revoked.
+If an already-revoked refresh token is reused, the whole family is revoked.
 
 ## Cookies
 
-Current cookie settings:
+Cookies set:
 
-| Cookie | HttpOnly | Secure currently | SameSite | Current lifetime |
+| Cookie | HttpOnly | Current Secure | SameSite | Current duration |
 | --- | --- | --- | --- | --- |
 | `AccessToken` | Yes | `false` | `Strict` | 15 minutes |
 | `RefreshToken` | Yes | `false` | `Strict` | 7 days |
 | `Fgp` | Yes | `false` | `Strict` | 7 days |
 
-`Secure = false` is suitable only for local HTTP development. A real HTTPS deployment should use secure cookies.
+`Secure = false` is only appropriate for local HTTP development. In an HTTPS production environment, this needs to switch to `Secure = true`.
 
-## Role-Based Access Control
+## Role-based authorization
 
-The API uses `[Authorize]` and `[Authorize(Roles = "...")]`.
+Roles are checked with `[Authorize]` and `[Authorize(Roles = "...")]`.
 
 Examples:
 
@@ -97,11 +115,11 @@ Examples:
 - `Etudiant,Enseignant`: `/api/pfmp/recherche/{studentId}/{pfmpId?}`;
 - `Enseignant,Administrateur`: `/api/presence/update/{studentId}`.
 
-Some `[Authorize]` actions add their own business access checks, especially messaging.
+Some `[Authorize]` actions (with no role specified) have additional internal business checks — for example, messaging.
 
 ## CORS
 
-`Program.cs` defines the `AllowFlutterWeb` policy with:
+`Program.cs` declares an `AllowFlutterWeb` policy with:
 
 ```text
 http://localhost:65427
@@ -113,13 +131,15 @@ and:
 - `AllowAnyHeader`;
 - `AllowCredentials`.
 
-For credentialed browser requests, exact origins are required. Do not combine `AllowAnyOrigin()` with `AllowCredentials()`.
+Important:
 
-When Flutter is served through Docker/Nginx, `/api` calls are same-origin from the browser perspective, so CORS is less central for that mode.
+- for requests that carry cookies, exact origins must be listed explicitly;
+- never combine `AllowAnyOrigin()` with `AllowCredentials()`;
+- in Docker via Nginx, `/api` calls are same-origin, so CORS is less critical for the frontend served by Nginx. Exactly which scenario relies on this policy (for example, running `flutter run` outside Docker on port `65427`) is not confirmed in the files reviewed — to verify.
 
-## Nginx `/api` Proxy
+## Nginx and `/api`
 
-`appli_pfmp/nginx.conf` proxies:
+`appli_pfmp/nginx.conf` serves Flutter and proxies:
 
 ```text
 /api/* -> http://api:8080/api/*
@@ -127,43 +147,45 @@ When Flutter is served through Docker/Nginx, `/api` calls are same-origin from t
 
 Benefits:
 
-- the browser uses one origin;
-- cookies are simpler to manage;
-- the API does not need to be exposed directly in production-style mode;
-- MySQL remains reachable only by the API.
+- no need to expose the API directly to the browser in production-style mode;
+- cookies stay on the same origin as the application;
+- fewer CORS issues.
 
-## Secrets and `.env`
+Full details of `nginx.conf`: [Nginx reverse proxy](NGINX_PROXY.md).
+
+## Secrets
 
 Rules:
 
 - never commit `.env`;
-- use `.env.example` only as a safe template;
-- use a strong, random `JWT_SECRET`;
-- do not document real local secrets.
+- use `.env.example` only as a template;
+- replace `JWT_SECRET` with a long, random value;
+- never document real local values.
 
-`.env` is ignored by `.gitignore`.
+The repository ignores `.env` via `.gitignore`.
 
-## Security Risks and TODOs
+## Risks and security TODOs
 
 | Topic | Risk | Recommendation |
 | --- | --- | --- |
-| Cookies with `Secure=false` | Acceptable for local HTTP only | Use `Secure=true` with HTTPS. |
-| HTTPS | Not configured as production-ready in this repository | Add HTTPS before real deployment. |
-| Forwarded headers | No `UseForwardedHeaders` middleware was confirmed | Add it if HTTPS is terminated by Nginx or another proxy. |
-| API exposure | Development config exposes the API port | Keep API internal in production-style mode. |
-| MySQL exposure | Development config exposes MySQL for local use | Never expose MySQL publicly. |
-| Database user | API uses `${MYSQL_USER}`/`${MYSQL_PASSWORD}`, but MySQL user creation is not confirmed in Compose | Verify user creation for a fresh volume. |
-| Internship supervisor account | Temporary password `test1234` is created in backend code | Replace before production. |
-| Profile endpoint | Frontend expects profile routes, but backend routing is unclear | Complete and protect profile endpoints. |
-| Automated tests | No backend security tests are visible | Add auth, role, and access-scope tests. |
+| `Secure=false` cookies | Cookies sent over plain HTTP | Switch to `Secure=true` for HTTPS production. |
+| HTTPS | No complete production configuration visible | Terminate TLS via a reverse proxy or hosting provider. |
+| Forwarded headers | `UseHttpsRedirection` exists, but no forwarded-headers middleware is visible | Add `UseForwardedHeaders` behind Nginx if needed. |
+| Direct API access | `docker-compose.override.yml` exposes the API in dev | Do not expose the API directly in production-style mode. |
+| MySQL | MySQL exposed in dev only | Never expose MySQL publicly. |
+| API database user | The API uses `${MYSQL_USER}`/`${MYSQL_PASSWORD}`, but the MySQL service does not create this user in the current compose file | Verify user creation for a fresh volume. |
+| Workplace supervisor | Creates a user with a temporary password of `test1234` | Remove this behavior before production. |
+| Profile | Profile endpoint incomplete | Finalize `[Authorize]` and explicit routes. |
+| Tests | No visible automated security tests | Add tests for auth, roles, cross-user access, and refresh tokens. |
+| DataProtection | No visible key-ring persistence | To verify whether any cookies/ASP.NET protections depend on this in production. |
 
-## Production Security Guidance
+## Production best practices
 
 - Enable HTTPS.
-- Use strong secrets outside Git.
+- Use strong secrets, kept out of Git.
 - Do not expose MySQL.
 - Do not expose the API directly if Nginx can proxy `/api`.
-- Use a limited MySQL application user instead of root.
-- Implement tested backups and restore procedures.
-- Add structured logs and monitoring.
-- Test `401` and `403` behavior for every role-sensitive endpoint.
+- Use an application-level MySQL user with limited privileges.
+- Set up backups and a tested restore procedure.
+- Add structured logs and alerting.
+- Test 401/403 responses for every role.

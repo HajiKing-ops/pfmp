@@ -1,30 +1,54 @@
 # 04 - Backend API
 
-The backend API is implemented in `PFMPManager.Api` with ASP.NET Core controllers. Routes are exposed under `/api`. Authentication uses HttpOnly cookies and role-based authorization.
+Technical basics:
 
-This document lists only endpoints confirmed in the current controllers. Missing Teacher / Referent endpoints are documented as future TODOs, not as existing routes.
+- ASP.NET Core API in `PFMPManager.Api`.
+- Routes under `/api`.
+- Authentication via HttpOnly cookies: `AccessToken`, `RefreshToken`, `Fgp`.
+- Roles are enforced with `[Authorize(Roles = "...")]` where present.
+- DTOs live in `PFMPManager.Api/DTOs`.
+
+The endpoints below are based on the controllers currently present in the code. No dedicated referent endpoint of the form `/api/referent/...` exists in the inspected code.
+
+## Table of contents
+
+- [Authentication](#authentication)
+- [Student dashboard](#student-dashboard)
+- [PFMP](#pfmp)
+- [Applications](#applications)
+- [Organizations](#organizations)
+- [Logbook](#logbook)
+- [Messages](#messages)
+- [Administration](#administration)
+- [Attendance](#attendance)
+- [Users](#users)
+- [News](#news)
+- [Profile](#profile)
+- [Endpoints with no confirmed frontend consumer](#endpoints-with-no-confirmed-frontend-consumer)
 
 ## Authentication
 
 ### `POST /api/login`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | Public |
 | Controller | `AuthController` |
-| Required role | Public |
-| Request body | `LoginRequestDto` |
-| Response | `LoginResponseDto` and auth cookies |
+| Body | `LoginRequestDto` |
+| Response | `LoginResponseDto` + cookies |
 
-Request:
+Purpose: authenticate a user and open a session via HttpOnly cookies.
+
+Body:
 
 ```json
 {
-  "login": "username",
+  "login": "identifier",
   "pwd": "password"
 }
 ```
 
-Response shape:
+200 response:
 
 ```json
 {
@@ -35,119 +59,162 @@ Response shape:
 }
 ```
 
-Business rules:
+Rules:
 
-- validates the login and password;
-- verifies the password with `PasswordHelper`;
-- resolves the role with `RoleService`;
+- validates the login;
+- validates the password with PBKDF2;
+- determines the role with `RoleService`;
 - creates a JWT access token;
-- creates a refresh token and stores only its hash;
-- creates a fingerprint and stores only its hash in the token/database;
-- sets `AccessToken`, `RefreshToken`, and `Fgp` HttpOnly cookies.
+- creates a raw refresh token, storing only its hash in the database;
+- creates a fingerprint, storing its hash in the JWT and in the database;
+- sets the `AccessToken`, `RefreshToken`, `Fgp` cookies.
 
-Error cases:
+Possible errors:
 
-- `400`: missing login/password or invalid stored password hash;
-- `401`: user not found or invalid password;
+- `400`: empty login/password, or missing password hash;
+- `401`: user not found or incorrect password;
 - `404`: role not found;
 - `500`: unhandled server error.
 
 ### `POST /api/login/refresh`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | Session cookie |
 | Controller | `AuthController` |
-| Required role | Existing cookie session |
-| Request body | None |
-| Response | `LoginResponseDto` and rotated cookies |
+| Body | None |
+| Response | `LoginResponseDto` + new cookies |
 
-Business rules:
+Purpose: renew the session (access token and refresh token) without re-entering credentials.
 
-- reads `RefreshToken` from cookies;
-- hashes it before database lookup;
-- rejects missing, unknown, revoked, or expired tokens;
-- revokes the token family if a rotated token is reused;
-- validates the `Fgp` cookie against the stored fingerprint hash;
-- rotates the refresh token and issues a new access token.
+Rules:
 
-Error cases:
+- reads `RefreshToken` from the cookies;
+- compares its hash against the database;
+- rejects a revoked or expired token;
+- revokes the whole token family if an already-used refresh token is replayed;
+- compares the `Fgp` cookie against the stored hash;
+- replaces the access token and the refresh token.
+
+Possible errors:
 
 - `400`: missing `RefreshToken` cookie;
-- `401`: invalid token, expired token, revoked token, missing role/user, or invalid fingerprint;
+- `401`: token not found, revoked, expired, user/role not found, or invalid fingerprint;
 - `500`: unhandled server error.
 
 ### `POST /api/logout`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | Session cookie |
 | Controller | `AuthController` |
-| Required role | Existing cookie session |
-| Request body | None |
-| Response | Text confirmation |
+| Body | None |
+| Response | Confirmation text |
 
-Business rules:
+Purpose: end the session and revoke the current refresh token.
 
-- reads the refresh token from cookies;
-- revokes the matching refresh token in the database;
-- deletes `AccessToken`, `RefreshToken`, and `Fgp`.
+Rules:
 
-Error cases:
+- reads `RefreshToken`;
+- looks up its hash in the database;
+- marks the token as revoked;
+- clears `AccessToken`, `RefreshToken`, `Fgp`.
 
-- `400`: missing refresh token cookie;
+Possible errors:
+
+- `400`: missing cookie;
 - `401`: token not found or already revoked;
 - `500`: unhandled server error.
 
-## Student Dashboard
+## Student dashboard
 
 ### `GET /api/dashboard`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | `Etudiant` |
 | Controller | `DashboardController` |
-| Required role | `Etudiant` |
 | Response | `DashboardDto` |
 
-Purpose: returns dashboard data for the connected student's active PFMP.
+Purpose: return data for the current student's active PFMP.
 
-Business rules:
+Response:
 
-- finds the active PFMP where `DateDebut <= today <= DateFin`;
-- counts daily reports inside the active PFMP period;
-- loads the linked `Planning`.
+```json
+{
+  "dateDebut": "2026-08-20T00:00:00",
+  "dateFin": "2026-09-20T00:00:00",
+  "id_Planning": 1,
+  "siret": "12345678900000",
+  "idAdministrateur": 2,
+  "idEtudiant": 3,
+  "idPfmp": 4,
+  "jourRestants": 10,
+  "joursRenseignes": 5,
+  "minutesTotales": 2100
+}
+```
 
-Error cases:
+Rules:
+
+- looks for an active PFMP where `DateDebut <= today <= DateFin`;
+- counts logbook entries within the period;
+- reads the associated schedule.
+
+Possible errors:
 
 - `401`: invalid token;
-- `403`: user is not `Etudiant`;
-- `404`: no active PFMP or missing planning;
+- `403`: role is not student;
+- `404`: no active PFMP, or schedule not found;
 - `500`: unhandled server error.
 
 ## PFMP
 
 ### `GET /api/pfmp/recherche/{studentId}/{pfmpId?}`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | `Etudiant`, `Enseignant` |
 | Controller | `PfmpController` |
-| Required role | `Etudiant`, `Enseignant` |
 | Response | List of `PfmpDetailDto` |
 
-Purpose: returns PFMP details for a student, optionally limited to one PFMP.
+Purpose: retrieve a student's PFMPs, with organization, workplace supervisor, and schedule details.
+
+Parameters:
+
+- `studentId`: id of the target student;
+- `pfmpId`: optional, narrows to a single PFMP.
 
 Access rules:
 
-- a Student can read only their own PFMPs;
-- a Teacher / Referent can read only assigned students' PFMPs through `PfmpAccessService`.
+- a student can only read their own PFMPs;
+- a teacher can only read PFMPs for students assigned to them via the `Etudiant` table.
 
-Response includes:
+Response:
 
-- PFMP dates and identifiers;
-- organisation name;
-- internship supervisor details when found;
-- remaining days and week count;
-- schedule days.
+```json
+[
+  {
+    "dateDebut": "2026-08-20T00:00:00",
+    "dateFin": "2026-09-20T00:00:00",
+    "id_Planning": 1,
+    "siret": "12345678900000",
+    "idEtudiant": 3,
+    "idPfmp": 4,
+    "jourRestants": 10,
+    "raisonSociale": "Company",
+    "semaine": 4,
+    "prenomMaitreStage": "FirstName",
+    "nomMaitreStage": "LastName",
+    "fonctionMaitreStage": "Supervisor",
+    "telephoneMaitreStage": "0000000000",
+    "emailMaitreStage": "mail@example.test",
+    "planningJours": []
+  }
+]
+```
 
-Error cases:
+Possible errors:
 
 - `401`: invalid token;
 - `403`: access denied;
@@ -156,16 +223,16 @@ Error cases:
 
 ### `POST /api/pfmp/complete`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | `Etudiant` |
 | Controller | `PfmpController` |
-| Required role | `Etudiant` |
-| Request body | `CreateCompletePfmpDto` |
+| Body | `CreateCompletePfmpDto` |
 | Response | `PfmpDto` |
 
-Purpose: creates a complete PFMP with organisation, internship supervisor, schedule, attendance rows, and PFMP record.
+Purpose: create a complete PFMP (organization, schedule, workplace supervisor, initial attendance rows) from an accepted application.
 
-Important request fields:
+Expected body:
 
 ```json
 {
@@ -176,7 +243,16 @@ Important request fields:
   "numTelephone": "0000000000",
   "siteWeb": "https://example.test",
   "totalHebdo": 2100,
-  "planningJours": [],
+  "planningJours": [
+    {
+      "jour": "Lundi",
+      "matinDebut": "08:00:00",
+      "matinFin": "12:00:00",
+      "apresMidiDebut": "13:00:00",
+      "apresMidiFin": "16:00:00",
+      "totalMinutes": 420
+    }
+  ],
   "dateDebut": "2026-08-20",
   "dateFin": "2026-09-20",
   "prenomMaitreStage": "FirstName",
@@ -189,90 +265,95 @@ Important request fields:
 
 Business rules:
 
-- required fields must be present, including `siteWeb`;
-- `DateFin` must be greater than or equal to `DateDebut`;
-- schedule days are validated by `PlanningValidationService`;
-- the calculated weekly total must match `TotalHebdo`;
-- weekly total must be greater than 0 and not exceed 2100 minutes;
-- an administrator must be found for the student's establishment in the current school year;
-- the student must have an accepted contact request for the organisation;
-- the requested period must not overlap another PFMP for the same student;
-- the organisation must exist;
-- the supervisor user/profile and `Travailler` relation are created or reused;
-- the planning, planning days, PFMP, and attendance rows are created in a transaction.
+- all main fields are required, including `siteWeb`;
+- `dateFin` must be greater than or equal to `dateDebut`;
+- the schedule must contain at least one valid day;
+- each day's total must match its time slots;
+- the weekly total must match the computed value and be no more than 2100 minutes;
+- an administrator must be found for the student's school for the current year;
+- the student must have an `Accepte` application for the organization;
+- the period must not overlap another PFMP for the same student;
+- the organization must already exist;
+- the workplace supervisor is created or found as a `Utilisateur` and a `Professionnel`;
+- the `Travailler` relationship is created if needed;
+- the schedule, schedule days, PFMP, and initial attendance rows are all created within a transaction.
 
-Known risks:
+Risks worth noting:
 
-- the backend creates a supervisor user with temporary password `test1234`;
-- the current Flutter form appears not to send `siteWeb`;
-- the current Flutter form appears to use hardcoded PFMP dates.
+- the code creates the professional's user account with a temporary password of `test1234`;
+- the current frontend appears not to send `siteWeb`, even though the API requires it;
+- the current frontend appears to send hardcoded dates.
 
-Error cases:
+Possible errors:
 
-- `400`: invalid request, invalid schedule, missing accepted contact request, or overlapping PFMP;
+- `400`: incomplete body, invalid schedule, application not accepted, overlap;
 - `401`: invalid token;
-- `403`: user is not `Etudiant`;
-- `404`: administrator or organisation not found;
+- `403`: role is not student;
+- `404`: administrator or organization not found;
 - `500`: unhandled server error.
 
-## Contact Requests
+## Applications
 
 ### `GET /api/demarches`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | `Etudiant` |
 | Controller | `DemarcheController` |
-| Required role | `Etudiant` |
 | Response | List of `ContacterDto` |
 
-Purpose: returns contact requests for the connected student.
+Purpose: return the applications submitted by the current student.
 
-Error cases:
+Errors:
 
 - `401`: invalid token;
-- `403`: user is not `Etudiant`;
-- `404`: no contact request or organisation not found.
+- `403`: role is not student;
+- `404`: no application or organization not found.
 
 ### `POST /api/demarches/{siret}`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | `Etudiant` |
 | Controller | `DemarcheController` |
-| Required role | `Etudiant` |
-| Request body | `CreateContacterDto` |
+| Body | `CreateContacterDto` |
 | Response | `ContacterDto` |
 
-Request:
+Purpose: submit a new contact application to an organization.
+
+Body:
 
 ```json
 {
-  "typeContact": "Email",
+  "typeContact": "Mail",
   "dateDemande": "2026-07-07",
   "statutDemande": "En attente"
 }
 ```
 
-Business rules:
+Rules:
 
-- the organisation must exist;
+- the organization must exist;
 - the initial status must be `En attente`;
-- duplicate contact requests for the same student and SIRET are rejected.
+- only one application per student/SIRET pair.
 
-Error cases:
+Errors:
 
-- `400`: invalid fields or invalid initial status;
-- `401` / `403`: authentication or role problem;
-- `404`: organisation not found;
-- `409`: contact request already exists.
+- `400`: invalid fields, or status other than `En attente`;
+- `401` / `403`;
+- `404`: organization not found;
+- `409`: application already exists.
 
 ### `PUT /api/demarches/modify/{siret}`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | `Etudiant` |
 | Controller | `DemarcheController` |
-| Required role | `Etudiant` |
-| Request body | `CreateContacterDto` |
+| Body | `CreateContacterDto` |
 | Response | `ContacterDto` |
+
+Purpose: update the status of an existing application.
 
 Accepted statuses:
 
@@ -280,188 +361,211 @@ Accepted statuses:
 - `Refuse`;
 - `Accepte`.
 
-Error cases:
+Errors:
 
-- `400`: invalid fields or invalid status;
-- `401` / `403`: authentication or role problem;
-- `404`: organisation or contact request not found.
+- `400`: invalid fields or unauthorized status;
+- `401` / `403`;
+- `404`: organization or application not found.
 
-## Organisations
+## Organizations
 
 ### `GET /api/entreprises`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | Authenticated |
 | Controller | `OrganisationController` |
-| Required role | Authenticated |
 | Response | List of `OrganisationDto` |
 
-Purpose: returns all organisations. No pagination is currently visible.
+Purpose: return all organizations. No pagination visible.
 
 ### `GET /api/entreprises/recherche`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | Authenticated |
 | Controller | `OrganisationController` |
-| Required role | Authenticated |
-| Query parameters | `nom`, `codePostal`, `secteur` |
+| Query | `nom`, `codePostal`, `secteur` |
 | Response | List of `OrganisationDto` |
 
-Filtering rules:
+Purpose: search organizations by name, postal code, or sector.
+
+Rules:
 
 - `nom` uses `Contains`;
-- `codePostal` uses exact match;
+- `codePostal` uses an exact match;
 - `secteur` uses `Contains`.
 
-Error cases:
+Errors:
 
 - `401`: not authenticated;
-- `404`: no result.
+- `404`: no results.
 
-## Daily Reports
+## Logbook
 
 ### `GET /api/journal`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | `Etudiant` |
 | Controller | `RapportJournalierController` |
-| Required role | `Etudiant` |
 | Response | List of `JournalDto` |
 
-Purpose: returns daily reports for the connected student.
+Purpose: return the current student's logbook entries.
 
-Error cases:
+Errors:
 
-- `401` / `403`: authentication or role problem;
-- `404`: no daily report found.
+- `401` / `403`;
+- `404`: no entries.
 
 ### `POST /api/journal`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | `Etudiant` |
 | Controller | `RapportJournalierController` |
-| Required role | `Etudiant` |
-| Request body | `CreateJournalDto` |
+| Body | `CreateJournalDto` |
 | Response | `JournalDto` |
 
-Request:
+Purpose: add a logbook entry for a given date.
+
+Body:
 
 ```json
 {
   "dateRapport": "2026-08-21",
-  "lienVersFichier": "Daily report content or link"
+  "lienVersFichier": "Report text or link"
 }
 ```
 
-Business rules:
+Rules:
 
 - `LienVersFichier` is required;
 - `DateRapport` is required;
-- a PFMP belonging to the student must cover the report date;
-- only one report per day and PFMP is allowed.
+- one of the student's PFMPs must cover that date;
+- only one entry per day per PFMP.
 
-Error cases:
+Errors:
 
-- `400`: required field missing;
-- `404`: no PFMP found for the date;
-- `409`: daily report already exists for that day.
+- `400`: missing required field;
+- `404`: no PFMP covers that date;
+- `409`: entry already exists.
 
 ### `PUT /api/journal/update/{id}`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | `Etudiant` |
 | Controller | `RapportJournalierController` |
-| Required role | `Etudiant` |
-| Request body | `UpdateRapportJournalierDto` |
+| Body | `UpdateRapportJournalierDto` |
 | Response | `JournalDto` |
 
-Business rules:
+Purpose: edit an existing logbook entry.
 
-- the report must belong to a PFMP owned by the connected student;
-- the updated report date must remain inside the PFMP period.
+> Not consumed by the Flutter frontend in the files reviewed — see [05 - Flutter frontend guide](05-frontend-guide.md).
 
-Error cases:
+Rules:
 
-- `400`: invalid id, link, date, or date outside PFMP period;
-- `404`: daily report not found.
+- the entry must belong to one of the student's PFMPs;
+- the new date must stay within the PFMP period.
+
+Errors:
+
+- `400`: invalid id/date/link, or date outside the period;
+- `404`: entry not found.
 
 ### `GET /api/journal/alerte`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | `Etudiant` |
 | Controller | `RapportJournalierController` |
-| Required role | `Etudiant` |
 | Response | `{ idEtudiant, journalExiste }` |
 
-Purpose: checks whether the connected student already has a daily report for today.
+Purpose: check whether the student already has an entry for today.
 
 ### `GET /api/journal/export/{idPfmp}`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | `Etudiant` |
 | Controller | `RapportJournalierController` |
-| Required role | `Etudiant` |
-| Response | Object containing `pfmp` and `journal` |
+| Response | `{ pfmp, journal }` object |
 
-Business rules:
+Purpose: export a PFMP's logbook entries as JSON.
 
-- the PFMP must belong to the connected student;
-- PFMP dates must be present;
-- reports are returned for the PFMP date range.
+> No Flutter page consuming this endpoint was identified in the files reviewed — to verify (see "Endpoints with no confirmed frontend consumer" at the end of this document).
+
+Rules:
+
+- the PFMP must belong to the current student;
+- the PFMP's dates must be set;
+- returns entries between `DateDebut` and `DateFin`.
 
 ### `GET /api/journal/pdf/{idPfmp}`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | Authenticated, but effective access is restricted to the owning student |
 | Controller | `RapportJournalierController` |
-| Required role | Authenticated, but effective access is student owner only |
 | Response | PDF file |
 
-Important note: the action has `[Authorize]`, but the implementation uses the connected user id as the student id and requires the PFMP to belong to that user. Administrator or Teacher / Referent PDF access is therefore not confirmed in code.
+Purpose: generate and download a PFMP's logbook as a PDF (using QuestPDF).
 
-Error cases:
+Rules:
 
-- `400`: invalid PFMP id or missing PFMP dates;
+- the action is annotated `[Authorize]` (with no explicit role restriction);
+- the code uses the current user's id as the student id;
+- a teacher/admin therefore does not pass the check, unless their id happens to match the PFMP owner;
+- generates a PDF with QuestPDF.
+
+Errors:
+
+- `400`: invalid id or missing dates;
 - `401`: invalid token;
-- `403`: PFMP not owned by the connected user;
-- `404`: student, organisation, or reports not found.
+- `403`: PFMP not owned by the current user;
+- `404`: student, organization, or entries not found.
 
 ## Messages
 
 ### `GET /api/messages/{idPfmp}`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | Authenticated |
 | Controller | `MessageController` |
-| Required role | Authenticated |
 | Response | List of `MessageResponseDto` |
 
-Business rules:
+Purpose: retrieve the message history for an active PFMP.
+
+Rules:
 
 - the PFMP must exist;
 - the PFMP must be active;
-- the connected user must be allowed to access it:
-  - student owner;
-  - assigned teacher/referent;
-  - administrator in the student establishment/class scope.
+- the user must be allowed to access the PFMP:
+  - the owning student;
+  - an assigned teacher;
+  - an administrator linked to the student's schools/classes.
 
-Error cases:
+Errors:
 
-- `400`: PFMP inactive;
+- `400`: PFMP not active;
 - `401`: invalid token;
 - `403`: access denied;
 - `404`: PFMP does not exist.
 
 ### `POST /api/messages/{idPfmp}`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | Authenticated |
 | Controller | `MessageController` |
-| Required role | Authenticated |
-| Request body | `MessageRequestDto` |
+| Body | `MessageRequestDto` |
 | Response | `MessageResponseDto` |
 
-Request:
+Purpose: send a new message on an active PFMP.
+
+Body:
 
 ```json
 {
@@ -469,68 +573,70 @@ Request:
 }
 ```
 
-Business rules:
+Rules:
 
 - content is required;
-- the same PFMP access checks as the history endpoint apply;
-- `RoleExpediteur` is taken from the JWT role.
+- same PFMP checks as for the history endpoint;
+- `RoleExpediteur` is taken from the JWT.
 
 ## Administration
 
 ### `GET /api/administrateur`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | `Administrateur` |
 | Controller | `AdministrateurController` |
-| Required role | `Administrateur` |
 | Response | `{ adminRowDto, stat }` |
 
-Purpose: returns PFMP dashboard rows and global statistics for establishments managed by the connected administrator.
+Purpose: return PFMP rows and statistics for the schools this administrator manages.
 
-Error cases:
+Errors:
 
-- `401` / `403`: authentication or role problem;
-- `404`: administrator, establishment, class, student, or PFMP not found.
+- `401` / `403`;
+- `404`: administrator, school, class, student, or PFMP not found.
 
 ### `GET /api/administrateur/recherche`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | `Administrateur` |
 | Controller | `AdministrateurController` |
-| Required role | `Administrateur` |
-| Query parameters | `nomRecherche`, `entrepriseRecherche`, `status`, `idEtablissement`, `idClasse` |
+| Query | `nomRecherche`, `entrepriseRecherche`, `status`, `idEtablissement`, `idClasse` |
 | Response | `{ adminRowDto, stat }` |
 
-Accepted `status` values:
+Purpose: filter visible PFMPs by name, company, status, school, or class.
 
-- `tous`;
-- `encours`;
-- `valide`;
-- `incomplet`.
+Accepted statuses:
 
-Business rules:
+- `tous` (all);
+- `encours` (in progress);
+- `valide` (validated);
+- `incomplet` (incomplete).
+
+Rules:
 
 - `idEtablissement` and `idClasse` must be provided together;
-- the establishment must be managed by the connected administrator;
+- the filtered school must belong to the administrator;
 - statistics are recalculated after filtering.
 
-Error cases:
+Errors:
 
-- `400`: invalid status or incomplete establishment/class filter;
-- `403`: establishment not allowed;
-- `404`: no result.
+- `400`: invalid status, or partial class/school filter;
+- `403`: school not authorized for this admin;
+- `404`: no results.
 
 ### `GET /api/administrateur/classes`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | `Administrateur` |
 | Controller | `AdministrateurController` |
-| Required role | `Administrateur` |
 | Response | List of `AdminClassStatsDto` |
 
-Purpose: returns class-level PFMP and attendance statistics.
+Purpose: return statistics grouped by class.
 
-Fields include:
+Fields:
 
 - `idEtablissement`;
 - `idClasse`;
@@ -541,42 +647,44 @@ Fields include:
 - `absence`;
 - `tauxPresence`.
 
-TODO: the frontend first tries `/api/administrateur/classes/stats`, then falls back to `/api/administrateur/classes`. Only `/api/administrateur/classes` is confirmed in the backend.
+TODO: the frontend first tries `/api/administrateur/classes/stats`, then falls back to `/api/administrateur/classes`. Only `/api/administrateur/classes` exists on the backend.
 
 ## Attendance
 
 ### `POST /api/presence/initialiser`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
-| Controller | `TablePreseceController` |
-| Required role | `Administrateur` |
-| Request body | None |
+| Role | `Administrateur` |
+| Controller | `TablePreseceController` *(spelling as observed in the inspected code — to verify)* |
+| Body | None |
 
-Purpose: initializes attendance for the current day for active PFMPs managed by the connected administrator.
+Purpose: create or update today's attendance rows for the active PFMPs managed by the current administrator.
 
-Business rules:
+Rules:
 
-- does nothing on Saturday or Sunday;
-- finds active PFMPs for the current day where `Pfmp.Id_Utilisateur` matches the administrator id;
-- limits creation to days present in `PlanningJours`;
-- updates `NON_RENSEIGNE` rows to `PRESENT`;
-- creates missing rows as `PRESENT`.
+- does nothing on Saturday/Sunday;
+- looks for active PFMPs today where `Pfmp.Id_Utilisateur` matches the logged-in admin;
+- limited to days present in `PlanningJours`;
+- turns today's `NON_RENSEIGNE` attendance rows into `PRESENT`;
+- creates any missing rows for today as `PRESENT`.
 
 Responses:
 
-- `200` with a message for weekend, already initialized, or no active PFMP;
-- `401` / `403` for authentication or role problems.
+- `200` with a message if it's the weekend, already initialized, or there is no active PFMP;
+- `401` / `403` otherwise.
 
 ### `PUT /api/presence/update/{studentId}`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
-| Controller | `TablePreseceController` |
-| Required role | `Enseignant`, `Administrateur` |
-| Request body | `UpdateTablePresenceDto` |
+| Role | `Enseignant`, `Administrateur` |
+| Controller | `TablePreseceController` *(spelling as observed in the inspected code — to verify)* |
+| Body | `UpdateTablePresenceDto` |
 
-Request:
+Purpose: update a student's attendance status for a given date.
+
+Body:
 
 ```json
 {
@@ -587,36 +695,38 @@ Request:
 }
 ```
 
-Business rules:
+Rules:
 
-- `Etat` must be `PRESENT` or `ABSENT`;
-- `Retard` must be zero or positive;
-- `DateJour` is required;
-- a Teacher / Referent must be assigned to the student and the date must be inside the PFMP;
-- an Administrator must be the PFMP administrator and the date must be inside the PFMP;
-- if `ABSENT`, lateness is forced to `0`;
-- if `PRESENT`, the provided lateness is kept.
+- `etat` must be `PRESENT` or `ABSENT`;
+- `retard` (lateness, in minutes) must be zero or positive;
+- the date is required;
+- a teacher must be linked to the student, and the date must fall within the PFMP;
+- an administrator must be the administrator of the PFMP, and the date must fall within the PFMP;
+- if `ABSENT`, `Retard` is forced to 0;
+- if `PRESENT`, the submitted lateness value is kept.
 
-Error cases:
+Possible errors:
 
-- `400`: invalid request;
-- `401` / `403`: authentication, role, or scope problem;
-- `404`: no attendance row found for that student and date.
+- `400`: invalid body;
+- `401` / `403`;
+- `404`: no attendance row found for that date.
 
-TODO: the frontend also tries `PUT /api/presence/modify` before falling back to this endpoint. That `modify` endpoint is not confirmed in backend code.
+TODO: the frontend also tries `PUT /api/presence/modify` first. This `modify` endpoint does not currently exist on the backend.
 
 ## Users
 
 ### `POST /api/utilisateur`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | `Administrateur` |
 | Controller | `UtilisateurController` |
-| Required role | `Administrateur` |
-| Request body | `CreateUtilisateurDto` |
-| Response | `CreateUtilisateurDto` without password |
+| Body | `CreateUtilisateurDto` |
+| Response | `CreateUtilisateurDto` without the password |
 
-Request:
+Purpose: create a base `Utilisateur` account.
+
+Body:
 
 ```json
 {
@@ -627,35 +737,37 @@ Request:
 }
 ```
 
-Business rules:
+Rules:
 
 - hashes the password with `PasswordHelper`;
-- creates only a base `Utilisateur` row.
+- creates only a `Utilisateur` row.
 
-TODO: this endpoint does not create the role profile (`Etudiant`, `Referent`, or `Administrateur`) in the inspected code.
+TODO: creating the role profile (`Etudiant`, `Referent`, `Administrateur`) is not visible in this endpoint. No Flutter screen for user creation was identified in the files reviewed either — to verify.
 
 ## News
 
 ### `GET /api/news`
 
-| Item | Details |
+| Field | Value |
 | --- | --- |
+| Role | Authenticated |
 | Controller | `NewsController` |
-| Required role | Authenticated |
 | Response | List of `NewsDto` |
 
-Purpose: fetches and parses the CERT-FR RSS feed.
+Purpose: read the CERT-FR RSS feed and return title, link, description, and date.
 
-Error cases:
+Errors:
 
 - `401`: not authenticated;
 - `500`: unable to fetch or parse the feed.
 
+> No Flutter page consuming this endpoint was identified in the files reviewed — to verify (see "Endpoints with no confirmed frontend consumer" below).
+
 ## Profile
 
-`ProfileController` exists with `[Route("api/profile")]`, but `ProfileMe()` does not have an explicit `[HttpGet]`, `[Authorize]`, or route attribute in the inspected code.
+`ProfileController` exists with `[Route("api/profile")]`, but the `ProfileMe()` action has no `[HttpGet]`, `[Authorize]`, or explicit route attribute in the inspected code.
 
-The frontend currently tries:
+The frontend tries:
 
 - `GET /api/profile/me`;
 - `GET /api/profile`;
@@ -663,4 +775,17 @@ The frontend currently tries:
 - `PUT /api/profile/me`;
 - `PUT /api/etudiants/me/profile`.
 
-TODO: verify or complete the profile controller before documenting these as working endpoints.
+TODO: verify or finalize the profile controller before documenting these endpoints as available.
+
+## Endpoints with no confirmed frontend consumer
+
+This section brings together, in one place, the backend endpoints for which **no Flutter page or call was identified** in the [05 - Flutter frontend guide](05-frontend-guide.md) files reviewed for this documentation. This does not mean these endpoints are useless or broken — only that their frontend consumption could not be confirmed with the files available.
+
+| Endpoint | Finding |
+| --- | --- |
+| `GET /api/news` | Exists on the backend (CERT-FR RSS feed). No "News" page appears in the Flutter navigation described in `05-frontend-guide.md`. |
+| `GET /api/journal/export/{idPfmp}` | Exists on the backend (JSON export). Only the PDF export (`GET /api/journal/pdf/{idPfmp}`) is described as used by `My PFMPs`. |
+| `POST /api/utilisateur` | Restricted to administrators. No user-creation screen is described in the admin tabs (`Supervision`, `Class management`, `Messaging`, the "Initialize attendance" action). |
+| `PUT /api/journal/update/{id}` | Confirmed unused — explicitly flagged as such in `05-frontend-guide.md`. |
+
+TODO: for each row, confirm whether it is a missing screen to build, an existing screen that simply isn't documented, or a genuinely unused endpoint to remove.

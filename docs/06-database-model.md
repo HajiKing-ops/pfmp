@@ -1,38 +1,38 @@
-# 06 - Database Model
+# 06 - Database model
 
-The database model is represented by EF Core entity classes in `PFMPManager.Api/Models` and by `DbSet` declarations in `AppDbContext`.
+The data model is represented by the EF Core entities in `PFMPManager.Api/Models` and by the `DbSet` properties on `AppDbContext`.
 
-Important: `AppDbContext` mainly configures composite keys for linking tables. The relationships below are based on the models and controller/service queries. Foreign key constraints should be verified in the actual SQL schema if needed.
+Important: `AppDbContext` mainly configures the composite primary keys of certain join tables. The business relationships described below are inferred from the controller/service code and from column names. Whether foreign-key constraints exist at the database schema level still needs to be checked in the SQL schema.
 
-## Main Entities
+## Main DbSets
 
-| Entity | Purpose |
+| Entity | Role |
 | --- | --- |
-| `Utilisateur` | Base user account: name, login, password hash. |
-| `Etudiant` | Student profile and apparent link to a referent. |
-| `Referent` | Teacher / Referent profile. |
+| `Utilisateur` | Base account: last name, first name, login, hashed password. |
+| `Etudiant` | Student profile, with an apparent link to a referent. |
+| `Referent` | Teacher/referent profile. |
 | `Administrateur` | Administrator profile. |
-| `Pfmp` | Internship period. |
-| `Organisation` | Host organisation/company. |
-| `Professionnel` | Professional / Internship supervisor. |
-| `Planning` | Weekly total. |
-| `PlanningJours` | Schedule days and time slots. |
-| `Contacter` | Student contact request with an organisation. |
-| `RapportJournalier` | Daily report. |
-| `Remplir` | Link between student and daily report. |
+| `Pfmp` | Work-based training placement period. |
+| `Organisation` | Host company/organization. |
+| `Professionnel` | Workplace supervisor/professional. |
+| `Planning` | Weekly total for a schedule. |
+| `PlanningJours` | Days and time slots for a schedule. |
+| `Contacter` | Contact application between a student and an organization. |
+| `RapportJournalier` | Logbook entry. |
+| `Remplir` | Link between a student and a logbook entry. |
 | `TablePresence` | Attendance, absence, lateness, justification. |
-| `Message` | PFMP-scoped message. |
-| `Etablissement` | School establishment. |
-| `GroupeClasse` | Class group linked to an establishment and program. |
-| `Filiere` | Program / field of study. |
-| `Etudier` | Student enrollment in a class group for a school period. |
-| `Administrer` | Administrator to establishment link. |
-| `Travailler` | Professional to organisation link. |
-| `RefreshToken` | Hashed refresh tokens, rotation metadata, fingerprint hash. |
+| `Message` | Message tied to a PFMP. |
+| `Etablissement` | School. |
+| `GroupeClasse` | Class, tied to a school and a program. |
+| `Filiere` | Training program/track. |
+| `Etudier` | A student's enrollment in a class for a school period. |
+| `Administrer` | Link between an administrator and a school. |
+| `Travailler` | Link between a professional and an organization. |
+| `RefreshToken` | Hashed refresh tokens, rotation, and fingerprint. |
 
-## Keys Configured in `AppDbContext`
+## Keys configured in `AppDbContext`
 
-Composite keys:
+Tables with a composite key:
 
 | Entity | Key |
 | --- | --- |
@@ -43,35 +43,35 @@ Composite keys:
 | `GroupeClasse` | `(Id_Etablissement, Id_Classe)` |
 | `Administrer` | `(Id_Utilisateur, Id_Etablissement)` |
 
-Other entities use `[Key]` attributes in their model classes.
+Other entities use `[Key]` on their classes.
 
-## Users and Roles
+## Users and roles
 
-`Utilisateur` is the base account table.
+The shared account type is `Utilisateur`.
 
-Application roles are resolved through role/profile tables:
+Application roles:
 
 ```text
 Utilisateur
-  |-- Etudiant       -> role "Etudiant"
-  |-- Referent       -> role "Enseignant"
-  |-- Administrateur -> role "Administrateur"
-  |-- Professionnel  -> business model only in current login flow
+  |-- Etudiant          -> role "Etudiant"
+  |-- Referent          -> role "Enseignant"
+  |-- Administrateur    -> role "Administrateur"
+  |-- Professionnel     -> business-model entity, not a login role currently
 ```
 
-`RoleService` checks these tables in this order: `Etudiant`, `Referent`, then `Administrateur`.
+`RoleService` checks roles in this order: student, referent, administrator.
 
-## Student, Referent, and Class Group
+## Inferred business relationships
 
-In code queries, `Etudiant` appears to store both the student user id and the assigned referent id:
+### Student, referent, and class
 
 ```text
 Utilisateur
   |
   v
 Etudiant
-  | Id_Utilisateur_1 = student user id
-  | Id_Utilisateur   = referent user id, to verify in schema
+  | Id_Utilisateur_1 = student's user account
+  | Id_Utilisateur   = apparent referent
   v
 Etudier
   |
@@ -82,9 +82,9 @@ GroupeClasse
 Etablissement / Filiere
 ```
 
-The Teacher / Referent access checks use `Etudiant.Id_Utilisateur == referentId` and `Etudiant.Id_Utilisateur_1 == studentId`.
+The teacher-side code checks the assignment with `Etudiant.Id_Utilisateur == referentId` and `Etudiant.Id_Utilisateur_1 == studentId`.
 
-## Administrator and Establishments
+### Administrator and schools
 
 ```text
 Administrateur
@@ -105,59 +105,58 @@ Etudier
 Etudiant
 ```
 
-Administrator endpoints load students through the establishments managed by the connected administrator.
+Admin endpoints load students starting from the schools the administrator manages.
 
-## PFMP
+### PFMP
 
-Important `Pfmp` fields:
+Main fields on `Pfmp`:
 
 - `Id_PFMP`;
 - `DateDebut`;
 - `DateFin`;
-- `Id_Utilisateur`: administrator linked to the PFMP;
+- `Id_Utilisateur`: the administrator tied to the PFMP;
 - `Id_Planning`;
 - `SIRET`;
-- `Id_Utilisateur_1`: student linked to the PFMP.
+- `Id_Utilisateur_1`: the student.
 
 Business relationship:
 
 ```text
-Student
+Etudiant
   |
   v
 PFMP
-  |-- Organisation through SIRET
-  |-- Planning through Id_Planning
-  |-- Administrator through Id_Utilisateur
+  |-- Organisation via SIRET
+  |-- Planning via Id_Planning
+  |-- Administrateur via Id_Utilisateur
 ```
 
-## Schedule / Planning
+## Schedule
 
-`Planning` stores `TotalHebdo`.
+`Planning` holds `TotalHebdo` (weekly total).
 
-`PlanningJours` stores:
+`PlanningJours` holds:
 
-- `Jour`;
-- `MatinDebut`;
-- `MatinFin`;
-- `ApresMidiDebut`;
-- `ApresMidiFin`;
+- `Jour` (day);
+- `MatinDebut` (morning start);
+- `MatinFin` (morning end);
+- `ApresMidiDebut` (afternoon start);
+- `ApresMidiFin` (afternoon end);
 - `TotalMinutes`;
 - `Id_Planning`.
 
-Backend validation requires:
+Backend validation enforces:
 
-- a day label;
-- complete or empty time slots;
+- a day must be set;
+- a time slot must be fully filled in or fully empty;
 - start before end;
-- morning not overlapping afternoon;
+- morning must not overlap the afternoon;
 - correct daily total;
-- correct weekly total;
-- weekly total not greater than 2100 minutes.
+- correct weekly total, capped at 2100 minutes.
 
-## Contact Requests
+## Applications
 
-`Contacter` links a student to an organisation:
+`Contacter` links a student to an organization:
 
 - `Id_Utilisateur`;
 - `SIRET`;
@@ -167,54 +166,54 @@ Backend validation requires:
 
 Statuses handled by the code:
 
-- `En attente`;
-- `Refuse`;
-- `Accepte`.
+- `En attente` (pending);
+- `Refuse` (rejected);
+- `Accepte` (accepted).
 
-To create a PFMP, the student must have an `Accepte` contact request for the requested SIRET.
+To create a PFMP, the student must have an `Accepte` application for the requested SIRET.
 
 ## Attendance
 
-`TablePresence` stores:
+`TablePresence` holds:
 
 - `Id_TablePresence`;
 - `DateJour`;
 - `Etat`;
 - `Retard`;
 - `Justification`;
-- `Id_Utilisateur` for the student.
+- `Id_Utilisateur` (the student).
 
-States visible in code:
+Visible states:
 
-- `NON_RENSEIGNE`;
+- `NON_RENSEIGNE` (not filled in);
 - `PRESENT`;
 - `ABSENT`.
 
 Attendance rows are created:
 
-- during complete PFMP creation for working days in the schedule;
-- or by the administrator daily initialization endpoint if rows are missing.
+- while a PFMP is being created, for the working days in the schedule;
+- or through the admin's daily initialization, when a row is missing.
 
-## Daily Reports
+## Logbook and reports
 
-`RapportJournalier` stores:
+`RapportJournalier` holds:
 
 - `Id_RapportJournalier`;
 - `DateRapport`;
 - `LienVersFichier`;
 - `Id_PFMP`.
 
-`Remplir` links the report to a student.
+`Remplir` links the student to the report.
 
-Confirmed rules:
+Visible rules:
 
-- a report date must be inside a student PFMP period;
-- only one daily report per day and PFMP is allowed;
-- export/PDF features use reports inside the PFMP period.
+- a report must fall within a PFMP period;
+- only one report per day per PFMP;
+- export (PDF or JSON) uses the reports from the PFMP period.
 
 ## Messages
 
-`Message` stores:
+`Message` holds:
 
 - `Id_Message`;
 - `Id_PFMP`;
@@ -223,18 +222,18 @@ Confirmed rules:
 - `Contenu`;
 - `DateEnvoi`.
 
-Messaging is restricted to active PFMPs and authorized participants.
+Messaging is restricted to active PFMPs and authorized users.
 
-## Organisations and Professionals
+## Organizations and professionals
 
 `Organisation` is identified by `SIRET`.
 
 `Professionnel` is identified by `Id_Utilisateur`.
 
-`Travailler` links a professional to an organisation:
+`Travailler` links a professional to an organization:
 
 ```text
-Professional / Utilisateur
+Professionnel / Utilisateur
   |
   v
 Travailler
@@ -243,9 +242,9 @@ Travailler
 Organisation
 ```
 
-During PFMP creation, the backend creates or reuses the internship supervisor and ensures the `Travailler` relation exists.
+While a PFMP is being created, the backend creates or finds the workplace supervisor and makes sure the `Travailler` relationship exists.
 
-## Refresh Tokens
+## Refresh tokens
 
 `RefreshToken` stores:
 
@@ -258,19 +257,19 @@ During PFMP creation, the backend creates or reuses the internship supervisor an
 - `TokenFamilyId`;
 - `FingerprintHash`.
 
-The raw refresh token is not stored. Refresh token rotation uses token families to detect reuse.
+The raw token is never stored. Rotation keeps a family of tokens so reuse can be detected and the whole family revoked.
 
-## MySQL Docker Volume
+## MySQL and the Docker volume
 
-The Docker volume is:
+The configured Docker volume is:
 
 ```text
 docker-test_mysql_data
 ```
 
-It is external, so it survives `docker compose down`. Do not use `docker compose down -v` unless you intentionally want to delete local database data.
+It is external, so it survives `docker compose down`. Do not use `docker compose down -v` unless the goal is to delete local data.
 
 See also:
 
-- [DATABASE_BACKUP.md](DATABASE_BACKUP.md)
-- [08 - Docker Deployment](08-docker-deployment.md)
+- [MySQL backup & restore](DATABASE_BACKUP.md)
+- [08 - Docker and deployment](08-docker-deployment.md)

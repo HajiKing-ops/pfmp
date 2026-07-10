@@ -1,4 +1,4 @@
-# 09 - Development Workflow
+# 09 - Development workflow
 
 ## Prerequisites
 
@@ -9,20 +9,20 @@ To run everything with Docker:
 - Docker Compose;
 - a local `.env` file.
 
-To run services locally without Docker:
+To run outside Docker:
 
 - .NET 9 SDK;
 - Flutter SDK compatible with Dart `^3.11.5`;
 - MySQL 8;
-- Chrome or Edge for Flutter Web.
+- a Chrome/Edge browser for Flutter Web.
 
-Setup guides:
+Existing setup guides:
 
-- [SETUP_WINDOWS.md](SETUP_WINDOWS.md)
-- [SETUP_MACOS.md](SETUP_MACOS.md)
-- [SETUP_LINUX.md](SETUP_LINUX.md)
+- [Windows setup](SETUP_WINDOWS.md)
+- [macOS setup](SETUP_MACOS.md)
+- [Linux setup](SETUP_LINUX.md)
 
-## Clone the Repository
+## Clone the project
 
 ```bash
 git clone <repository-url>
@@ -35,25 +35,25 @@ cd Projet-WebApp-PFMP
 Copy-Item .env.example .env
 ```
 
-Edit `.env` with local values.
+Then edit `.env` with local values.
 
 Do not commit `.env`.
 
-## First Docker Run
+## First Docker run
 
-Create the external volume:
+Create the volume:
 
 ```bash
 docker volume create docker-test_mysql_data
 ```
 
-Start the stack:
+Start:
 
 ```bash
 docker compose up --build
 ```
 
-Check containers:
+Check:
 
 ```bash
 docker compose ps
@@ -65,9 +65,9 @@ Open:
 http://localhost:65427
 ```
 
-## Rebuild After Changes
+## Rebuilding after a change
 
-Full development rebuild:
+Full rebuild:
 
 ```bash
 docker compose up --build
@@ -85,7 +85,7 @@ Stop:
 docker compose down
 ```
 
-## Run the API Locally
+## Running the API outside Docker
 
 ```bash
 cd PFMPManager.Api
@@ -105,7 +105,7 @@ OpenAPI JSON in development:
 http://localhost:5002/openapi/v1.json
 ```
 
-## Run Flutter Locally
+## Running Flutter outside Docker
 
 ```bash
 cd appli_pfmp
@@ -113,9 +113,9 @@ flutter pub get
 flutter run -d chrome --web-port 65427
 ```
 
-To verify: the current Flutter code uses `/api/...`. If Flutter is served by its development server, make sure `/api` requests are routed or proxied to the API.
+Note: the Flutter code uses `/api/...`. If Flutter is served by its own dev server, you need to check how `/api` is proxied to the API. In Docker, Nginx already handles this.
 
-## Test Changes
+## Testing changes
 
 Backend:
 
@@ -132,25 +132,25 @@ flutter analyze
 flutter test
 ```
 
-Manual checks:
+Recommended manual tests:
 
 - login;
 - logout;
-- student access;
-- administrator access;
-- `403` responses for forbidden endpoints;
-- contact request creation/update;
+- student role access;
+- administrator role access;
+- `403` rejection on unauthorized endpoints;
+- application creation/edit;
 - PFMP creation;
-- daily reports;
+- logbook;
 - messaging;
 - attendance;
-- production-style Nginx `/api` proxy.
+- production-style with Nginx `/api`.
 
-See [10 - Testing Checklist](10-testing-checklist.md).
+See [10 - Testing checklist](10-testing-checklist.md).
 
-## Recommended Git Workflow
+## Recommended Git workflow
 
-Before working:
+Before starting work:
 
 ```bash
 git status
@@ -160,17 +160,17 @@ git pull
 Create a branch:
 
 ```bash
-git checkout -b docs/improve-documentation
+git checkout -b docs/documentation-improvements
 ```
 
-Use small, clear commits:
+Small, clear commits:
 
 ```bash
 git add README.md docs/
-git commit -m "docs: improve project documentation"
+git commit -m "docs: add project documentation"
 ```
 
-Commit message examples:
+Example commit messages:
 
 - `docs: document backend api routes`
 - `docs: add docker deployment guide`
@@ -178,18 +178,18 @@ Commit message examples:
 - `feat(frontend): add teacher dashboard`
 - `test(api): add auth role tests`
 
-## Contribution Rules
+## Contribution rules
 
-- Do not commit `.env`.
-- Do not commit real secrets in docs, configuration, or screenshots.
-- Keep `.env.example` safe and generic.
-- Document route changes when API endpoints change.
-- Update the testing checklist when a user flow changes.
-- Back up MySQL before risky data changes.
+- Never commit `.env`.
+- Never commit secrets in `appsettings.json`, the documentation, or screenshots.
+- Keep `.env.example` filled with dummy values.
+- Document any API route changes.
+- Add or update the testing checklist whenever a flow changes.
+- Take a MySQL backup before any change that risks affecting the data.
 
-## Backup Before Risky Changes
+## Backing up before sensitive changes
 
-See [DATABASE_BACKUP.md](DATABASE_BACKUP.md).
+See [MySQL backup & restore](DATABASE_BACKUP.md).
 
 Example:
 
@@ -197,11 +197,15 @@ Example:
 docker exec pfmp_mysql mysqldump -uroot -pYOUR_PASSWORD pfmp_manager > backups/pfmp_manager_before_changes.sql
 ```
 
-## Regular Checks
+## If you get stuck
 
-- Docker volume exists.
-- Containers are running.
-- Nginx `/api` proxy works.
+See [Troubleshooting](TROUBLESHOOTING.md) for common problems: CORS errors, rejected cookies, MySQL connection issues, a missing Docker volume, and more.
+
+## Things to check regularly
+
+- The Docker volume exists.
+- Containers are healthy/up.
+- The Nginx `/api` proxy works.
 - Cookies are set after login.
-- Protected endpoints reject unauthorized users.
-- Documentation remains aligned with controllers and services.
+- The API rejects unauthorized access.
+- The documentation stays aligned with the controllers and services.

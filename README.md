@@ -1,154 +1,71 @@
 # PFMP Manager
 
-PFMP Manager is a web application for managing student internship periods called PFMP. The repository contains an ASP.NET Core Web API, a Flutter Web frontend, a MySQL database, and a Docker Compose setup with Nginx.
+A web application for managing PFMP work-based training placements in a school context.
 
-This documentation is based on the code currently present in the repository. Anything unclear or not confirmed in code is marked as `TODO`, `To verify`, or `Not confirmed in code`.
+> **PFMP** stands for *Période de Formation en Milieu Professionnel*, a mandatory work-based training placement that French vocational students complete with a host company. The term is kept as-is throughout this documentation, matching the codebase (entities, routes, and variables are all named `Pfmp`).
 
-## Technology Stack
+PFMP Manager centralizes placement tracking: finding a host organization, contact applications, weekly schedules, the student logbook, attendance, and messaging.
 
-| Area | Technologies |
-| --- | --- |
-| Backend | ASP.NET Core Web API, .NET 9, Entity Framework Core, Pomelo MySQL, QuestPDF |
-| Frontend | Flutter Web, Dart, flutter_bloc, http BrowserClient |
-| Database | MySQL 8, persistent Docker volume |
-| Authentication | JWT in HttpOnly cookies, refresh token rotation, fingerprint cookie |
-| DevOps | Docker Compose, Nginx, `.env` configuration |
+- **Backend**: ASP.NET Core Web API + Entity Framework Core
+- **Database**: MySQL
+- **Frontend**: Flutter Web
+- **Deployment**: Docker Compose + Nginx
+- **Authentication**: JWT stored in HttpOnly cookies, with role-based access control
 
-## Main Roles
+> **Project status**: active student project. Some parts (teacher interface, automated tests, production HTTPS) are still incomplete — see [12 - TODO and future improvements](docs/12-todo-future-improvements.md).
 
-| Role | Current status |
-| --- | --- |
-| Administrator | Has a Flutter admin area for supervision, class statistics, attendance, period management, and messaging. |
-| Teacher / Referent | Exists in backend authorization for assigned-student access, attendance updates, and messaging. A dedicated Flutter teacher area is not currently wired in `main.dart`. |
-| Student | Has a Flutter student area for dashboard, PFMP search, daily reports, messaging, profile, and PFMP list. |
-| Professional / Internship supervisor | Exists in the business model and can be linked to an organisation during PFMP creation. This role does not log into the app in the current version. |
+## Roles
 
-## Quick Architecture
+| Role | Logs into the app | Summary |
+| --- | --- | --- |
+| Student | Yes | Manages their own PFMPs, applications, and logbook. |
+| Administrator | Yes | Oversees PFMPs for the schools they are responsible for. |
+| Teacher / Referent | Yes, backend only | Can follow assigned students through the API; no Flutter interface is wired up for this role yet. |
+| Professional / Workplace supervisor | No | Exists in the data model but does not log into the app in the current version. |
 
-```text
-Browser
-  |
-  v
-Flutter Web / Nginx
-  |
-  | /api/*
-  v
-ASP.NET Core API
-  |
-  | Entity Framework Core
-  v
-MySQL
-```
+Full breakdown and permission table: [03 - Roles and permissions](docs/03-roles-and-permissions.md).
 
-PFMP Manager uses a separated architecture because each part has a clear responsibility:
-
-- the Flutter frontend manages the user interface and browser experience;
-- the ASP.NET Core API manages authentication, authorization, business rules, and API responses;
-- MySQL stores persistent application data;
-- Docker Compose runs the stack in a reproducible way;
-- Nginx serves Flutter Web and forwards `/api/...` calls to the internal API container.
-
-In production-style mode, only Nginx is exposed publicly. The API and MySQL containers stay internal, which reduces the public attack surface.
-
-## Repository Structure
+## Project structure
 
 ```text
 .
-|-- PFMPManager.Api/        # ASP.NET Core API
-|   |-- Controllers/        # REST endpoints
-|   |-- DTOs/               # Request/response contracts
-|   |-- Data/               # EF Core AppDbContext
-|   |-- Helpers/            # JWT, password, admin helper code
-|   |-- Models/             # EF Core entities
-|   |-- Services/           # Business/security services
-|   `-- Dockerfile
-|-- appli_pfmp/             # Flutter Web application
-|   |-- lib/application/    # Screens
-|   |-- lib/bloc/           # BLoC state management
-|   |-- lib/data/           # API calls
-|   |-- lib/model/          # Dart models
-|   |-- nginx.conf          # Nginx static server + /api proxy
-|   `-- Dockerfile
-|-- docs/                   # Detailed documentation
-|-- docker-compose.yml
-|-- docker-compose.override.yml
-|-- docker-compose.prod.yml
-|-- .env.example
-`-- README.md
+├── PFMPManager.Api/       # ASP.NET Core API
+├── appli_pfmp/            # Flutter Web application
+├── docker-compose.yml
+├── docker-compose.override.yml
+├── docker-compose.prod.yml
+├── .env.example
+├── README.md
+└── docs/
 ```
 
-## Environment Configuration
+## Prerequisites
 
-Do not commit the real `.env` file. It is ignored by `.gitignore`.
+- Git
+- Docker Desktop or Docker Engine + Docker Compose (to run everything in containers)
+- .NET 9 SDK and the Flutter SDK (only needed to run services outside Docker)
 
-Create a local environment file from the safe template:
+Detailed per-OS setup guides: [Windows](docs/SETUP_WINDOWS.md) · [macOS](docs/SETUP_MACOS.md) · [Linux](docs/SETUP_LINUX.md).
 
-```powershell
-Copy-Item .env.example .env
-```
-
-Variables shown in `.env.example`:
-
-```env
-MYSQL_ROOT_PASSWORD=change_me
-MYSQL_DATABASE=pfmp_manager
-MYSQL_USER=pfmp_user
-MYSQL_PASSWORD=change_me
-MYSQL_PORT=3307
-API_PORT=5002
-FLUTTER_PORT=65427
-JWT_SECRET=change_me_long_secret_at_least_32_chars
-```
-
-Important: `docker-compose.yml` uses `${MYSQL_USER}` and `${MYSQL_PASSWORD}` for the API connection string. The MySQL service currently declares `MYSQL_ROOT_PASSWORD` and `MYSQL_DATABASE`, but not automatic user creation. For a fresh Docker volume, verify that the application database user exists or add a proper initialization process.
-
-## Run with Docker for Development
-
-Create the external MySQL volume if needed:
+## Run With Docker
 
 ```bash
+git clone <repository-url>
+cd Projet-WebApp-PFMP
+cp .env.example .env          # PowerShell: Copy-Item .env.example .env
 docker volume create docker-test_mysql_data
-```
-
-Start the full stack:
-
-```bash
 docker compose up --build
 ```
 
-Default local URLs with `.env.example`:
+Then open [http://localhost:65427](http://localhost:65427) (default port from `.env.example`).
 
-| Service | URL |
-| --- | --- |
-| Flutter Web / Nginx | `http://localhost:65427` |
-| API exposed for development | `http://localhost:5002` |
-| MySQL exposed for development | `localhost:3307` |
-
-Flutter calls relative `/api/...` URLs. In Docker, Nginx forwards those requests to the API container.
-
-## Run in Production-Style Mode
-
-Production-style mode exposes only Nginx on port 80. The API and MySQL remain internal to the Docker network.
+Production-style mode, where only Nginx is exposed (see [08 - Docker and deployment](docs/08-docker-deployment.md)):
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 
-Stop production-style mode:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.prod.yml down
-```
-
-Useful logs:
-
-```bash
-docker logs pfmp_api
-docker logs pfmp_flutter
-docker logs pfmp_mysql
-```
-
-## Run Locally without Docker
+## Run Locally
 
 Backend:
 
@@ -156,6 +73,7 @@ Backend:
 cd PFMPManager.Api
 dotnet restore
 dotnet run --launch-profile http
+# http://localhost:5002
 ```
 
 Frontend:
@@ -166,52 +84,35 @@ flutter pub get
 flutter run -d chrome --web-port 65427
 ```
 
-To verify: the current Flutter code calls relative `/api/...` URLs. When running Flutter directly with the development server, make sure those requests are proxied or routed to the ASP.NET Core API, because the Flutter development server does not automatically proxy `/api`.
+⚠️ The Flutter code calls the API with relative URLs (`/api/...`). In Docker, Nginx handles this automatically; outside Docker, you need a local proxy forwarding `/api` to `http://localhost:5002`, otherwise the calls will fail. Details: [05 - Flutter frontend guide](docs/05-frontend-guide.md#api-calls).
 
-## Detailed Documentation
+## Documentation
 
-- [01 - Project Overview](docs/01-project-overview.md)
-- [02 - Architecture](docs/02-architecture.md)
-- [03 - Roles and Permissions](docs/03-roles-and-permissions.md)
-- [04 - Backend API](docs/04-backend-api.md)
-- [05 - Frontend Guide](docs/05-frontend-guide.md)
-- [06 - Database Model](docs/06-database-model.md)
-- [07 - Authentication and Security](docs/07-authentication-security.md)
-- [08 - Docker Deployment](docs/08-docker-deployment.md)
-- [09 - Development Workflow](docs/09-development-workflow.md)
-- [10 - Testing Checklist](docs/10-testing-checklist.md)
-- [11 - Temporary Public Access](docs/11-temporary-public-access.md)
-- [12 - TODO and Future Improvements](docs/12-todo-future-improvements.md)
+| Document | Content |
+| --- | --- |
+| [01 - Project overview](docs/01-project-overview.md) | Goals, users, main flows, current scope. |
+| [02 - Architecture](docs/02-architecture.md) | Global diagram, backend / frontend / Docker architecture. |
+| [03 - Roles and permissions](docs/03-roles-and-permissions.md) | Detailed permission table by role. |
+| [04 - Backend API](docs/04-backend-api.md) | Full endpoint reference (method, route, role, rules, errors). |
+| [05 - Flutter frontend guide](docs/05-frontend-guide.md) | Flutter app structure, screens, API calls. |
+| [06 - Database model](docs/06-database-model.md) | EF Core entities, relationships, composite keys. |
+| [07 - Authentication and security](docs/07-authentication-security.md) | JWT, cookies, CORS, refresh token rotation. |
+| [08 - Docker and deployment](docs/08-docker-deployment.md) | Services, ports, volumes, deployment commands. |
+| [09 - Development workflow](docs/09-development-workflow.md) | Setup, dev cycle, Git conventions. |
+| [10 - Testing checklist](docs/10-testing-checklist.md) | Manual checks before shipping. |
+| [11 - Temporary public access](docs/11-temporary-public-access.md) | Procedure for a short public test from a local machine. |
+| [12 - TODO and future improvements](docs/12-todo-future-improvements.md) | Backend, frontend, DevOps, and security follow-ups. |
+| [MySQL backup & restore](docs/DATABASE_BACKUP.md) | Backing up and restoring the MySQL volume. |
+| [Nginx reverse proxy](docs/NGINX_PROXY.md) | Details of `nginx.conf` and the `/api` proxy. |
+| [Troubleshooting](docs/TROUBLESHOOTING.md) | Post-deploy checklist and common problems. |
+| Setup guides: [Windows](docs/SETUP_WINDOWS.md) / [macOS](docs/SETUP_MACOS.md) / [Linux](docs/SETUP_LINUX.md) | Installing the toolchain per operating system. |
 
-Operational docs:
+## Security
 
-- [Windows Setup](docs/SETUP_WINDOWS.md)
-- [macOS Setup](docs/SETUP_MACOS.md)
-- [Linux Setup](docs/SETUP_LINUX.md)
-- [Database Backup and Restore](docs/DATABASE_BACKUP.md)
-- [Nginx Reverse Proxy](docs/NGINX_PROXY.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
+Authentication relies on HttpOnly cookies and role-based access control. Several current settings (`Secure=false` cookies, no HTTPS) are suited to local development only and **are not appropriate for a real public deployment**. See [07 - Authentication and security](docs/07-authentication-security.md) before putting this online, even temporarily, and [11 - Temporary public access](docs/11-temporary-public-access.md) if a short public test is genuinely needed.
 
-## Project Status
+Never commit `.env`: use `.env.example` as a template and replace the default values (especially `JWT_SECRET`) before any real use.
 
-Confirmed in code:
+## Contributing
 
-- cookie-based login and logout;
-- JWT access token with refresh token rotation;
-- fingerprint cookie validation;
-- role-based access control;
-- student area;
-- administrator area;
-- PFMP, schedule, attendance, daily report, organisation, messaging, and admin supervision endpoints;
-- Docker Compose setup with MySQL, API, Flutter Web, and Nginx `/api` reverse proxy.
-
-Not complete or to verify:
-
-- no dedicated Flutter Teacher / Referent area is currently wired;
-- `ProfileController` appears incomplete or not explicitly routed;
-- the Flutter PFMP creation form appears to omit `siteWeb`, while the API requires it;
-- the Flutter PFMP creation form currently uses hardcoded dates;
-- `/api/presence/modify` and `/api/administrateur/classes/stats` are attempted by the frontend as fallbacks but are not backend routes confirmed in code;
-- a fresh MySQL volume may need explicit creation of the non-root application user.
-
-See [12 - TODO and Future Improvements](docs/12-todo-future-improvements.md) for the full roadmap.
+See [09 - Development workflow](docs/09-development-workflow.md) for Git conventions, build/test commands, and the checklist to run through before proposing a change.
