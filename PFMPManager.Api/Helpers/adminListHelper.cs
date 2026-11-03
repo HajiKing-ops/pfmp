@@ -145,8 +145,11 @@ namespace PFMPManager.Api.Helpers
                         {
                             var jourPlanning = planjour.Select(pj => pj.Jour).ToList();
 
-                            for (var date = pfmp.DateDebut.Value.Date; date <= pfmp.DateFin.Value.Date; date = date.AddDays(1))
+                            var start = pfmp.DateDebut.Value.Date;
+                            var lastOffset = (pfmp.DateFin.Value.Date - start).Days;
+                            for (var offset = 0; offset <= lastOffset; offset++)
                             {
+                                var date = start.AddDays(offset);
                                 string jourFrancais = date.DayOfWeek switch
                                 {
                                     DayOfWeek.Monday => "Lundi",

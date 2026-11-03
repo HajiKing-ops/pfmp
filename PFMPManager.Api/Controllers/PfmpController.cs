@@ -554,8 +554,11 @@ namespace PFMPManager.Api.Controllers
 
             var presences = new List<TablePresence>();
 
-            for (var date = dateDebut.Date; date <= dateFin.Date; date = date.AddDays(1))
+            var start = dateDebut.Date;
+            var lastOffset = (dateFin.Date - start).Days;
+            for (var offset = 0; offset <= lastOffset; offset++)
             {
+                var date = start.AddDays(offset);
                 var jourFrancais = date.DayOfWeek switch
                 {
                     DayOfWeek.Monday => "Lundi",
