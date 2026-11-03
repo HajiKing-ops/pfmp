@@ -12,6 +12,7 @@ class EntreeForm extends StatelessWidget {
   final String? hint;
   final TextEditingController ctrlr;
   final bool obligatoire;
+  final FormFieldValidator<String>? validator;
 
   const EntreeForm({
     super.key,
@@ -19,6 +20,7 @@ class EntreeForm extends StatelessWidget {
     this.hint,
     required this.ctrlr,
     required this.obligatoire,
+    this.validator,
   });
 
   @override
@@ -47,12 +49,14 @@ class EntreeForm extends StatelessWidget {
               ),
             ),
             controller: ctrlr,
-            validator: (value) {
-              if (obligatoire && (value == null || value.isEmpty)) {
-                return 'Ce champ est obligatoire';
-              }
-              return null;
-            },
+            validator:
+                validator ??
+                (value) {
+                  if (obligatoire && (value == null || value.isEmpty)) {
+                    return 'Ce champ est obligatoire';
+                  }
+                  return null;
+                },
           ),
         ],
       ),

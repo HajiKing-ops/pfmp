@@ -10,6 +10,7 @@ import 'package:appli_pfmp/custom/responsive/responsive.dart';
 import 'package:appli_pfmp/model/utilisateur.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 class FormPfmp extends StatefulWidget {
   final double lEcran;
@@ -44,6 +45,11 @@ class _FormPfmpState extends State<FormPfmp> {
   final fonctionMaitreController = TextEditingController();
   final telephoneMaitreController = TextEditingController();
   final emailMaitreController = TextEditingController();
+  final _dateDebutController = TextEditingController();
+  final _dateFinController = TextEditingController();
+  DateTime? _dateDebut;
+  DateTime? _dateFin;
+  bool _validatePeriod = false;
 
   bool lunIsPressed = false;
   bool marIsPressed = false;
@@ -86,6 +92,8 @@ class _FormPfmpState extends State<FormPfmp> {
     fonctionMaitreController.dispose();
     telephoneMaitreController.dispose();
     emailMaitreController.dispose();
+    _dateDebutController.dispose();
+    _dateFinController.dispose();
     for (final jourMap in controllersHoraires.values) {
       for (final controller in jourMap.values) {
         controller.dispose();
@@ -175,10 +183,11 @@ class _FormPfmpState extends State<FormPfmp> {
                     obligatoire: true,
                   ),
                   EntreeForm(
-                    txt: 'SITE WEB',
+                    txt: 'SITE WEB *',
                     hint: 'https://...',
                     ctrlr: siteWebController,
-                    obligatoire: false,
+                    obligatoire: true,
+                    validator: _validateWebsite,
                   ),
                 ],
               ),
@@ -224,7 +233,12 @@ class _FormPfmpState extends State<FormPfmp> {
               ),
               const SizedBox(height: 10),
               _sectionTitle(Icons.date_range_rounded, 'PERIODE'),
-              const Text('Du {} au {}', style: TextStyle(color: Colors.grey)),
+              ResponsiveFormRow(
+                children: [
+                  _dateField(isStart: true),
+                  _dateField(isStart: false),
+                ],
+              ),
               const SizedBox(height: 10),
               const Text(
                 'JOURS TRAVAILLES',
@@ -455,8 +469,101 @@ class _FormPfmpState extends State<FormPfmp> {
     );
   }
 
+  String? _validateWebsite(String? value) {
+    return value == null || value.trim().isEmpty
+        ? 'Ce champ est obligatoire'
+        : null;
+  }
+
+  Widget _dateField({required bool isStart}) {
+    final selectedDate = isStart ? _dateDebut : _dateFin;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: TextFormField(
+        key: ValueKey(isStart ? 'pfmp-start-date' : 'pfmp-end-date'),
+        controller: isStart ? _dateDebutController : _dateFinController,
+        readOnly: true,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: isStart ? 'Date de début *' : 'Date de fin *',
+          hintText: 'jj/mm/aaaa',
+          labelStyle: const TextStyle(color: Colors.grey),
+          filled: true,
+          fillColor: couleurWidget,
+          suffixIcon: const Icon(Icons.calendar_today, color: Colors.grey),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        autovalidateMode: _validatePeriod || selectedDate != null
+            ? AutovalidateMode.always
+            : AutovalidateMode.disabled,
+        validator: (_) {
+          if (selectedDate == null) {
+            return 'Sélectionnez une date';
+          }
+          if (!isStart &&
+              _dateDebut != null &&
+              selectedDate.isBefore(_dateDebut!)) {
+            return 'La date de fin doit être après ou égale au début';
+          }
+          return null;
+        },
+        onTap: () => _selectDate(isStart: isStart),
+      ),
+    );
+  }
+
+  Future<void> _selectDate({required bool isStart}) async {
+    final firstDate = isStart ? DateTime(1) : (_dateDebut ?? DateTime(1));
+    final candidate =
+        (isStart ? _dateDebut : _dateFin) ??
+        (isStart ? DateTime.now() : (_dateDebut ?? DateTime.now()));
+    final picked = await showDatePicker(
+      context: context,
+      locale: const Locale('fr', 'FR'),
+      initialDate: candidate.isBefore(firstDate) ? firstDate : candidate,
+      firstDate: firstDate,
+      lastDate: DateTime(9999, 12, 31),
+      initialEntryMode: DatePickerEntryMode.input,
+      helpText: isStart ? 'Début de la PFMP' : 'Fin de la PFMP',
+      cancelText: 'Annuler',
+      confirmText: 'Confirmer',
+    );
+    if (!mounted || picked == null) return;
+    final date = DateTime(picked.year, picked.month, picked.day);
+    setState(() {
+      if (isStart) {
+        _dateDebut = date;
+        _dateDebutController.text = DateFormat('dd/MM/yyyy').format(date);
+      } else {
+        _dateFin = date;
+        _dateFinController.text = DateFormat('dd/MM/yyyy').format(date);
+      }
+    });
+  }
+
   void _submit() {
-    if (!_formKey.currentState!.validate()) {
+    final formValid = _formKey.currentState!.validate();
+    if (_validateWebsite(siteWebController.text) != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Le site web est obligatoire')),
+      );
+      return;
+    }
+    final startDate = _dateDebut;
+    final endDate = _dateFin;
+    final periodError = startDate == null || endDate == null
+        ? 'Sélectionnez les dates de début et de fin'
+        : endDate.isBefore(startDate)
+        ? 'La date de fin doit être après ou égale au début'
+        : null;
+    if (periodError != null) {
+      setState(() => _validatePeriod = true);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(periodError)));
+      return;
+    }
+    if (!formValid) {
       return;
     }
 
@@ -477,10 +584,11 @@ class _FormPfmpState extends State<FormPfmp> {
       'siret': siretController.text,
       'adresse': adresseController.text,
       'numTelephone': telephoneEntrepriseController.text,
+      'siteWeb': siteWebController.text.trim(),
       'totalHebdo': totalHebdo(formatApiPlanning(horaires)),
       'planningJours': formatApiPlanning(horaires),
-      'dateDebut': '2026-08-20',
-      'dateFin': '2026-09-20',
+      'dateDebut': DateFormat('yyyy-MM-dd').format(startDate!),
+      'dateFin': DateFormat('yyyy-MM-dd').format(endDate!),
       'idEtudiant': widget.etudiant.id,
       'prenomMaitreStage': prenomMaitreController.text,
       'nomMaitreStage': nomMaitreController.text,
