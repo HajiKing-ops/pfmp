@@ -1,5 +1,6 @@
 import 'package:appli_pfmp/bloc/pfmp_bloc/pfmp_bloc.dart';
 import 'package:appli_pfmp/bloc/pfmp_bloc/pfmp_event.dart';
+import 'package:appli_pfmp/bloc/pfmp_bloc/pfmp_state.dart';
 import 'package:appli_pfmp/custom/custom_colors/couleurs_widgets.dart';
 import 'package:appli_pfmp/custom/custom_functions/calculs_horaires.dart';
 import 'package:appli_pfmp/custom/custom_functions/format_planning.dart';
@@ -464,7 +465,16 @@ class _FormPfmpState extends State<FormPfmp> {
           ),
           child: const Text('Annuler', style: TextStyle(color: Colors.red)),
         ),
-        BoutonTexte(txt: 'Enregistrer', fct: _submit),
+        BlocBuilder<PfmpBloc, PfmpState>(
+          builder: (context, state) {
+            final pending =
+                state is PfmpPostLoadingState || state is PfmpPostSuccessState;
+            return BoutonTexte(
+              txt: pending ? 'Enregistrement en cours…' : 'Enregistrer',
+              fct: pending ? null : _submit,
+            );
+          },
+        ),
       ],
     );
   }
@@ -542,6 +552,7 @@ class _FormPfmpState extends State<FormPfmp> {
   }
 
   void _submit() {
+    if (context.read<PfmpBloc>().submissionPending) return;
     final formValid = _formKey.currentState!.validate();
     if (_validateWebsite(siteWebController.text) != null) {
       ScaffoldMessenger.of(context).showSnackBar(

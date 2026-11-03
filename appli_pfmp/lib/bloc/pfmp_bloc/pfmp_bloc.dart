@@ -2,48 +2,85 @@ import 'package:appli_pfmp/bloc/pfmp_bloc/pfmp_event.dart';
 import 'package:appli_pfmp/bloc/pfmp_bloc/pfmp_state.dart';
 import 'package:appli_pfmp/data/pfmp_api.dart';
 import 'package:appli_pfmp/model/pfmp.dart';
+import 'package:appli_pfmp/model/pfmp_creation_receipt.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+typedef PfmpLoader = Future<List<Pfmp?>?> Function(int studentId, int? pfmpId);
+typedef PfmpCreator = Future<PfmpCreationReceipt> Function(Map information);
+
 class PfmpBloc extends Bloc<PfmpEvent, PfmpState> {
-  // Etat par défaut : initialisation de l'état d'affichage des PFMP de l'étudiant
-  PfmpBloc() : super(PfmpInitializeState()) {
-    // Si l'évènement courant est l'affichage des PFMP
+  final PfmpLoader _load;
+  final PfmpCreator _create;
+  bool _posting = false;
+  int _loadGeneration = 0;
+  PfmpCreationReceipt? _savedReceipt;
+  bool get submissionPending => _posting;
+  bool get creationNeedsReload => _savedReceipt != null;
+
+  PfmpBloc({PfmpLoader? load, PfmpCreator? create})
+    : _load = load ?? requestPfmp,
+      _create = create ?? sendPfmp,
+      super(const PfmpInitializeState()) {
     on<PfmpInitializeEvent>((event, emit) async {
-      // Emission de l'état de chargement des PFMP
-      emit(PfmpLoadingState());
-
-      // Stockage des PFMP récupérées via la requête à l'API
-      List<Pfmp?>? pfmp = await requestPfmp(
-        event.idEtudiant,
-        event.idPfmp,
-      );
-
-      // Si la requête est fonctionnelle
-      if (pfmp != null) {
-        // Emission de l'état de succès de récupération des PFMP
-        emit(PfmpSuccessState(pfmp));
+      if (_posting) return;
+      final generation = ++_loadGeneration;
+      emit(const PfmpLoadingState());
+      final rows = await _safeLoad(event.idEtudiant, event.idPfmp);
+      if (generation != _loadGeneration) return;
+      if (rows == null) {
+        final receipt = _savedReceipt;
+        emit(
+          receipt == null
+              ? const PfmpErrorState('Impossible de charger les PFMP.')
+              : PfmpReloadErrorState(receipt),
+        );
       } else {
-        // Emission de l'état d'erreur lors de la récupération des PFMP
-        emit(PfmpErrorState(Error()));
+        _savedReceipt = null;
+        emit(PfmpSuccessState(rows));
       }
     });
-
-    // Si l'évènement courant est la publication d'une nouvelle PFMP
     on<PfmpPostEvent>((event, emit) async {
-      // Emission de l'état de chargement de l'envoi de la nouvelle PFMP
-      emit(PfmpPostLoadingState());
-
-      // Stockage des PFMP récupérées via la requête à l'API
-      Pfmp? nouvelleEntree = await sendPfmp(event.informations);
-
-      // Si la requête est fonctionnelle
-      if (nouvelleEntree != null) {
-        // Emission de l'état de confirmation de création de la nouvelle PFMP
-        emit(PfmpPostSuccessState(nouvelleEntree));
-      } else {
-        // Emission de l'état d'erreur lors de la création de la nouvelle PFMP
-        emit(PfmpPostErrorState(Error()));
+      if (_posting || _savedReceipt != null) return;
+      // A list request started before this POST must not replace its outcome.
+      ++_loadGeneration;
+      _posting = true;
+      emit(const PfmpPostLoadingState());
+      try {
+        final receipt = await _create(event.informations);
+        _savedReceipt = receipt;
+        emit(PfmpPostSuccessState(receipt));
+        final rows = await _safeLoad(receipt.idEtudiant, null);
+        if (rows == null) {
+          emit(PfmpReloadErrorState(receipt));
+        } else {
+          _savedReceipt = null;
+          emit(PfmpSuccessState(rows));
+        }
+      } on PfmpRequestException catch (error) {
+        emit(
+          PfmpPostErrorState(
+            error.message,
+            outcomeUnknown: error.outcomeUnknown,
+          ),
+        );
+      } catch (_) {
+        emit(
+          const PfmpPostErrorState(
+            'Connexion interrompue. Vérifiez la liste avant de réessayer.',
+            outcomeUnknown: true,
+          ),
+        );
+      } finally {
+        _posting = false;
       }
     });
+  }
+
+  Future<List<Pfmp?>?> _safeLoad(int studentId, int? pfmpId) async {
+    try {
+      return await _load(studentId, pfmpId);
+    } catch (_) {
+      return null;
+    }
   }
 }

@@ -1,91 +1,99 @@
 import 'dart:convert';
 import 'package:appli_pfmp/model/pfmp.dart';
+import 'package:appli_pfmp/model/pfmp_creation_receipt.dart';
+import 'package:http/http.dart' as http;
 import 'package:http/browser_client.dart';
 
-/*
-  Ce fichier contient les requêtes relatives à la gestion des PFMP de l'étudiant.
-*/
+class PfmpRequestException implements Exception {
+  final String message;
+  final bool outcomeUnknown;
+  const PfmpRequestException(this.message, {this.outcomeUnknown = false});
+  @override
+  String toString() => message;
+}
 
-/*
-  Requête de récupération des PFMP de l'étudiant, prend en paramètre l'identifiant de l'étudiant, son token et un identifiant de PFMP optionnel.
-  Renvoie la liste de toutes les PFMP réalisées et en cours. Si un identifiant de PFMP est inscrit, renvoie la PFMP souhaitée.
-*/
+String _errorMessage(http.Response response) {
+  try {
+    final value = jsonDecode(response.body);
+    if (value is String && value.trim().isNotEmpty) return value;
+    if (value is Map) {
+      for (final key in ['message', 'error', 'title']) {
+        if (value[key] is String) return value[key] as String;
+      }
+    }
+  } catch (_) {
+    if (response.body.trim().isNotEmpty && !response.body.contains('<')) {
+      return response.body;
+    }
+  }
+  return 'La demande a été refusée (${response.statusCode}).';
+}
+
 Future<List<Pfmp?>?> requestPfmp(
   int idEtudiant,
-  int? idPfmp,
-) async {
+  int? idPfmp, {
+  http.Client? client,
+}) async {
+  final transport = client ?? (BrowserClient()..withCredentials = true);
   try {
-    Uri? url;
-
-    // Si aucune PFMP n'est spécifiée
-    if (idPfmp == null) {
-      url = Uri.parse(
-        "/api/pfmp/recherche/$idEtudiant",
-      );
-    } else {
-      // Si une PFMP est spécifiée
-      url = Uri.parse(
-        "/api/pfmp/recherche/$idEtudiant/$idPfmp",
-      );
-    }
-
-    final client = BrowserClient()..withCredentials = true;
-
-    // Résultat de la requête GET à l'API
-    final response = await client.get(
-      url,
+    final suffix = idPfmp == null ? '' : '/$idPfmp';
+    final response = await transport.get(
+      Uri.parse('/api/pfmp/recherche/$idEtudiant$suffix'),
       headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
     );
-
-    // Si la requête renvoie le code de statut 200 : OK, ou requête réussie
-    if (response.statusCode == 200) {
-      // Renvoie la liste ds PFMP de l'étudiant
-      final List<dynamic> body = jsonDecode(response.body);
-      return body.map((e) => Pfmp.fromJson(e as Map<String, dynamic>)).toList();
-    } else {
-      return [];
-    }
-  } catch ($e) {
+    if (response.statusCode == 404) return [];
+    if (response.statusCode != 200) return null;
+    return (jsonDecode(response.body) as List<dynamic>)
+        .map((e) => Pfmp.fromJson(e as Map<String, dynamic>))
+        .toList();
+  } catch (_) {
     return null;
+  } finally {
+    if (client == null) transport.close();
   }
 }
 
-/*
-  Requête de création de PFMP, prend en paramètre le token de l'étudiant et les informations de la PFMP créée.
-  Renvoie la PFMP nouvellement créée.
-*/
-Future<Pfmp?> sendPfmp(Map informations) async {
+Future<PfmpCreationReceipt> sendPfmp(
+  Map informations, {
+  http.Client? client,
+}) async {
+  final transport = client ?? (BrowserClient()..withCredentials = true);
   try {
-    // Route API
-    final url = Uri.parse("/api/pfmp/complete");
-
-    // Contenu JSON envoyé
-    Map data = informations;
-    var body = jsonEncode(data);
-
-    final client = BrowserClient()..withCredentials = true;
-
-    // Résultat de la requête POST à l'API
-    final response = await client.post(
-      url,
+    final response = await transport.post(
+      Uri.parse('/api/pfmp/complete'),
       headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
-      body: body,
+      body: jsonEncode(informations),
     );
-
-    // Si la requête renvoie le code de statut 200 : OK, ou requête réussie
-    if (response.statusCode == 200) {
-      // Renvoie la PFMP créée
-      Map<String, dynamic> result = jsonDecode(response.body);
-      return Pfmp.fromJson(result);
+    if (response.statusCode != 200) {
+      throw PfmpRequestException(
+        _errorMessage(response),
+        outcomeUnknown: response.statusCode >= 500,
+      );
     }
-  } catch ($e) {
-    return null;
+    try {
+      return PfmpCreationReceipt.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    } catch (_) {
+      throw const PfmpRequestException(
+        'Réponse illisible. La PFMP peut avoir été enregistrée : vérifiez la liste avant de réessayer.',
+        outcomeUnknown: true,
+      );
+    }
+  } on PfmpRequestException {
+    rethrow;
+  } catch (_) {
+    throw const PfmpRequestException(
+      'Connexion interrompue. La PFMP peut avoir été enregistrée : vérifiez la liste avant de réessayer.',
+      outcomeUnknown: true,
+    );
+  } finally {
+    if (client == null) transport.close();
   }
-  return null;
 }

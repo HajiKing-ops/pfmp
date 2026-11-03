@@ -17,8 +17,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 class MesPfmp extends StatefulWidget {
   final Utilisateur utilisateur;
+  final Future<int?> Function()? reportCountLoader;
 
-  const MesPfmp({super.key, required this.utilisateur});
+  const MesPfmp({super.key, required this.utilisateur, this.reportCountLoader});
 
   @override
   State<MesPfmp> createState() => _MesPfmpState();
@@ -28,6 +29,7 @@ class _MesPfmpState extends State<MesPfmp> {
   int saisiePFMP = 0;
   int? _rapportCount;
   bool _loadingRapports = true;
+  List<Pfmp?> _displayed = [];
 
   @override
   void initState() {
@@ -39,6 +41,15 @@ class _MesPfmpState extends State<MesPfmp> {
   }
 
   Future<void> _loadRapportStats() async {
+    if (widget.reportCountLoader != null) {
+      final count = await widget.reportCountLoader!();
+      if (!mounted) return;
+      setState(() {
+        _rapportCount = count;
+        _loadingRapports = false;
+      });
+      return;
+    }
     final journal = await requestJournal(widget.utilisateur.id);
     if (!mounted) return;
 
@@ -64,9 +75,25 @@ class _MesPfmpState extends State<MesPfmp> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<PfmpBloc, PfmpState>(
+    return BlocConsumer<PfmpBloc, PfmpState>(
+      listener: (context, state) {
+        if (state is PfmpSuccessState) _displayed = state.pfmp;
+        if (state is PfmpPostSuccessState) {
+          setState(() => saisiePFMP = 0);
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('PFMP enregistrée.')));
+        }
+        if (state is PfmpPostErrorState) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.error.toString())));
+        }
+      },
       builder: (context, state) {
-        if (state is PfmpLoadingState) {
+        if (state is PfmpLoadingState &&
+            _displayed.isEmpty &&
+            saisiePFMP == 0) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -79,11 +106,13 @@ class _MesPfmpState extends State<MesPfmp> {
           );
         }
 
-        if (state is! PfmpSuccessState) {
+        if (state is PfmpInitializeState) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final pfmps = state.pfmp.whereType<Pfmp>().toList();
+        final pfmps = (state is PfmpSuccessState ? state.pfmp : _displayed)
+            .whereType<Pfmp>()
+            .toList();
         final entreprisesDifferentes = pfmps.map((e) => e.siret).toSet().length;
         final heuresEntreprises = formatMinutesAsHours(
           plannedMinutesForPfmps(pfmps),
@@ -97,6 +126,23 @@ class _MesPfmpState extends State<MesPfmp> {
               style: TextStyle(color: Colors.white, fontSize: 25.0),
             ),
             const SizedBox(height: 12),
+            if (state is PfmpReloadErrorState)
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'PFMP enregistrée ; rechargement impossible.',
+                      style: TextStyle(color: Colors.amber),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => context.read<PfmpBloc>().add(
+                      PfmpInitializeEvent(widget.utilisateur.id, null),
+                    ),
+                    child: const Text('Réessayer le chargement'),
+                  ),
+                ],
+              ),
             ResponsiveWrapGrid(
               minItemWidth: 230,
               children: [
@@ -175,11 +221,15 @@ class _MesPfmpState extends State<MesPfmp> {
         ),
         BoutonTexte(
           txt: '+ Nouvelle PFMP',
-          fct: () {
-            setState(() {
-              saisiePFMP = 1;
-            });
-          },
+          fct:
+              context.read<PfmpBloc>().creationNeedsReload ||
+                  context.read<PfmpBloc>().submissionPending
+              ? null
+              : () {
+                  setState(() {
+                    saisiePFMP = 1;
+                  });
+                },
         ),
       ],
     );
