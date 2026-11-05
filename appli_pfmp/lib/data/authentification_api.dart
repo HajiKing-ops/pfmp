@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:appli_pfmp/model/utilisateur.dart';
-import 'package:http/browser_client.dart';
+import 'package:appli_pfmp/data/http_client.dart';
 
 class AuthRequestResult {
   final Utilisateur? user;
@@ -13,7 +13,7 @@ class AuthRequestResult {
 }
 
 Future<bool> logout() async {
-  final client = BrowserClient()..withCredentials = true;
+  final client = createHttpClient();
 
   try {
     final url = Uri.parse('/api/logout');
@@ -32,7 +32,7 @@ Future<bool> logout() async {
 }
 
 Future<AuthRequestResult> loginRequest(String login, String pwd) async {
-  final client = BrowserClient()..withCredentials = true;
+  final client = createHttpClient();
 
   try {
     final url = Uri.parse('/api/login');

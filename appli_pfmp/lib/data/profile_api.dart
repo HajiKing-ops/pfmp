@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:appli_pfmp/model/profile.dart';
-import 'package:http/browser_client.dart';
+import 'package:appli_pfmp/data/http_client.dart';
 
 const _profileReadEndpoints = [
   '/api/profile/me',
@@ -24,7 +24,7 @@ class ProfileApiResult {
 }
 
 Future<ProfileApiResult> requestProfileMe() async {
-  final client = BrowserClient()..withCredentials = true;
+  final client = createHttpClient();
 
   try {
     for (final endpoint in _profileReadEndpoints) {
@@ -66,7 +66,7 @@ Future<ProfileApiResult> requestProfileMe() async {
 }
 
 Future<ProfileApiResult> updateProfileMe(StudentProfile profile) async {
-  final client = BrowserClient()..withCredentials = true;
+  final client = createHttpClient();
   final body = jsonEncode(profile.toUpdateJson());
 
   try {

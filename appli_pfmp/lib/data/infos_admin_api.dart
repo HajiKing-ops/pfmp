@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:appli_pfmp/model/admin_class_stats.dart';
 import 'package:appli_pfmp/model/infos_admin.dart';
-import 'package:http/browser_client.dart';
+import 'package:appli_pfmp/data/http_client.dart';
+import 'package:http/http.dart' as http;
 
 /*
   Requête de récupération des informations pour l'espace administrateur d'un établissement.
@@ -14,7 +15,7 @@ requestInfosAdmin() async {
     // Route API
     final url = Uri.parse("/api/administrateur");
     
-    final client = BrowserClient()..withCredentials = true;
+    final client = createHttpClient();
 
     // Résultat de la requête GET à l'API
     final response = await client.get(
@@ -73,7 +74,7 @@ class AdminListApiResult<T> {
 }
 
 Future<AdminListApiResult<AdminClassStats>> requestAdminClassStats() async {
-  final client = BrowserClient()..withCredentials = true;
+  final client = createHttpClient();
   const endpoints = [
     '/api/administrateur/classes/stats',
     '/api/administrateur/classes',
@@ -134,7 +135,7 @@ Future<AdminListApiResult<AdminClassStats>> requestAdminClassStats() async {
 }
 
 Future<List<AdminClassStats>> _hydrateClassLabels(
-  BrowserClient client,
+  http.Client client,
   List<AdminClassStats> classes,
 ) async {
   final hydrated = <AdminClassStats>[];
@@ -155,7 +156,7 @@ Future<List<AdminClassStats>> _hydrateClassLabels(
 }
 
 Future<String?> _fetchClassLabel(
-  BrowserClient client,
+  http.Client client,
   AdminClassStats classe,
 ) async {
   try {
@@ -206,7 +207,7 @@ Future<AdminListApiResult<StagiaireAdmin>> requestAdminStudentsByClass({
   required int idEtablissement,
   required int idClasse,
 }) async {
-  final client = BrowserClient()..withCredentials = true;
+  final client = createHttpClient();
 
   try {
     final url = Uri(

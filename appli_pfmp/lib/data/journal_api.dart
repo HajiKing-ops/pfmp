@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:appli_pfmp/model/journal.dart';
-import 'package:http/browser_client.dart';
+import 'package:appli_pfmp/data/http_client.dart';
 
 class JournalAlertResult {
   final bool success;
@@ -15,7 +15,7 @@ class JournalAlertResult {
 }
 
 Future<JournalAlertResult> checkJournalAlerte() async {
-  final client = BrowserClient()..withCredentials = true;
+  final client = createHttpClient();
 
   try {
     final url = Uri.parse('/api/journal/alerte');
@@ -75,7 +75,7 @@ Future<List<EntreeJournal?>?> requestJournal(
     // Route API
     final url = Uri.parse("/api/journal");
 
-    final client = BrowserClient()..withCredentials = true;
+    final client = createHttpClient();
 
     // Résultat de la requête GET à l'API
     final response = await client.get(
@@ -120,7 +120,7 @@ Future<EntreeJournal?> sendJournal(
     };
     var body = jsonEncode(data);
 
-    final client = BrowserClient()..withCredentials = true;
+    final client = createHttpClient();
 
     // Résultat de la requête POST à l'API
     final response = await client.post(

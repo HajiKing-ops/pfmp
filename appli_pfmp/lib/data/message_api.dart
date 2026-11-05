@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:appli_pfmp/model/message.dart';
-import 'package:http/browser_client.dart';
+import 'package:appli_pfmp/data/http_client.dart';
 
 class MessageApiResult<T> {
   final T? data;
@@ -13,7 +13,7 @@ class MessageApiResult<T> {
 }
 
 Future<MessageApiResult<List<MessagePfmp>>> fetchMessages(int idPfmp) async {
-  final client = BrowserClient()..withCredentials = true;
+  final client = createHttpClient();
 
   try {
     final response = await client.get(
@@ -52,7 +52,7 @@ Future<MessageApiResult<MessagePfmp>> sendMessage(
   int idPfmp,
   String contenu,
 ) async {
-  final client = BrowserClient()..withCredentials = true;
+  final client = createHttpClient();
 
   try {
     final response = await client.post(

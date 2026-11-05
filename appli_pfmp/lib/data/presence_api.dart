@@ -1,8 +1,9 @@
 import 'dart:convert';
-import 'package:http/browser_client.dart';
+import 'package:appli_pfmp/data/http_client.dart';
+import 'package:http/http.dart' as http;
 
 Future<({bool success, String message})> initialiserPresences() async {
-  final client = BrowserClient()..withCredentials = true;
+  final client = createHttpClient();
 
   try {
     final url = Uri.parse('/api/presence/initialiser');
@@ -58,7 +59,7 @@ Future<({bool success, String message})> modifierPresences({
   required int idPfmp,
   required List<PresenceModification> modifications,
 }) async {
-  final client = BrowserClient()..withCredentials = true;
+  final client = createHttpClient();
 
   try {
     if (idEtudiant <= 0) {
@@ -136,7 +137,7 @@ Future<({bool success, String message})> modifierPresences({
 }
 
 Future<({bool success, String message})> _modifierPresencesAvecUpdateEndpoint({
-  required BrowserClient client,
+  required http.Client client,
   required int idEtudiant,
   required List<PresenceModification> modifications,
 }) async {

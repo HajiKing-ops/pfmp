@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:appli_pfmp/model/dashboard.dart';
-import 'package:http/browser_client.dart';
+import 'package:appli_pfmp/data/http_client.dart';
 
 Future<DashboardStats?> requestDashboardStats() async {
-  final client = BrowserClient()..withCredentials = true;
+  final client = createHttpClient();
 
   try {
     final response = await client.get(

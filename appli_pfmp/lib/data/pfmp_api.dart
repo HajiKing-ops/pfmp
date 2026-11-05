@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:appli_pfmp/model/pfmp.dart';
 import 'package:appli_pfmp/model/pfmp_creation_receipt.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/browser_client.dart';
+import 'package:appli_pfmp/data/http_client.dart';
 
 class PfmpRequestException implements Exception {
   final String message;
@@ -34,7 +34,7 @@ Future<List<Pfmp?>?> requestPfmp(
   int? idPfmp, {
   http.Client? client,
 }) async {
-  final transport = client ?? (BrowserClient()..withCredentials = true);
+  final transport = client ?? createHttpClient();
   try {
     final suffix = idPfmp == null ? '' : '/$idPfmp';
     final response = await transport.get(
@@ -60,7 +60,7 @@ Future<PfmpCreationReceipt> sendPfmp(
   Map informations, {
   http.Client? client,
 }) async {
-  final transport = client ?? (BrowserClient()..withCredentials = true);
+  final transport = client ?? createHttpClient();
   try {
     final response = await transport.post(
       Uri.parse('/api/pfmp/complete'),

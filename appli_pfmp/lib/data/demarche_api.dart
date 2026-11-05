@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:appli_pfmp/model/demarche.dart';
-import 'package:http/browser_client.dart';
+import 'package:appli_pfmp/data/http_client.dart';
 
 /* 
   Ce fichier contient les 3 requêtes API relatives aux démarches de recherche d'entreprises.
@@ -15,7 +15,7 @@ Future<List<Demarche?>?> requestDemarche() async {
     // Route API
     final url = Uri.parse("/api/demarches");
 
-    final client = BrowserClient()..withCredentials = true;
+    final client = createHttpClient();
 
     // Résultat de la requête GET à l'API
     final response = await client.get(
@@ -64,7 +64,7 @@ Future<Demarche?> sendDemarche(
     };
     var body = jsonEncode(data);
 
-    final client = BrowserClient()..withCredentials = true;
+    final client = createHttpClient();
 
     // Résultat de la requête POST à l'API
     final response = await client.post(
@@ -112,7 +112,7 @@ Future<Demarche?> modifyDemarche(
     };
     var body = jsonEncode(data);
 
-    final client = BrowserClient()..withCredentials = true;
+    final client = createHttpClient();
 
     // Résultat de la requête PUT à l'API
     final response = await client.put(
