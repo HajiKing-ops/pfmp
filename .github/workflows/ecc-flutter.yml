@@ -1,0 +1,84 @@
+name: ECC Flutter CI
+
+on:
+  push:
+    branches:
+      - review/ecc-native-tests
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ecc-flutter-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      FLUTTER_SUPPRESS_ANALYTICS: 'true'
+      DART_SUPPRESS_ANALYTICS: 'true'
+    defaults:
+      run:
+        shell: bash
+        working-directory: appli_pfmp
+    steps:
+      - name: Check out the pushed ECC commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          clean: false
+          persist-credentials: false
+
+      - name: Install Flutter 3.47.9 (Dart 3.13.7)
+        working-directory: ${{ runner.temp }}
+        run: |
+          # Version and checksum from Flutter's official Linux release manifest:
+          # https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json
+          curl --fail --location --retry 3 --proto '=https' --proto-redir '=https' \
+            --output flutter.tar.xz \
+            https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.47.9-stable.tar.xz
+          printf '%s  %s\n' \
+            25ed8c3c29d51a7353f2a944310b478af8214920639524b19c50a19e6c044c5a \
+            flutter.tar.xz | sha256sum --check --strict
+          tar --extract --xz --file flutter.tar.xz
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version --machine
+
+      - name: Restore locked dependencies
+        run: |
+          # Flutter automatically migrates analyzer excludes during pub get.
+          # Restore the captured config so analysis checks the committed rules.
+          cp analysis_options.yaml "$RUNNER_TEMP/pfmp-analysis-options.yaml"
+          trap 'cp "$RUNNER_TEMP/pfmp-analysis-options.yaml" analysis_options.yaml' EXIT
+          flutter pub get --enforce-lockfile
+          git diff --exit-code -- pubspec.yaml pubspec.lock
+
+      - name: Check formatting of the HTTP factories and tests
+        run: >-
+          dart format --output=none --set-exit-if-changed
+          lib/data/http_client.dart lib/data/http_client_native.dart
+          lib/data/http_client_web.dart test
+
+      - name: Analyze the full Flutter application
+        run: |
+          echo '::notice title=Analyzer policy::Informational diagnostics remain visible and nonfatal; warnings and errors fail. Stage 1 baseline: 18 informational diagnostics.'
+          printf '%s\n' \
+            '### Static analysis policy' \
+            'All diagnostics are printed in the analysis step log. Informational diagnostics are nonfatal; warnings and errors fail. The Stage 1 baseline has 18 informational diagnostics.' \
+            >> "$GITHUB_STEP_SUMMARY"
+          flutter analyze --no-pub --no-fatal-infos
+
+      - name: Run the complete native test suite
+        run: flutter test --no-pub --reporter expanded
+
+      - name: Run native tests in randomized order (seed 417)
+        run: >-
+          flutter test --no-pub --reporter expanded
+          --test-randomize-ordering-seed=417
+
+      - name: Build Flutter Web
+        run: flutter build web --no-pub
+
+      - name: Check dependency and analyzer configuration preservation
+        run: git diff --exit-code -- pubspec.yaml pubspec.lock analysis_options.yaml
